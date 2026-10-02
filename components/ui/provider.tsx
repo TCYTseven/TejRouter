@@ -53,13 +53,13 @@ export function ProviderBadge({
     <span
       className={cn(
         "inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-md border border-border bg-surface-2 font-medium text-fg",
-        size === "sm" ? "h-6 px-2 text-xs" : "h-7 px-2.5 text-[13px]",
+        size === "sm" ? "h-7 px-2.5 text-[13px]" : "h-8 px-3 text-sm",
         className,
       )}
     >
       <ProviderDot provider={provider} />
       <span className="truncate">{provider.name}</span>
-      {model ? <span className="truncate font-mono text-[11px] font-normal text-fg-muted">{model}</span> : null}
+      {model ? <span className="truncate text-[13px] font-normal text-fg-muted">{model}</span> : null}
     </span>
   );
 }

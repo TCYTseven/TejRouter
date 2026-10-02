@@ -11,7 +11,7 @@ export function StatTile({
   sub,
   delta,
   deltaTone = "neutral",
-  icon,
+
   trend,
   className,
   emphasis,
@@ -31,21 +31,20 @@ export function StatTile({
   return (
     <div
       className={cn(
-        "flex min-w-0 flex-col gap-1 rounded-lg border bg-surface px-3 py-2.5",
-        emphasis ? "border-accent-line shadow-glow" : "border-border",
+        "flex min-w-0 flex-col gap-1 rounded-xl border bg-surface px-5 py-4",
+        emphasis ? "border-border-strong" : "border-border",
         className,
       )}
     >
-      <div className="flex items-center gap-1.5 text-[11px] font-medium text-fg-subtle">
-        {icon}
+      <div className="flex items-center gap-1.5 text-sm text-fg-muted">
         <span className="truncate">{label}</span>
       </div>
       <div className="flex items-baseline gap-2">
-        <span className="num truncate text-lg font-semibold tracking-tight text-fg">{value}</span>
+        <span className="num truncate text-2xl font-semibold tracking-tight text-fg">{value}</span>
         {delta ? (
           <span
             className={cn(
-              "num text-[11px]",
+              "num text-sm",
               deltaTone === "good" && "text-success",
               deltaTone === "bad" && "text-danger",
               deltaTone === "neutral" && "text-fg-muted",
@@ -55,7 +54,7 @@ export function StatTile({
           </span>
         ) : null}
       </div>
-      {sub ? <div className="truncate text-[11px] text-fg-muted">{sub}</div> : null}
+      {sub ? <div className="truncate text-[13px] text-fg-muted">{sub}</div> : null}
       {trend ? <div className="mt-1">{trend}</div> : null}
     </div>
   );
@@ -74,11 +73,11 @@ export function MetricRow({
   className?: string;
 }) {
   return (
-    <div className={cn("flex items-baseline justify-between gap-3 py-1", className)}>
-      <dt className="shrink-0 text-[11px] text-fg-subtle">{label}</dt>
-      <dd className="num min-w-0 truncate text-right text-xs text-fg">
+    <div className={cn("flex items-baseline justify-between gap-4 py-1.5", className)}>
+      <dt className="shrink-0 text-sm text-fg-muted">{label}</dt>
+      <dd className="num min-w-0 truncate text-right text-sm text-fg">
         {value}
-        {hint ? <span className="ml-1.5 text-[10px] text-fg-subtle">{hint}</span> : null}
+        {hint ? <span className="ml-1.5 text-[13px] text-fg-muted">{hint}</span> : null}
       </dd>
     </div>
   );

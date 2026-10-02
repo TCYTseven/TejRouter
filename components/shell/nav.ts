@@ -1,14 +1,5 @@
 import type { ComponentType } from "react";
-import {
-  IconBook,
-  IconFlask,
-  IconLayout,
-  IconList,
-  IconServer,
-  IconTerminal,
-  IconTrophy,
-  type IconProps,
-} from "@/components/ui/icons";
+import { IconFlask, IconList, IconServer, IconTerminal, IconTrophy, type IconProps } from "@/components/ui/icons";
 
 export interface NavItem {
   href: string;
@@ -19,15 +10,13 @@ export interface NavItem {
   key: string;
 }
 
-/** Primary app navigation. Pages built by other agents are linked here too. */
+/** Primary app navigation (docs/DESIGN.md). Methodology lives in the sidebar footer. */
 export const NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", description: "Router status and latest results", icon: IconLayout, key: "d" },
-  { href: "/playground", label: "Playground", description: "Race one prompt across routers", icon: IconTerminal, key: "p" },
-  { href: "/benchmarks", label: "Benchmarks", description: "Run graded suites with statistics", icon: IconFlask, key: "b" },
-  { href: "/runs", label: "Runs", description: "Saved benchmark runs and reports", icon: IconList, key: "r" },
-  { href: "/arena", label: "Arena", description: "Leaderboard from your blind votes", icon: IconTrophy, key: "a" },
-  { href: "/providers", label: "Providers", description: "Keys, models and health checks", icon: IconServer, key: "v" },
-  { href: "/methodology", label: "Methodology", description: "How the numbers are computed", icon: IconBook, key: "m" },
+  { href: "/playground", label: "Compare", description: "Send one prompt to several routers", icon: IconTerminal, key: "c" },
+  { href: "/benchmarks", label: "Benchmark", description: "Score routers on graded tasks", icon: IconFlask, key: "b" },
+  { href: "/runs", label: "Results", description: "Your benchmark reports", icon: IconList, key: "r" },
+  { href: "/arena", label: "Leaderboard", description: "Rankings from your blind votes", icon: IconTrophy, key: "l" },
+  { href: "/providers", label: "Routers", description: "Connect routers and check them", icon: IconServer, key: "o" },
 ];
 
 export function isActive(pathname: string | null, href: string): boolean {

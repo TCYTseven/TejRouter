@@ -4,7 +4,7 @@ import { cn } from "@/lib/client/cn";
 export type BadgeTone = "neutral" | "accent" | "success" | "warning" | "danger" | "info" | "outline";
 
 const tones: Record<BadgeTone, string> = {
-  neutral: "bg-surface-3 text-fg-muted border-border",
+  neutral: "bg-surface-2 text-fg-muted border-border",
   accent: "bg-accent-soft text-accent-text border-accent-line",
   success: "bg-success-soft text-success border-success/30",
   warning: "bg-warning-soft text-warning border-warning/30",
@@ -24,8 +24,8 @@ export function Badge({ tone = "neutral", mono, size = "sm", className, ...rest 
   return (
     <span
       className={cn(
-        "inline-flex max-w-full items-center gap-1 rounded border font-medium whitespace-nowrap",
-        size === "sm" ? "h-5 px-1.5 text-[11px]" : "h-6 px-2 text-xs",
+        "inline-flex max-w-full items-center gap-1 rounded-md border font-medium whitespace-nowrap",
+        size === "sm" ? "h-6 px-2 text-[13px]" : "h-7 px-2.5 text-sm",
         mono && "font-mono tracking-tight",
         tones[tone],
         className,
@@ -42,7 +42,7 @@ const dotColor: Record<StatusKind, string> = {
   warn: "bg-warning",
   error: "bg-danger",
   idle: "bg-fg-subtle",
-  live: "bg-accent",
+  live: "bg-success",
   offline: "bg-info",
 };
 

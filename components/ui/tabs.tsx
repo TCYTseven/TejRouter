@@ -65,12 +65,12 @@ export function Tabs<T extends string>({
             tabIndex={active ? 0 : -1}
             onClick={() => onChange(t.value)}
             className={cn(
-              "relative -mb-px inline-flex h-9 items-center gap-1.5 border-b-2 px-2.5 text-xs font-medium whitespace-nowrap transition-colors",
+              "relative -mb-px inline-flex h-10 items-center gap-1.5 border-b-2 px-3 text-sm font-medium whitespace-nowrap transition-colors",
               active ? "border-accent text-fg" : "border-transparent text-fg-muted hover:text-fg",
             )}
           >
             {t.label}
-            {t.count != null ? <span className="num rounded bg-surface-3 px-1 text-[10px] text-fg-muted">{t.count}</span> : null}
+            {t.count != null ? <span className="num rounded-md bg-surface-2 px-1.5 text-[13px] text-fg-muted">{t.count}</span> : null}
           </button>
         );
       })}

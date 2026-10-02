@@ -32,7 +32,7 @@ export function EmptyState({
       ) : null}
       <div className="space-y-1">
         <p className="text-sm font-medium text-fg">{title}</p>
-        {description ? <p className="mx-auto max-w-sm text-xs leading-relaxed text-fg-muted">{description}</p> : null}
+        {description ? <p className="mx-auto max-w-sm text-sm text-fg-muted">{description}</p> : null}
       </div>
       {action ? <div className="mt-1 flex flex-wrap items-center justify-center gap-2">{action}</div> : null}
     </div>

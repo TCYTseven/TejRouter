@@ -28,8 +28,8 @@ export default function AppError({ error, retry }: { error: Error & { digest?: s
         <Button variant="accent" onClick={() => retry()} leftIcon={<IconRefresh size={14} />}>
           Try again
         </Button>
-        <ButtonLink href="/dashboard" variant="secondary">
-          Back to dashboard
+        <ButtonLink href="/playground" variant="secondary">
+          Go to Compare
         </ButtonLink>
       </div>
     </div>

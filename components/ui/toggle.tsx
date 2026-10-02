@@ -51,8 +51,8 @@ export function Toggle({
       </button>
       {label || description ? (
         <span className="flex flex-col">
-          {label ? <span className="text-xs font-medium text-fg">{label}</span> : null}
-          {description ? <span className="text-[11px] text-fg-subtle">{description}</span> : null}
+          {label ? <span className="text-sm font-medium text-fg">{label}</span> : null}
+          {description ? <span className="text-[13px] text-fg-muted">{description}</span> : null}
         </span>
       ) : null}
     </label>

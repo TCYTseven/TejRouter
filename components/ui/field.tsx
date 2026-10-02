@@ -9,13 +9,13 @@ import { cn } from "@/lib/client/cn";
 import { IconChevronDown } from "./icons";
 
 const control =
-  "w-full rounded-md border border-border bg-surface-2 text-sm text-fg placeholder:text-fg-subtle " +
+  "w-full rounded-lg border border-border bg-surface text-[15px] text-fg placeholder:text-fg-subtle " +
   "transition-[border-color,box-shadow] duration-150 hover:border-border-strong " +
-  "focus:border-accent-line focus:outline-none focus:ring-2 focus:ring-accent-soft focus-visible:outline-none " +
+  "focus:border-link focus:outline-none focus:ring-2 focus:ring-link/20 focus-visible:outline-none " +
   "disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-danger/60";
 
 export function Label({ className, ...rest }: LabelHTMLAttributes<HTMLLabelElement>) {
-  return <label className={cn("text-xs font-medium text-fg-muted", className)} {...rest} />;
+  return <label className={cn("text-sm font-medium text-fg", className)} {...rest} />;
 }
 
 export function Input({
@@ -23,7 +23,7 @@ export function Input({
   mono,
   ...rest
 }: InputHTMLAttributes<HTMLInputElement> & { mono?: boolean }) {
-  return <input className={cn(control, "h-8 px-2.5", mono && "num text-[13px]", className)} {...rest} />;
+  return <input className={cn(control, "h-9 px-3", mono && "num", className)} {...rest} />;
 }
 
 export function Textarea({
@@ -33,7 +33,7 @@ export function Textarea({
 }: TextareaHTMLAttributes<HTMLTextAreaElement> & { mono?: boolean }) {
   return (
     <textarea
-      className={cn(control, "min-h-20 resize-y px-3 py-2 leading-relaxed", mono && "font-mono text-[13px]", className)}
+      className={cn(control, "min-h-20 resize-y px-3 py-2 leading-relaxed", mono && "font-mono text-sm", className)}
       {...rest}
     />
   );
@@ -43,7 +43,7 @@ export function Textarea({
 export function Select({ className, children, ...rest }: SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <div className={cn("relative", className)}>
-      <select className={cn(control, "h-8 appearance-none pr-8 pl-2.5")} {...rest}>
+      <select className={cn(control, "h-9 appearance-none pr-9 pl-3 text-sm")} {...rest}>
         {children}
       </select>
       <IconChevronDown
@@ -81,11 +81,11 @@ export function Field({
       </div>
       {children}
       {error ? (
-        <p id={`${htmlFor}-error`} className="text-xs text-danger">
+        <p id={`${htmlFor}-error`} className="text-[13px] text-danger">
           {error}
         </p>
       ) : hint ? (
-        <p id={`${htmlFor}-hint`} className="text-[11px] text-fg-subtle">
+        <p id={`${htmlFor}-hint`} className="text-[13px] text-fg-muted">
           {hint}
         </p>
       ) : null}

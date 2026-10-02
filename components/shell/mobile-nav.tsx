@@ -90,7 +90,7 @@ export function MobileNav({ footer }: { footer?: React.ReactNode }) {
             <div className="flex flex-col gap-3 border-t border-border p-3">
               {footer}
               <div className="flex items-center justify-between">
-                <span className="text-[11px] text-fg-subtle">Theme</span>
+                <span className="text-sm text-fg-muted">Theme</span>
                 <ThemeToggle />
               </div>
             </div>

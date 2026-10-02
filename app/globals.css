@@ -8,102 +8,102 @@
  */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
+/* Calm neutral palette; see docs/DESIGN.md. "accent" fills are inverted neutrals,
+   interactive emphasis (links, focus) uses --link blue. */
 :root,
 [data-theme="dark"] {
   color-scheme: dark;
-  /* planes */
-  --bg: #07080a;
-  --bg-subtle: #0b0c0f;
-  --surface: #0f1013;
-  --surface-2: #15171b;
-  --surface-3: #1c1e23;
-  --overlay: rgba(4, 5, 7, 0.72);
-  /* lines */
-  --border: #23262c;
-  --border-strong: #33363e;
-  --grid-line: rgba(255, 255, 255, 0.045);
-  /* ink */
-  --fg: #ededf0;
-  --fg-muted: #a3a4ad;
-  --fg-subtle: #80818b;
-  --fg-inverse: #0a0b0d;
-  /* brand: phosphor lime */
-  --accent: #c6f24e;
-  --accent-strong: #d7fa6e;
-  --accent-fg: #0b0e03;
-  --accent-text: #d2f770;
-  --accent-soft: rgba(198, 242, 78, 0.1);
-  --accent-line: rgba(198, 242, 78, 0.35);
-  /* status (always paired with an icon or label) */
-  --success: #3ecf8e;
-  --success-soft: rgba(62, 207, 142, 0.12);
-  --warning: #f5b544;
-  --warning-soft: rgba(245, 181, 68, 0.12);
-  --danger: #ff6369;
-  --danger-soft: rgba(255, 99, 105, 0.12);
-  --info: #6aa8ff;
-  --info-soft: rgba(106, 168, 255, 0.12);
-  /* misc */
-  --ring: #c6f24e;
-  --shadow-lg: 0 24px 60px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04);
-  --shadow-sm: 0 1px 0 0 rgba(255, 255, 255, 0.03) inset, 0 1px 2px rgba(0, 0, 0, 0.4);
-  --glow: 0 0 0 1px rgba(198, 242, 78, 0.25), 0 0 24px -4px rgba(198, 242, 78, 0.35);
+  --bg: #0a0a0b;
+  --bg-subtle: #0f0f11;
+  --surface: #131315;
+  --surface-2: #19191c;
+  --surface-3: #232327;
+  --overlay: rgba(0, 0, 0, 0.6);
+  --border: #27272b;
+  --border-strong: #35353b;
+  --grid-line: transparent;
+  --fg: #ededef;
+  --fg-muted: #a1a1aa;
+  --fg-subtle: #71717a;
+  --fg-inverse: #0a0a0b;
+  --accent: #ededef;
+  --accent-strong: #ffffff;
+  --accent-fg: #0a0a0b;
+  --accent-text: #7aaeff;
+  --accent-soft: rgba(255, 255, 255, 0.06);
+  --accent-line: rgba(255, 255, 255, 0.2);
+  --link: #7aaeff;
+  --success: #4cc38a;
+  --success-soft: rgba(76, 195, 138, 0.12);
+  --warning: #f0b043;
+  --warning-soft: rgba(240, 176, 67, 0.12);
+  --danger: #f2555a;
+  --danger-soft: rgba(242, 85, 90, 0.12);
+  --info: #7aaeff;
+  --info-soft: rgba(122, 174, 255, 0.12);
+  --ring: #7aaeff;
+  --shadow-lg: 0 16px 40px -12px rgba(0, 0, 0, 0.6);
+  --shadow-sm: none;
+  --glow: none;
 }
 
 [data-theme="light"] {
   color-scheme: light;
-  --bg: #f6f6f3;
-  --bg-subtle: #efefeb;
+  --bg: #fafafa;
+  --bg-subtle: #f4f4f5;
   --surface: #ffffff;
-  --surface-2: #f4f4f1;
-  --surface-3: #eaeae6;
-  --overlay: rgba(20, 20, 18, 0.35);
-  --border: #e2e2dc;
-  --border-strong: #cdcdc6;
-  --grid-line: rgba(10, 10, 10, 0.05);
-  --fg: #0c0c0d;
-  --fg-muted: #52525a;
-  --fg-subtle: #6a6a72;
+  --surface-2: #f4f4f5;
+  --surface-3: #e9e9ec;
+  --overlay: rgba(10, 10, 11, 0.3);
+  --border: #e4e4e7;
+  --border-strong: #d4d4d8;
+  --grid-line: transparent;
+  --fg: #0a0a0b;
+  --fg-muted: #52525b;
+  --fg-subtle: #71717a;
   --fg-inverse: #ffffff;
-  --accent: #4a7a00;
-  --accent-strong: #3d6600;
+  --accent: #0a0a0b;
+  --accent-strong: #27272a;
   --accent-fg: #ffffff;
-  --accent-text: #3f6a00;
-  --accent-soft: rgba(110, 170, 10, 0.12);
-  --accent-line: rgba(74, 122, 0, 0.35);
-  --success: #0f8a55;
-  --success-soft: rgba(15, 138, 85, 0.1);
-  --warning: #a36100;
-  --warning-soft: rgba(214, 140, 0, 0.12);
-  --danger: #d1242f;
-  --danger-soft: rgba(209, 36, 47, 0.08);
-  --info: #1f6feb;
-  --info-soft: rgba(31, 111, 235, 0.08);
-  --ring: #4a7a00;
-  --shadow-lg: 0 24px 60px -16px rgba(20, 20, 18, 0.22), 0 0 0 1px rgba(10, 10, 10, 0.04);
-  --shadow-sm: 0 1px 2px rgba(20, 20, 18, 0.06);
-  --glow: 0 0 0 1px rgba(74, 122, 0, 0.25), 0 0 20px -6px rgba(74, 122, 0, 0.35);
+  --accent-text: #2563eb;
+  --accent-soft: rgba(10, 10, 11, 0.05);
+  --accent-line: rgba(10, 10, 11, 0.18);
+  --link: #2563eb;
+  --success: #15803d;
+  --success-soft: rgba(21, 128, 61, 0.08);
+  --warning: #a16207;
+  --warning-soft: rgba(161, 98, 7, 0.08);
+  --danger: #dc2626;
+  --danger-soft: rgba(220, 38, 38, 0.07);
+  --info: #2563eb;
+  --info-soft: rgba(37, 99, 235, 0.08);
+  --ring: #2563eb;
+  --shadow-lg: 0 16px 40px -16px rgba(10, 10, 11, 0.18);
+  --shadow-sm: 0 1px 2px rgba(10, 10, 11, 0.04);
+  --glow: none;
 }
 
 /* No JS + light OS: still honor the system preference. */
 @media (prefers-color-scheme: light) {
   :root:not([data-theme]) {
     color-scheme: light;
-    --bg: #f6f6f3;
-    --bg-subtle: #efefeb;
+    --bg: #fafafa;
+    --bg-subtle: #f4f4f5;
     --surface: #ffffff;
-    --surface-2: #f4f4f1;
-    --surface-3: #eaeae6;
-    --border: #e2e2dc;
-    --border-strong: #cdcdc6;
-    --grid-line: rgba(10, 10, 10, 0.05);
-    --fg: #0c0c0d;
-    --fg-muted: #52525a;
-    --fg-subtle: #6a6a72;
-    --accent: #4a7a00;
+    --surface-2: #f4f4f5;
+    --surface-3: #e9e9ec;
+    --border: #e4e4e7;
+    --border-strong: #d4d4d8;
+    --fg: #0a0a0b;
+    --fg-muted: #52525b;
+    --fg-subtle: #71717a;
+    --fg-inverse: #ffffff;
+    --accent: #0a0a0b;
     --accent-fg: #ffffff;
-    --accent-text: #3f6a00;
-    --accent-soft: rgba(110, 170, 10, 0.12);
+    --accent-text: #2563eb;
+    --accent-soft: rgba(10, 10, 11, 0.05);
+    --link: #2563eb;
+    --ring: #2563eb;
   }
 }
 
@@ -135,6 +135,7 @@
   --color-info: var(--info);
   --color-info-soft: var(--info-soft);
   --color-ring: var(--ring);
+  --color-link: var(--link);
   /* legacy names from the starter */
   --color-background: var(--bg);
   --color-foreground: var(--fg);
@@ -164,8 +165,10 @@
     background: var(--bg);
     color: var(--fg);
     font-family: var(--font-sans);
-    font-feature-settings: "ss01", "cv11";
+    font-size: 15px;
+    line-height: 1.6;
     text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
   }
   ::selection {
     background: var(--accent-soft);
@@ -200,34 +203,31 @@
 }
 
 @layer components {
-  /* Engineering grid that fades out toward the bottom */
-  .bg-grid {
-    background-image:
-      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
-    background-size: 32px 32px;
-    background-position: -1px -1px;
-  }
-  .bg-grid-fade {
-    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 100%);
-  }
+  /* Decorative backgrounds are retired (docs/DESIGN.md); kept as no-ops so old markup is harmless. */
+  .bg-grid,
+  .bg-grid-fade,
   .bg-dots {
-    background-image: radial-gradient(var(--grid-line) 1px, transparent 1px);
-    background-size: 16px 16px;
+    background-image: none;
+    mask-image: none;
   }
-  /* Metric numerals: monospace + tabular so columns align */
+  /* Metric numerals: the sans face with tabular figures so columns align. */
   .num {
-    font-family: var(--font-mono);
-    font-variant-numeric: tabular-nums slashed-zero;
-    font-feature-settings: "tnum", "zero";
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
   }
+  /* Small section label: sentence case, muted. */
   .eyebrow {
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    line-height: 1rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--fg-subtle);
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    font-weight: 500;
+    color: var(--fg-muted);
+  }
+  .link {
+    color: var(--link);
+    text-underline-offset: 3px;
+  }
+  .link:hover {
+    text-decoration: underline;
   }
   .hairline-t {
     border-top: 1px solid var(--border);
@@ -239,8 +239,8 @@
   }
   /* Rendered model output (see components/ui/markdown.tsx) */
   .prose-output {
-    font-size: 0.875rem;
-    line-height: 1.6;
+    font-size: 0.9375rem;
+    line-height: 1.65;
     overflow-wrap: anywhere;
   }
   .prose-output > * + * {
