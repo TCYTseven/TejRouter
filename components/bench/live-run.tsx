@@ -135,7 +135,7 @@ export function LiveRun({
       {run ? (
         <Card as="section" aria-labelledby="routers-live-title" className="p-6 max-sm:p-5">
           <h2 id="routers-live-title" className="mb-3 text-lg font-semibold text-fg">
-            {running ? "Results so far" : "Results"}
+            {running ? "By router, so far" : "By router"}
           </h2>
           <RouterRows arms={agg.arms} simulated={simulated} />
           <Disclosure summary="Show every task" className="mt-5 border-t border-border pt-4">
@@ -162,9 +162,8 @@ function RouterRows({ arms, simulated }: { arms: ArmLive[]; simulated: (provider
           <th scope="col" className="w-[4.5rem] py-2 pr-3 text-right font-normal sm:w-28">
             Accuracy
           </th>
-          <th scope="col" className="w-[4.5rem] py-2 pr-3 text-right font-normal sm:w-28">
-            <span className="sm:hidden">Time</span>
-            <span className="max-sm:hidden">Avg time</span>
+          <th scope="col" className="w-28 py-2 pr-3 text-right font-normal max-sm:hidden">
+            Avg time
           </th>
           <th scope="col" className="w-[4.5rem] py-2 text-right font-normal sm:w-28">
             Cost
@@ -176,9 +175,9 @@ function RouterRows({ arms, simulated }: { arms: ArmLive[]; simulated: (provider
           <tr key={a.arm.id} className="border-b border-border last:border-b-0">
             <td className="py-3 pr-3">
               <div className="flex min-w-0 items-center gap-2.5">
-                <ProviderDot color={a.arm.color} simulated={simulated(a.arm.providerId)} size={10} />
+                <ProviderDot color={a.arm.color} simulated={simulated(a.arm.providerId)} size={10} className="max-sm:mt-1.5 max-sm:self-start" />
                 <div className="min-w-0">
-                  <p className="truncate text-[15px] text-fg" title={a.arm.label}>
+                  <p className="text-[15px] break-words text-fg sm:truncate" title={a.arm.label}>
                     {armName(a.arm)}
                   </p>
                   {a.errors > 0 ? (
@@ -200,7 +199,7 @@ function RouterRows({ arms, simulated }: { arms: ArmLive[]; simulated: (provider
                 <span className="text-fg-muted">—</span>
               )}
             </td>
-            <td className="num py-3 pr-3 text-right text-[15px] text-fg-muted">{formatMs(a.meanLatency)}</td>
+            <td className="num py-3 pr-3 text-right text-[15px] text-fg-muted max-sm:hidden">{formatMs(a.meanLatency)}</td>
             <td className="num py-3 text-right text-[15px] text-fg-muted">{a.costN ? formatUsd(a.cost) : "—"}</td>
           </tr>
         ))}
@@ -217,7 +216,11 @@ function leaderSentence(arms: ArmLive[]): string | null {
   if (!second) return `${armName(first.arm)} scored ${pct(first.ci!.p)}.`;
   if (Math.round(first.ci!.p * 100) === Math.round(second.ci!.p * 100))
     return `${armName(first.arm)} and ${armName(second.arm)} tied at ${pct(first.ci!.p)}.`;
-  const clear = first.ci!.lo > second.ci!.hi;
+  // Two-proportion z-test: is the gap bigger than chance would usually produce?
+  const p1 = first.ci!.p;
+  const p2 = second.ci!.p;
+  const se = Math.sqrt((p1 * (1 - p1)) / first.n + (p2 * (1 - p2)) / second.n);
+  const clear = se === 0 ? p1 !== p2 : (p1 - p2) / se > 1.96;
   const base = `${armName(first.arm)} was the most accurate: ${pct(first.ci!.p)} vs ${pct(second.ci!.p)} for ${armName(second.arm)}.`;
   return clear ? base : `${base} The gap is small enough that it could be chance.`;
 }

@@ -26,10 +26,17 @@ import { RouterList, useNormalizedArms } from "./router-list";
 import { TaskOptions } from "./task-options";
 import { useBenchRun } from "./use-bench-run";
 
+/** Rough dollars for an estimate: "$0.03", "$2.82", "under $0.01". */
+function roughUsd(n: number): string {
+  if (n < 0.005) return "under $0.01";
+  return n >= 100 ? formatUsd(n) : `$${n.toFixed(2)}`;
+}
+
 function costRange(low: number | null, high: number | null): string | null {
   if (low == null || high == null) return null;
-  if (high - low < 1e-9) return `about ${formatUsd(low)}`;
-  return `about ${formatUsd(low)} to ${formatUsd(high)}`;
+  const lo = roughUsd(low);
+  const hi = roughUsd(high);
+  return lo === hi ? `about ${lo}` : `about ${lo} to ${hi}`;
 }
 
 export function BenchLauncher({

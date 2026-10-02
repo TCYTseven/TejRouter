@@ -48,15 +48,20 @@ export function summarySentence(rows: Row[], repeated: boolean): string {
   if (ok.length === 1) parts.push(`Only ${ok[0].label} answered.`);
   if (ok.length >= 2) {
     const fast = minBy(ok, (r) => r.latency);
+    const tiedFast = fast ? ok.filter((r) => r.latency != null && formatMs(r.latency) === formatMs(fast.latency)) : [];
     const costs = ok.map((r) => r.cost).filter((c): c is number => c != null);
     const allSameCost = costs.length > 0 && costs.every((c) => c === costs[0]);
     const cheap = costs.length >= 2 && !allSameCost ? minBy(ok, (r) => r.cost) : null;
-    if (fast && cheap && fast === cheap) {
+    if (tiedFast.length > 1) {
+      parts.push(`${tiedFast.map((r) => r.label).join(" and ")} were equally fast${avg} (${formatMs(fast!.latency)}).`);
+      if (cheap) parts.push(`${cheap.label} was cheapest${avg} (${formatUsd(cheap.cost)}).`);
+      else if (allSameCost && costs.length === ok.length) parts.push(`${ok.length === 2 ? "Both" : "All"} cost the same (${formatUsd(costs[0])}).`);
+    } else if (fast && cheap && fast === cheap) {
       parts.push(`${fast.label} was both fastest (${formatMs(fast.latency)}) and cheapest (${formatUsd(cheap.cost)})${avg}.`);
     } else {
       if (fast) parts.push(`${fast.label} answered fastest${avg} (${formatMs(fast.latency)}).`);
       if (cheap) parts.push(`${cheap.label} was cheapest${avg} (${formatUsd(cheap.cost)}).`);
-      else if (allSameCost && costs.length === ok.length) parts.push(`They all cost the same (${formatUsd(costs[0])}).`);
+      else if (allSameCost && costs.length === ok.length) parts.push(`${ok.length === 2 ? "Both" : "All"} cost the same (${formatUsd(costs[0])}).`);
     }
   }
   if (failed.length) parts.push(`${failed.map((r) => r.label).join(" and ")} returned an error.`);

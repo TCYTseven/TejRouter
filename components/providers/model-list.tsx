@@ -14,7 +14,7 @@ export function ModelList({ providerId, providerName }: { providerId: string; pr
 
   if (!enabled) {
     return (
-      <Button size="sm" variant="secondary" onClick={() => setEnabled(true)}>
+      <Button size="sm" variant="secondary" className="self-start" onClick={() => setEnabled(true)}>
         Show available models
       </Button>
     );

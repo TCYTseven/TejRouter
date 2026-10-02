@@ -155,7 +155,7 @@ function AddRouter({
           {sorted.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
-              {p.simulated ? " (practice)" : p.configured ? "" : " (no API key)"}
+              {p.simulated || p.configured ? "" : " (no API key)"}
             </option>
           ))}
         </Select>

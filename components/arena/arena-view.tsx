@@ -99,7 +99,7 @@ function Ranked({ lb, votes, stale }: { lb: ArenaLeaderboard; votes: ArenaVote[]
 
       <div className="divide-y divide-border border-y border-border">
         <Disclosure summary="Show head-to-head" summaryClassName={disclosureSummary}>
-          <div className="grid gap-10 pt-2 pb-8 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-10 pt-2 pb-8 lg:grid-cols-2">
             <WinProbability lb={lb} armIds={armIds} />
             <HeadToHead lb={lb} armIds={armIds} />
           </div>

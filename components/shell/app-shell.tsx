@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { IconBook, IconGithub } from "@/components/ui/icons";
 import { CommandPaletteTrigger } from "./command-palette";
+import { FooterLink } from "./footer-link";
 import { REPO_URL, Wordmark } from "./logo";
 import { MobileNav } from "./mobile-nav";
 import { RouterStatusPill } from "./router-status";
@@ -37,10 +38,10 @@ export function AppShell({ children, status }: { children: ReactNode; status: Sh
         </div>
         <div className="flex flex-col gap-1 border-t border-border p-3">
           {pill}
-          <Link href="/methodology" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-fg-muted hover:bg-surface-2/60 hover:text-fg">
+          <FooterLink href="/methodology">
             <IconBook size={16} className="text-fg-subtle" />
             How it works
-          </Link>
+          </FooterLink>
           <div className="mt-1 flex items-center justify-between px-1">
             <ThemeToggle />
             <a

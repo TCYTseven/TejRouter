@@ -104,7 +104,7 @@ export function armNote(report: RunReport, armId: string): string {
   } else if (r && r.nWithModel > 0) {
     const big = pricierModel(r);
     const share = big ? r.models.find((m) => m.model === big)?.share : null;
-    if (big && fin(share)) parts.push(`Picks per task; uses ${big} for ${pct(share, 0)}`);
+    if (big && fin(share)) parts.push(`Picks per task; uses ${big} for ${pct(share, 0)} of tasks`);
     else parts.push(r.distinctModels > 1 ? `Picks among ${r.distinctModels} models` : `Always picked ${r.models[0]?.model ?? "one model"}`);
   } else {
     parts.push("Picks the model; does not say which");

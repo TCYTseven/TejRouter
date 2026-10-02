@@ -21,8 +21,8 @@ export function providerEnvVars(p: EnvInfo): { name: string; role: "key" | "key-
  */
 export function buildEnvTemplate(providers: EnvInfo[]): string {
   const lines: string[] = [
-    "# TejRouter .env.local",
-    "# Keys stay server-side; the browser only ever sees the last 4 characters.",
+    "# TejRouter: paste into .env.local, fill in your keys, then restart npm run dev.",
+    "# Keys stay on the server. The browser only ever sees the last 4 characters.",
     "",
   ];
   for (const p of providers) {
@@ -30,7 +30,7 @@ export function buildEnvTemplate(providers: EnvInfo[]): string {
     lines.push(`# ${p.name}${p.docsUrl ? `  (${p.docsUrl})` : ""}`);
     const [primary, ...aliases] = p.keyEnvs;
     lines.push(`${primary}=`);
-    if (aliases.length) lines.push(`#   also accepted: ${aliases.join(", ")}`);
+    if (aliases.length) lines.push(`#   also accepted instead: ${aliases.join(", ")}`);
     if (p.baseUrlEnv) {
       if (p.baseUrl) lines.push(`# ${p.baseUrlEnv}=${p.baseUrl}`);
       else lines.push(`${p.baseUrlEnv}=   # required: your deployment's /v1 URL`);

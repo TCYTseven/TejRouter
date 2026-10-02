@@ -52,7 +52,7 @@ export default async function MethodologyPage() {
           <p className="mt-2 text-[15px] text-fg-muted">The methods behind every number TejRouter reports.</p>
         </header>
 
-        <MobileToc entries={toc} articleId={ARTICLE_ID} />
+        <MobileToc entries={toc} />
 
         <div className="text-base leading-[1.7] text-fg/90">
           <Summary />
@@ -94,7 +94,7 @@ export default async function MethodologyPage() {
 
       <aside className="hidden xl:block">
         <div className="sticky top-10">
-          <Toc entries={toc} articleId={ARTICLE_ID} />
+          <Toc entries={toc} />
         </div>
       </aside>
     </div>

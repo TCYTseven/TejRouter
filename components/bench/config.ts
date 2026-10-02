@@ -1,6 +1,6 @@
 import type { BenchRunConfig, SuiteInfo } from "@/lib/bench/types";
 import type { ProviderStatus } from "@/lib/types";
-import { armId } from "@/lib/bench/arms";
+import { armId, normalizeArms } from "@/lib/bench/arms";
 
 /** One arm row in the builder. `key` is a local instance id; model "" = router default. */
 export interface ArmDraft {
@@ -110,11 +110,19 @@ export function toRunConfig(c: LauncherConfig, suites: SuiteInfo[], arms: ArmDra
     ...(c.maxTokens ? { maxTokens: c.maxTokens } : {}),
     ...(c.seed != null ? { seed: c.seed } : {}),
     ...(c.maxTasksPerSuite ? { maxTasksPerSuite: c.maxTasksPerSuite } : {}),
-    ...(c.name.trim() ? { name: c.name.trim() } : {}),
+    name: c.name.trim() || defaultRunName(c, uniq),
   };
 }
 
 /** Display name for a router in a run: the provider name, plus the model when it is fixed. */
 export function armName(arm: { label: string; model?: string }): string {
   return arm.model ? arm.label : arm.label.split(" · ")[0];
+}
+
+/** "Practice: Budget vs Practice: Smart, quick" when the user leaves the name empty. */
+function defaultRunName(c: LauncherConfig, arms: ArmDraft[]): string {
+  const names = normalizeArms(arms.map((a) => ({ providerId: a.providerId, ...(a.model.trim() ? { model: a.model.trim() } : {}) }))).map(armName);
+  const who = names.length <= 3 ? names.join(" vs ") : `${names.length} routers`;
+  const preset = PRESETS.find((p) => (p.maxTasksPerSuite ?? null) === (c.maxTasksPerSuite ?? null) && p.repetitions === c.repetitions);
+  return preset ? `${who}, ${preset.label.toLowerCase()}` : who;
 }

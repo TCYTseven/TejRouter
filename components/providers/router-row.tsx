@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useState, type ReactNode } from "react";
 import type { ProviderStatus } from "@/lib/types";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { CopyButton } from "@/components/ui/copy-button";
 import { IconChevronDown, IconExternal } from "@/components/ui/icons";
 import { ProviderDot } from "@/components/ui/provider";
@@ -76,11 +76,15 @@ export function RouterRow({ provider: p, expandable = true }: { provider: Provid
           <Button size="sm" variant="secondary" onClick={() => setOpen(true)} aria-controls={panelId}>
             Set up
           </Button>
-        ) : null}
+        ) : (
+          <ButtonLink size="sm" variant="ghost" href={`/providers#${p.id}`}>
+            How to set up
+          </ButtonLink>
+        )}
       </div>
       <div
         className={cn(
-          "-mt-2 flex-col gap-1 pr-5 pb-4 pl-[46px] max-sm:pr-4 max-sm:pl-[42px]",
+          "-mt-2 flex-col gap-1 pr-5 pb-4 pl-[42px] max-sm:pr-4 max-sm:pl-[38px]",
           state.kind === "idle" ? "hidden max-sm:flex" : "flex",
         )}
       >
@@ -164,7 +168,7 @@ function SetupDetails({ id, provider: p }: { id: string; provider: ProviderStatu
   }
 
   return (
-    <div id={id} className="flex flex-col gap-5 pr-5 pb-5 pl-[46px] max-sm:pr-4 max-sm:pl-4">
+    <div id={id} className="flex flex-col gap-5 pr-5 pb-5 pl-[42px] max-sm:pr-4 max-sm:pl-4">
       <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-[120px_1fr]">
         {rows.map(([k, v]) => (
           <div key={k} className="contents">

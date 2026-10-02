@@ -172,8 +172,8 @@ function RepeatDetails({ arm, shown, onPick, max }: { arm: ArmRound; shown: numb
   return (
     <div className="flex flex-col gap-2">
       <p>
-        {ok} of {arm.reps.length} runs answered. Total time {formatMeanSd(latency.mean, latency.sd, formatMs)}
-        {cost.mean != null ? `, cost ${formatMeanSd(cost.mean, cost.sd, formatUsd)}` : ""} (average ± spread).
+        {ok} of {arm.reps.length} runs answered. Total time {formatMeanSd(latency.mean, latency.sd || null, formatMs)}
+        {cost.mean != null ? `, cost ${formatMeanSd(cost.mean, cost.sd || null, formatUsd)}` : ""} (average ± spread).
       </p>
       <div
         className="relative h-6"

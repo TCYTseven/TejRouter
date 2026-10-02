@@ -10,7 +10,7 @@ function half(x: number) {
 
 function Section({ id, title, description, children }: { id: string; title: string; description: string; children: ReactNode }) {
   return (
-    <section aria-labelledby={id} className="space-y-3">
+    <section aria-labelledby={id} className="min-w-0 space-y-3">
       <div>
         <h3 id={id} className="text-[15px] font-semibold text-fg">
           {title}

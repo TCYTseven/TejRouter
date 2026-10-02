@@ -22,12 +22,26 @@ function timeAgo(ts: number, now: number): string {
   return new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function leader(run: RunSummary): string {
+function leader(run: RunSummary): { prefix: string; name: string; score: string } | null {
   const scored = run.arms.filter((a) => a.samples > 0);
-  if (!scored.length) return "No answers yet";
+  if (!scored.length) return null;
   const best = scored.reduce((a, b) => (b.accuracy > a.accuracy ? b : a));
-  const text = `${armName(best)} · ${Math.round(best.accuracy * 100)}%`;
-  return scored.length > 1 ? `Leader: ${text}` : text;
+  return { prefix: scored.length > 1 ? "Leader: " : "", name: armName(best), score: `${Math.round(best.accuracy * 100)}%` };
+}
+
+/** "Leader: Enclave · 84%", truncating the name but never the score. */
+function Leader({ run, className }: { run: RunSummary; className?: string }) {
+  const l = leader(run);
+  if (!l) return <span className={className}>No answers yet</span>;
+  return (
+    <span className={`flex min-w-0 items-baseline ${className ?? ""}`} title={`${l.prefix}${l.name} · ${l.score}`}>
+      <span className="truncate">
+        {l.prefix}
+        {l.name}
+      </span>
+      <span className="num shrink-0">&nbsp;· {l.score}</span>
+    </span>
+  );
 }
 
 export function RunsList({ initialRuns, now, simulatedIds }: { initialRuns: RunSummary[]; now: number; simulatedIds: string[] }) {
@@ -104,7 +118,7 @@ export function RunsList({ initialRuns, now, simulatedIds }: { initialRuns: RunS
         </div>
       ) : (
         <div className="rounded-xl border border-border bg-surface">
-          <div className="hidden grid-cols-[minmax(0,1fr)_8.5rem_6rem_4.5rem_minmax(0,14rem)_2.5rem] gap-4 border-b border-border px-5 py-2.5 text-[13px] text-fg-muted md:grid">
+          <div className="hidden grid-cols-[minmax(0,1.1fr)_7.5rem_6rem_3.5rem_minmax(0,1fr)_2.5rem] gap-4 border-b border-border px-5 py-2.5 text-[13px] text-fg-muted md:grid">
             <span>Name</span>
             <span>Date</span>
             <span>Routers</span>
@@ -147,7 +161,7 @@ function RunRow({
   const incomplete = run.aborted || run.sampleCount < run.totalJobs;
   const names = run.arms.map(armName).join(", ");
   return (
-    <li className="relative grid grid-cols-[minmax(0,1fr)_2.5rem] items-center gap-x-4 gap-y-1 px-5 py-3.5 hover:bg-surface-2 md:grid-cols-[minmax(0,1fr)_8.5rem_6rem_4.5rem_minmax(0,14rem)_2.5rem]">
+    <li className="relative grid grid-cols-[minmax(0,1fr)_2.5rem] items-center gap-x-4 gap-y-1 px-5 py-3.5 hover:bg-surface-2 md:grid-cols-[minmax(0,1.1fr)_7.5rem_6rem_3.5rem_minmax(0,1fr)_2.5rem]">
       <div className="min-w-0">
         <Link
           href={href}
@@ -157,13 +171,12 @@ function RunRow({
         </Link>
         {incomplete ? <p className="text-[13px] text-warning">Stopped before the end</p> : null}
         {/* Phone: the other columns collapse into one line. */}
-        <p className="flex min-w-0 flex-wrap items-center gap-x-2 text-sm text-fg-muted md:hidden">
-          <span>{timeAgo(run.createdAt, now)}</span>
-          <span aria-hidden="true">·</span>
-          <span className="num">{formatNumber(run.taskCount)} tasks</span>
-          <span aria-hidden="true">·</span>
-          <span className="truncate">{leader(run)}</span>
-        </p>
+        <div className="text-sm text-fg-muted md:hidden">
+          <p className="num">
+            {timeAgo(run.createdAt, now)} · {formatNumber(run.taskCount)} tasks
+          </p>
+          <Leader run={run} className="text-fg" />
+        </div>
       </div>
       <time
         dateTime={new Date(run.createdAt).toISOString()}
@@ -180,9 +193,7 @@ function RunRow({
         <span className="sr-only">{names}</span>
       </span>
       <span className="num hidden text-right text-sm text-fg-muted md:block">{formatNumber(run.taskCount)}</span>
-      <span className="hidden truncate text-sm text-fg md:block" title={leader(run)}>
-        {leader(run)}
-      </span>
+      <Leader run={run} className="text-sm text-fg max-md:hidden" />
       <div className="col-start-2 row-span-full row-start-1 md:col-start-auto md:row-span-1 md:row-start-auto">
         <RowMenu name={run.name} onDownload={onDownload} onDelete={onDelete} />
       </div>
