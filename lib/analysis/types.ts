@@ -424,7 +424,9 @@ export interface TejWeights {
 }
 
 export interface TejComponents {
-  /** Accuracy (task-weighted mean score), already in [0, 1]. */
+  /** Raw accuracy (task-weighted mean score), for display; not used directly in the score. */
+  accuracyRaw: number | null;
+  /** Min-max normalized accuracy across arms: 1 = most accurate arm. */
   accuracy: number | null;
   /** Log-scale min-max of mean cost per request across arms: 1 = cheapest. */
   cost: number | null;

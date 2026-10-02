@@ -23,6 +23,8 @@ import {
   jsDivergenceRecords,
   kde,
   logistic1d,
+  max as arrMax,
+  min as arrMin,
   mcnemar,
   mdePairedMeans,
   mdePairedProportions,
@@ -285,7 +287,7 @@ export function analyzeRun(run: BenchRun, opts: AnalyzeOptions = {}): RunReport 
     run.finishedAt != null && Number.isFinite(run.finishedAt) && Number.isFinite(run.createdAt)
       ? run.finishedAt - run.createdAt
       : starts.length && ends.length
-        ? Math.max(...ends) - Math.min(...starts)
+        ? arrMax(ends) - arrMin(starts)
         : null;
   const hasCost = arms.some((a) => a.obs.some((o) => o.cost != null));
   const meta: RunMeta = {
@@ -297,8 +299,8 @@ export function analyzeRun(run: BenchRun, opts: AnalyzeOptions = {}): RunReport 
     nSamples: (run.samples ?? []).length,
     nTasks: taskMeta.size,
     nArms: arms.length,
-    repetitions: run.config?.repetitions ?? (repCounts.length ? Math.max(...repCounts) : 0),
-    repsObserved: { min: repCounts.length ? Math.min(...repCounts) : 0, max: repCounts.length ? Math.max(...repCounts) : 0 },
+    repetitions: run.config?.repetitions ?? (repCounts.length ? arrMax(repCounts) : 0),
+    repsObserved: { min: repCounts.length ? arrMin(repCounts) : 0, max: repCounts.length ? arrMax(repCounts) : 0 },
     arms: arms.map((a) => a.meta),
     categories: [...categories.entries()].map(([name, nTasks]) => ({ name, nTasks })).sort((a, b) => a.name.localeCompare(b.name)),
     suites: [...new Set([...taskMeta.values()].map((t) => t.suiteId))],
@@ -467,7 +469,7 @@ export function analyzeRun(run: BenchRun, opts: AnalyzeOptions = {}): RunReport 
       return fromBoot(b, "bootstrap-percentile", 2, xs.length);
     };
     const h = lat.length >= 2 ? silvermanBandwidth(lat) : 1;
-    const latencyKde = lat.length >= 2 ? kde(lat, { points: kdePoints, bandwidth: h, from: Math.max(0, Math.min(...lat) - 3 * h), to: Math.max(...lat) + 3 * h }) : [];
+    const latencyKde = lat.length >= 2 ? kde(lat, { points: kdePoints, bandwidth: h, from: Math.max(0, arrMin(lat) - 3 * h), to: arrMax(lat) + 3 * h }) : [];
 
     // cost
     const withCost = a.obs.filter((o) => o.cost != null);

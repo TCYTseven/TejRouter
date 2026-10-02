@@ -226,10 +226,17 @@ describe("analyzeRun end-to-end on simulators", async () => {
       expect(r.score!).toBeLessThanOrEqual(100);
     }
     const accOnly = computeTejScore(report, { accuracy: 1, cost: 0, latency: 0, reliability: 0 });
+    const accs = report.perArm.map((a) => a.accuracy.value!);
+    const [lo, hi] = [Math.min(...accs), Math.max(...accs)];
     for (const r of accOnly.rows) {
       const acc = report.perArm.find((a) => a.armId === r.armId)!.accuracy.value!;
-      expect(r.score!).toBeCloseTo(100 * acc, 10);
+      expect(r.score!).toBeCloseTo((100 * (acc - lo)) / (hi - lo), 10);
+      expect(r.components.accuracyRaw).toBe(acc);
     }
+    const comps = report.tejScore.rows.map((r) => r.components.accuracy!);
+    expect(Math.max(...comps)).toBe(1);
+    expect(Math.min(...comps)).toBe(0);
+    expect(report.tejScore.rows.find((r) => r.armId === "sim-oracle:sim/large")!.components.cost).toBe(0);
     const costOnly = computeTejScore(report, { accuracy: 0, cost: 1, latency: 0, reliability: 0 });
     expect(costOnly.rows.find((r) => r.armId === "sim-oracle:sim/small")!.score).toBeCloseTo(100, 10);
     expect(report.power.nTasks).toBe(120);
