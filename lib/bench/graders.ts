@@ -605,8 +605,14 @@ function gradeCode(spec: Extract<GraderSpec, { kind: "code" }>, text: string): G
 // Constraints
 // ---------------------------------------------------------------------------
 
+/** Whitespace-separated tokens containing a letter or digit; list markers ("-", "1.") are not words. */
 export function countWords(s: string): number {
-  return s.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
+  return s
+    .split(/\r?\n/)
+    .map((l) => l.replace(/^\s*(?:[-*•+]|\d+[.)])\s+/, ""))
+    .join(" ")
+    .split(/\s+/)
+    .filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
 }
 
 function nonEmptyLines(s: string): string[] {
