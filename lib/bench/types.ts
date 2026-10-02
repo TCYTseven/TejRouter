@@ -66,6 +66,8 @@ export interface BenchRunConfig {
   seed?: number;
   /** Optional cap on tasks per suite, sampled deterministically by seed. */
   maxTasksPerSuite?: number;
+  /** Optional human-readable run name. */
+  name?: string;
 }
 
 export interface GradeResult {
@@ -87,6 +89,8 @@ export interface BenchSample {
   rep: number;
   result: ChatResult;
   grade: GradeResult;
+  /** Number of calls made for this sample (1 = no retries). */
+  attempts?: number;
 }
 
 /** Task metadata without prompts, kept with each run. */
@@ -106,11 +110,67 @@ export interface BenchRun {
   arms: BenchArm[];
   tasks: BenchTaskMeta[];
   samples: BenchSample[];
+  /** True when the run was stopped before every job finished. */
+  aborted?: boolean;
+  /** Fatal error that ended the run early, if any. */
+  error?: string;
 }
 
 /** NDJSON events streamed from POST /api/bench. */
 export type BenchEvent =
   | { type: "run-start"; run: Omit<BenchRun, "samples">; totalJobs: number }
   | { type: "sample"; sample: BenchSample; completed: number; totalJobs: number }
-  | { type: "run-end"; runId: string; finishedAt: number }
+  | {
+      type: "run-end";
+      runId: string;
+      finishedAt: number;
+      aborted?: boolean;
+      /** Set by POST /api/bench: whether the run was saved to data/runs. */
+      persisted?: boolean;
+    }
   | { type: "error"; message: string };
+
+/** Per-arm aggregate in a run summary. */
+export interface RunArmSummary {
+  armId: string;
+  label: string;
+  color: string;
+  providerId: ProviderId;
+  model?: string;
+  samples: number;
+  /** Samples whose call failed (ok: false). */
+  errors: number;
+  /** Fraction of samples graded correct (failed calls count as incorrect). */
+  accuracy: number;
+  meanScore: number;
+  totalCostUsd: number | null;
+  meanLatencyMs: number | null;
+}
+
+/** Lightweight listing entry returned by GET /api/runs. */
+export interface RunSummary {
+  id: string;
+  name: string;
+  createdAt: number;
+  finishedAt: number | null;
+  aborted: boolean;
+  suiteIds: string[];
+  taskCount: number;
+  sampleCount: number;
+  /** tasks × arms × repetitions. */
+  totalJobs: number;
+  arms: RunArmSummary[];
+}
+
+/** Suite metadata returned by GET /api/bench/suites. */
+export interface SuiteInfo {
+  id: string;
+  name: string;
+  description: string;
+  taskCount: number;
+  categories: { name: string; count: number }[];
+  /** Task counts per difficulty bucket: [0,0.2), [0.2,0.4), [0.4,0.6), [0.6,0.8), [0.8,1]. */
+  difficultyHistogram: number[];
+  meanDifficulty: number;
+  examples: { id: string; category: string; difficulty: number; prompt: string; expected: string }[];
+}
