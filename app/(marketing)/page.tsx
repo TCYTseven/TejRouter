@@ -236,7 +236,7 @@ export default async function LandingPage() {
                 Provider details
               </ButtonLink>
             </div>
-            <ul className="grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
+            <ul className="grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-3 sm:[&>li:last-child:nth-child(odd)]:col-span-2 lg:[&>li:last-child:nth-child(odd)]:col-span-1">
               {providers.map((p) => (
                 <li key={p.id} className="flex items-start gap-3 bg-surface p-4">
                   <span className="mt-1.5">

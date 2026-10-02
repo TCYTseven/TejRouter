@@ -40,6 +40,14 @@ export const SITE_KEYWORDS = [
   "Pareto frontier",
 ];
 
+/** The generated 1200x630 card from app/opengraph-image.tsx. */
+export const OG_IMAGE = {
+  url: "/opengraph-image",
+  width: 1200,
+  height: 630,
+  alt: "TejRouter: the router that tests routers",
+};
+
 export function pageMetadata({
   title,
   description,
@@ -65,11 +73,13 @@ export function pageMetadata({
       url: path,
       title: full,
       description,
+      images: [OG_IMAGE],
     },
     twitter: {
       card: "summary_large_image",
       title: full,
       description,
+      images: [OG_IMAGE.url],
     },
   };
 }

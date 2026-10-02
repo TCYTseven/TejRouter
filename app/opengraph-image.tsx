@@ -43,14 +43,15 @@ export default function OpengraphImage() {
             <circle cx="23" cy="23.5" r="2.1" fill="#80818b" />
             <circle cx="23" cy="16" r="2.8" fill="#c6f24e" />
           </svg>
-          <div style={{ display: "flex", fontSize: 40, fontWeight: 700, letterSpacing: -1 }}>
-            Tej<span style={{ color: "#c6f24e" }}>Router</span>
+          <div style={{ display: "flex", fontSize: 40, fontWeight: 700 }}>
+            <span>Tej</span>
+            <span style={{ color: "#c6f24e" }}>Router</span>
           </div>
         </div>
 
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 48 }}>
           <div style={{ display: "flex", flexDirection: "column", maxWidth: 600 }}>
-            <div style={{ display: "flex", fontSize: 68, fontWeight: 700, lineHeight: 1.02, letterSpacing: -2.5 }}>
+            <div style={{ display: "flex", fontSize: 68, fontWeight: 700, lineHeight: 1.04 }}>
               The router that tests routers.
             </div>
             <div style={{ display: "flex", marginTop: 24, fontSize: 26, color: "#a3a4ad", lineHeight: 1.35 }}>
