@@ -177,7 +177,7 @@ export function BenchLauncher({
             <div className="flex items-center gap-3 rounded-lg border border-border-strong bg-surface/95 px-3 py-2 shadow-lg backdrop-blur">
               <a href="#preflight" className="min-w-0 flex-1 text-[11px] leading-tight text-fg-muted">
                 <span className="num block text-xs font-medium text-fg">
-                  {formatNumber(pre.jobs)} jobs · ±{Number.isFinite(pre.mde) ? (pre.mde * 100).toFixed(1) : "—"} pp
+                  {formatNumber(pre.jobs)} jobs · MDE {Number.isFinite(pre.mde) ? (pre.mde * 100).toFixed(1) : "—"} pp
                 </span>
                 {pre.warnings.length ? `${pre.warnings.length} pre-flight note${pre.warnings.length === 1 ? "" : "s"}` : "Pre-flight clear"}
               </a>
