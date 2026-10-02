@@ -13,6 +13,7 @@ function bad(n: number | null | undefined): n is null | undefined {
 export function formatMs(ms: number | null | undefined): string {
   if (bad(ms)) return DASH;
   const a = Math.abs(ms);
+  if (a === 0) return "0 ms";
   if (a < 1) return `${ms.toFixed(2)} ms`;
   if (a < 1000) return `${Math.round(ms)} ms`;
   if (a < 10_000) return `${(ms / 1000).toFixed(2)} s`;

@@ -43,9 +43,10 @@ export function fetchModels(providerId: string, force = false): Promise<ModelLis
  * first fetch entirely.
  */
 export function useProviders(initial?: ProviderStatus[]) {
-  const [state, setState] = useState<{ providers: ProviderStatus[] | null; error: string | null }>({
+  const [state, setState] = useState<{ providers: ProviderStatus[] | null; error: string | null; refreshing: boolean }>({
     providers: initial ?? null,
     error: null,
+    refreshing: false,
   });
   const [nonce, setNonce] = useState(initial ? 0 : 1);
 
@@ -53,19 +54,25 @@ export function useProviders(initial?: ProviderStatus[]) {
     if (nonce === 0) return;
     const ctl = new AbortController();
     fetchProviders(ctl.signal)
-      .then((providers) => setState({ providers, error: null }))
+      .then((providers) => setState({ providers, error: null, refreshing: false }))
       .catch((e: unknown) => {
         if (ctl.signal.aborted) return;
-        setState((s) => ({ providers: s.providers, error: e instanceof Error ? e.message : String(e) }));
+        setState((s) => ({ ...s, refreshing: false, error: e instanceof Error ? e.message : String(e) }));
       });
     return () => ctl.abort();
   }, [nonce]);
 
-  const reload = useCallback(() => setNonce((n) => n + 1), []);
+  const reload = useCallback(() => {
+    setState((s) => ({ ...s, refreshing: true }));
+    setNonce((n) => n + 1);
+  }, []);
   return {
     providers: state.providers,
     error: state.error,
+    /** First load (no data yet). */
     loading: state.providers == null && state.error == null,
+    /** A reload() is in flight. */
+    refreshing: state.refreshing,
     reload,
   };
 }

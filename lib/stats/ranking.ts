@@ -79,11 +79,11 @@ function aggregate(items: string[], matches: PairwiseMatch[]): Aggregate {
   return { wins, games };
 }
 
-function fitAggregate(k: number, agg: Aggregate, opts: BradleyTerryOptions): { p: number[]; iterations: number; converged: boolean } {
+function fitAggregate(k: number, agg: Aggregate, opts: BradleyTerryOptions, init?: number[]): { p: number[]; iterations: number; converged: boolean } {
   const prior = opts.prior ?? 1;
   const maxIt = opts.maxIterations ?? 10000;
   const tol = opts.tolerance ?? 1e-10;
-  const p = new Array<number>(k).fill(1);
+  const p = init ? init.slice() : new Array<number>(k).fill(1);
   let converged = false;
   let it = 0;
   for (; it < maxIt; it++) {
@@ -107,6 +107,30 @@ function fitAggregate(k: number, agg: Aggregate, opts: BradleyTerryOptions): { p
       for (const x of p) lg += Math.log(x);
       const g = Math.exp(lg / k);
       for (let i = 0; i < k; i++) p[i] /= g;
+    } else {
+      // The data likelihood is invariant to a common rescaling of p; only the prior
+      // pins the scale, so plain MM crawls along that direction. Take the exact
+      // coordinate-ascent step in the common log-scale s: solve
+      // Σᵢ σ(s + ln pᵢ) = k/2 (σ = logistic) by safeguarded Newton.
+      let sc = 0;
+      for (let it2 = 0; it2 < 50; it2++) {
+        let g = -k / 2;
+        let dg = 0;
+        for (let i = 0; i < k; i++) {
+          const q = 1 / (1 + Math.exp(-(sc + Math.log(p[i]))));
+          g += q;
+          dg += q * (1 - q);
+        }
+        if (!(dg > 0)) break;
+        const step = Math.max(-5, Math.min(5, g / dg));
+        sc -= step;
+        if (Math.abs(step) < 1e-14) break;
+      }
+      if (sc !== 0 && Number.isFinite(sc)) {
+        const f = Math.exp(sc);
+        for (let i = 0; i < k; i++) p[i] *= f;
+        if (Math.abs(sc) > maxDelta) maxDelta = Math.abs(sc);
+      }
     }
     if (maxDelta < tol) {
       converged = true;
@@ -189,6 +213,9 @@ export function bradleyTerryBootstrap(
   const alpha = opts.alpha ?? 0.05;
   const B = Math.max(0, Math.floor(opts.iterations ?? 1000));
   const fit = bradleyTerry(items, matches, opts);
+  const prior = opts.prior ?? 1;
+  // Unnormalized strengths for warm starts (with a prior the scale is anchored by the reference item).
+  const warm = prior > 0 ? fitAggregate(k, aggregate(items, matches), opts).p : fit.strengths;
   // Pre-aggregate each group's sufficient statistics so a resample is a cheap sum.
   const groupsMap = new Map<string, PairwiseMatch[]>();
   matches.forEach((m, i) => {
@@ -197,7 +224,27 @@ export function bradleyTerryBootstrap(
     if (!arr) groupsMap.set(g, (arr = []));
     arr.push(m);
   });
-  const groupAggs = [...groupsMap.values()].map((ms) => aggregate(items, ms));
+  // Sparse (index, value) form of each group's sufficient statistics.
+  const groupAggs = [...groupsMap.values()].map((ms) => {
+    const g = aggregate(items, ms);
+    const wi: number[] = [];
+    const wv: number[] = [];
+    const gi: number[] = [];
+    const gv: number[] = [];
+    g.wins.forEach((v, i) => {
+      if (v) {
+        wi.push(i);
+        wv.push(v);
+      }
+    });
+    g.games.forEach((v, i) => {
+      if (v) {
+        gi.push(i);
+        gv.push(v);
+      }
+    });
+    return { wi, wv, gi, gv };
+  });
   const G = groupAggs.length;
   const samples: number[][] = items.map(() => []);
   const rankSamples: number[][] = items.map(() => []);
@@ -206,10 +253,11 @@ export function bradleyTerryBootstrap(
     const agg: Aggregate = { wins: new Float64Array(k), games: new Float64Array(k * k) };
     for (let g = 0; g < G; g++) {
       const src = groupAggs[randInt(rand, G)];
-      for (let i = 0; i < k; i++) agg.wins[i] += src.wins[i];
-      for (let i = 0; i < k * k; i++) if (src.games[i]) agg.games[i] += src.games[i];
+      for (let t = 0; t < src.wi.length; t++) agg.wins[src.wi[t]] += src.wv[t];
+      for (let t = 0; t < src.gi.length; t++) agg.games[src.gi[t]] += src.gv[t];
     }
-    const r = fitAggregate(k, agg, { ...opts, maxIterations: Math.min(opts.maxIterations ?? 2000, 2000), tolerance: 1e-8 });
+    // Warm start from the full-data fit: the MM fixed point is unique, so this only saves iterations.
+    const r = fitAggregate(k, agg, { ...opts, maxIterations: Math.min(opts.maxIterations ?? 2000, 2000), tolerance: 1e-8 }, warm);
     const ratings = finish(items, r.p, agg, r.iterations, r.converged).ratings;
     const order = ratings.map((_, i) => i).sort((x, y) => ratings[y] - ratings[x]);
     order.forEach((i, pos) => rankSamples[i].push(pos + 1));

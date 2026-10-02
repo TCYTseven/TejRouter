@@ -9,7 +9,7 @@ export function EnvSetup({ providers }: { providers: ProviderStatus[] }) {
   const real = providers.filter((p) => !p.simulated);
   const template = buildEnvTemplate(providers);
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="grid gap-4 2xl:grid-cols-[1.1fr_1fr]">
       <div className="min-w-0 overflow-x-auto rounded-lg border border-border">
         <table className="w-full min-w-[520px] text-left text-xs">
           <caption className="sr-only">Environment variables read by each router</caption>

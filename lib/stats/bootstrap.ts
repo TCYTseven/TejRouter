@@ -167,9 +167,24 @@ export function bootstrapMean(xs: ArrayLike<number>, opts: BootstrapOptions = {}
   );
 }
 
-/** Bootstrap CI on the median (percentile method by default). */
+/**
+ * Bootstrap CI on the median (percentile method by default). Uses a typed-array
+ * buffer and the native numeric sort, which is several times faster than a generic
+ * statistic for large samples.
+ */
 export function bootstrapMedian(xs: ArrayLike<number>, opts: BootstrapOptions = {}): BootstrapResult {
-  return bootstrapCI(xs, (s) => median(s), opts);
+  const data = Float64Array.from(xs as ArrayLike<number>);
+  let buf = new Float64Array(data.length);
+  return bootstrapIndices(
+    data.length,
+    (idx) => {
+      if (buf.length !== idx.length) buf = new Float64Array(idx.length);
+      for (let i = 0; i < idx.length; i++) buf[i] = data[idx[i]];
+      buf.sort();
+      return median(buf, true);
+    },
+    opts,
+  );
 }
 
 /**

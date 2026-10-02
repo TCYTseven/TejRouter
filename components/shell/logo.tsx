@@ -44,7 +44,7 @@ export function Wordmark({ className, subtitle = true }: { className?: string; s
           Tej<span className="text-accent-text">Router</span>
         </span>
         {subtitle ? (
-          <span className="mt-1 font-mono text-[10px] tracking-tight text-fg-subtle">the router that tests routers</span>
+          <span className="mt-1 text-[10.5px] whitespace-nowrap text-fg-subtle">the router that tests routers</span>
         ) : null}
       </span>
     </span>

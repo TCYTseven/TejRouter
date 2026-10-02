@@ -9,7 +9,7 @@ import { cn } from "@/lib/client/cn";
 export function ProviderStatusGrid({ providers, className }: { providers: ProviderStatus[]; className?: string }) {
   const ordered = [...providers].sort((a, b) => rank(a) - rank(b));
   return (
-    <ul className={cn("grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 xl:grid-cols-3", className)}>
+    <ul className={cn("grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 2xl:grid-cols-3", className)}>
       {ordered.map((p) => (
         <li key={p.id} className="bg-surface">
           <Link
@@ -19,7 +19,7 @@ export function ProviderStatusGrid({ providers, className }: { providers: Provid
             <div className="flex items-center justify-between gap-2">
               <span className="flex min-w-0 items-center gap-2">
                 <ProviderDot provider={p} size={10} />
-                <span className="truncate text-sm font-medium text-fg">{p.name}</span>
+                <span className="text-sm leading-tight font-medium text-fg">{p.name}</span>
               </span>
               <ProviderStatusBadge provider={p} />
             </div>
