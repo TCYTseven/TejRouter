@@ -1,3 +1,4 @@
+import { getProviderSpec } from "@/lib/providers/registry";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -338,7 +339,7 @@ describe("arms", () => {
     expect(arms.map((a) => a.id)).toEqual(["enclave:default", "enclave:gpt-4o", "openrouter:openrouter/auto"]);
     expect(arms[0].label).toBe("Enclave Cyberouter · cyberouter/auto");
     expect(arms[1].label).toBe("Enclave Cyberouter · gpt-4o");
-    expect(arms[0].color).toBe("#f97316");
+    expect(arms[0].color).toBe(getProviderSpec("enclave")!.color);
     expect(arms[1].color).not.toBe(arms[0].color);
     expect(arms[1].color).toMatch(/^#[0-9a-f]{6}$/);
   });

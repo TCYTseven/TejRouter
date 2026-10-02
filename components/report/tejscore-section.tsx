@@ -117,7 +117,7 @@ function Leaderboard({ rows }: { rows: Row[] }) {
     <div ref={ref} className={cn(vizStyles.viz)}>
       <Legend
         className="mb-3"
-        items={KEYS.map((k) => ({ key: k, label: NAMES[k], color: `color-mix(in oklab, var(--fg-muted) ${Math.round(OPACITY[k] * 100)}%, transparent)`, shape: "rect" }))}
+        items={KEYS.map((k) => ({ key: k, label: NAMES[k], color: `color-mix(in oklab, var(--fg-muted) ${Math.round(OPACITY[k] * 100)}%, var(--surface))`, shape: "rect" }))}
         label="Score components"
       />
       <div ref={containerRef} className="relative">
@@ -128,8 +128,8 @@ function Leaderboard({ rows }: { rows: Row[] }) {
               key: c.k,
               label: NAMES[c.k],
               value: c.v,
-              color: a.color,
-              opacity: OPACITY[c.k],
+              color: OPACITY[c.k] >= 1 ? a.color : `color-mix(in oklab, ${a.color} ${Math.round(OPACITY[c.k] * 100)}%, var(--surface))`,
+              ink: OPACITY[c.k] >= 1 ? "#fff" : "var(--fg)",
               tip: (
                 <div>
                   <TipTitle>{a.label}</TipTitle>

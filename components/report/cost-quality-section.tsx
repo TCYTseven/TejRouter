@@ -73,6 +73,11 @@ export function CostQualitySection({ index }: { index: number }) {
             ]}
           />
           <Scatter points={plotted} />
+          <Legend
+            className="mt-2"
+            label="Arms"
+            items={plotted.map((p) => ({ key: p.armId, label: arm(p.armId).label, color: arm(p.armId).color, shape: arm(p.armId).kind === "router" ? "dot" : "rect", dimmed: p.dominatedBy.length > 0 }))}
+          />
           <p className="mt-2 text-[11.5px] text-fg-subtle">
             Cost per request on a log scale; whiskers are {L} intervals on both axes. Faded points are dominated. Up and to the left is better.
             {cq.baselineHull.length >= 2 && cq.baselineHull.join() === cq.hull.join() ? " The baseline-only hull coincides with the overall hull: no router extends it." : ""}
@@ -220,8 +225,12 @@ function Scatter({ points }: { points: CostQualityPoint[] }) {
 }
 
 function Points({ ctx, points, tip }: { ctx: XYContext; points: CostQualityPoint[]; tip: (p: CostQualityPoint) => React.ReactNode }) {
-  const { arm } = useReportCtx();
-  // Place direct labels greedily, avoiding overlaps; skip a label if no slot is free.
+  const { arm, report } = useReportCtx();
+  const cq = report.costQuality;
+  // Place direct labels greedily (most accurate first): try right/left of the point at
+  // several offsets, avoiding other labels, other points and the plot edges; a label
+  // with no free slot is dropped (the legend, tooltip and table still carry it).
+  const marks = points.map((p) => ({ x: ctx.x(p.costUsd!), y: ctx.y(p.quality!) }));
   const placed: { x0: number; x1: number; y: number }[] = [];
   const labels = [...points]
     .sort((a, b) => ctx.y(a.quality!) - ctx.y(b.quality!))
@@ -229,17 +238,22 @@ function Points({ ctx, points, tip }: { ctx: XYContext; points: CostQualityPoint
       const a = arm(p.armId);
       const px = ctx.x(p.costUsd!);
       const py = ctx.y(p.quality!);
-      const text = a.label.length > 28 ? `${a.label.slice(0, 27)}…` : a.label;
+      const text = a.label.length > 36 ? `${a.label.slice(0, 35)}…` : a.label;
       const w = textWidth(text, 11);
-      const right = px + 12 + w < ctx.innerWidth;
-      const x0 = right ? px + 10 : px - 10 - w;
-      const x1 = x0 + w;
-      for (const dy of [-12, 12, -24, 24, 0]) {
-        const y = py + dy;
-        if (y < 6 || y > ctx.innerHeight - 6) continue;
-        if (placed.every((b) => b.x1 < x0 - 4 || b.x0 > x1 + 4 || Math.abs(b.y - y) >= 13)) {
+      const prefBelow = p.onFrontier && cq.frontier[cq.frontier.length - 1] !== p.armId;
+      const dys = prefBelow ? [12, -12, 0, 24, -24] : [-12, 12, 0, -24, 24];
+      for (const side of ["right", "left"] as const) {
+        for (const dy of dys) {
+          const y = py + dy;
+          const x0 = side === "right" ? px + 10 : px - 10 - w;
+          const x1 = x0 + w;
+          if (x0 < 0 || x1 > ctx.innerWidth || y < 6 || y > ctx.innerHeight - 6) continue;
+          if (dy === 0 && Math.abs(x0 - px) < 9) continue;
+          const hitsLabel = placed.some((b) => !(b.x1 < x0 - 4 || b.x0 > x1 + 4 || Math.abs(b.y - y) >= 13));
+          const hitsMark = marks.some((m) => m.x >= x0 - 7 && m.x <= x1 + 7 && Math.abs(m.y - y) < 12 && !(m.x === px && m.y === py));
+          if (hitsLabel || hitsMark) continue;
           placed.push({ x0, x1, y });
-          return { p, text, x: right ? x0 : x1, y, anchor: right ? ("start" as const) : ("end" as const) };
+          return { p, text, x: side === "right" ? x0 : x1, y, anchor: side === "right" ? ("start" as const) : ("end" as const) };
         }
       }
       return null;

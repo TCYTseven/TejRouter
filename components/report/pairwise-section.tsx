@@ -248,9 +248,9 @@ function PairDetail({ o }: { o: Oriented }) {
 
       <div className="mt-4 grid gap-x-6 gap-y-3 sm:grid-cols-2">
         <Group title="Accuracy">
-          <Row label="Mean diff (A − B)" value={`${pp(o.diff)} ${ci(o.lo, o.hi, (v) => pctNum(v))}`} hint={o.method} />
+          <Row label="Mean diff (A − B)" value={`${pp(o.diff)} ${ci(o.lo, o.hi, (v) => pctNum(v))}`} />
           <Row label="Permutation p" value={pval(p.permutationP)} hint={`Holm ${pval(p.pAdjusted.permutationHolm)}`} />
-          <Row label="P(A > B), Bayesian" value={pct(o.pAB, 1)} />
+          <Row label="P(A > B), Bayesian" value={probText(o.pAB)} />
           <Row label="Credible diff" value={`${pp(o.cred.mean)} ${ci(o.cred.lo, o.cred.hi, (v) => pctNum(v))}`} />
         </Group>
         <Group title="McNemar (per-task majority)">
@@ -265,19 +265,26 @@ function PairDetail({ o }: { o: Oriented }) {
           <Row label="Cliff's δ" value={`${num(o.cliffs, 2)} ${ci(o.cliffsLo, o.cliffsHi, (v) => num(v, 2))}`} hint={p.latency.magnitude} />
           <Row label="Paired tasks" value={String(p.latency.nPairs)} />
         </Group>
-        <Group title="Cost">
+        <Group title="Cost and decision">
           <Row
-            label="Mean cost diff / request"
+            label="Cost diff / request"
             value={o.costDiff == null ? <Val v={null} fmt={usd} reason="cost missing for one of the arms" /> : `${o.costDiff > 0 ? "+" : o.costDiff < 0 ? "−" : ""}${usd(Math.abs(o.costDiff))}`}
             hint={o.costDiff != null ? (o.costDiff < 0 ? "A cheaper" : o.costDiff > 0 ? "A dearer" : "same") : undefined}
           />
-          <Row label="Significance level" value={`α = ${num(report.options.alpha, 2)}`} />
-          <Row label="Decision rule" value="Holm McNemar" />
-          <Row label="Accuracy test" value={pEq(p.pAdjusted.mcnemarHolm)} />
+          <Row label="Shared tasks" value={String(p.nSharedTasks)} />
+          <Row label="McNemar χ² p" value={pval(p.mcnemar.pChiSquare)} />
+          <Row label={`Decision (α = ${num(report.options.alpha, 2)})`} value={p.significant ? "different" : "no evidence"} hint={pEq(p.pAdjusted.mcnemarHolm)} />
         </Group>
       </div>
     </section>
   );
+}
+
+function probText(p: number | null): string {
+  if (p == null) return "—";
+  if (p > 0.999) return "> 99.9%";
+  if (p < 0.001) return "< 0.1%";
+  return pct(p, 1);
 }
 
 function Group({ title, children }: { title: string; children: React.ReactNode }) {

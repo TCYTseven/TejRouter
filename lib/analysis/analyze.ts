@@ -192,7 +192,7 @@ function classifyArm(arm: BenchArm, obs: Obs[], opts: AnalyzeOptions): { kind: A
  */
 export function analyzeRun(run: BenchRun, opts: AnalyzeOptions = {}): RunReport {
   const level = opts.level ?? 0.95;
-  const alpha = 1 - level;
+  const alpha = +(1 - level).toFixed(10);
   const B = Math.max(1, Math.floor(opts.bootstrapIterations ?? 1000));
   const K = Math.max(1, Math.floor(opts.difficultyBuckets ?? 4));
   const seed = (opts.seed ?? run.config?.seed ?? 1) >>> 0;
@@ -425,7 +425,8 @@ export function analyzeRun(run: BenchRun, opts: AnalyzeOptions = {}): RunReport 
       armId: a.meta.id,
       kind: a.meta.kind,
       nWithModel: withModel.length,
-      nUnknownModel: a.obs.length - withModel.length,
+      nUnknownModel: a.obs.filter((o) => o.ok && o.model == null).length,
+      nErrored: a.obs.filter((o) => !o.ok).length,
       distinctModels: models.length,
       models,
       byCategory,
@@ -569,11 +570,23 @@ export function analyzeRun(run: BenchRun, opts: AnalyzeOptions = {}): RunReport 
       armId,
       nTasks: cells.length,
       nSamples: obs.length,
-      accuracy: boot ? fromBoot(boot, "cluster-bootstrap-percentile", 2, means.length) : NULL_EST("cluster-bootstrap-percentile"),
+      accuracy: cellAccuracy(boot, means),
       correctRate: obs.length ? est(cr.estimate, cr.lo, cr.hi, "wilson") : NULL_EST("wilson"),
       meanCostUsd: avg(cells.map((c) => c.meanCost).filter((x): x is number => x != null)),
       medianLatencyMs: lats.length ? median(lats) : null,
     };
+  }
+
+  // A percentile bootstrap collapses to a zero-width interval when every task in a
+  // small cell has the same score (all right, all wrong). Fall back to a Wilson
+  // interval on the task-mean scores so the uncertainty stays visible.
+  function cellAccuracy(boot: BootstrapResult | null, means: number[]): Estimate {
+    if (!boot) return NULL_EST("cluster-bootstrap-percentile");
+    if (means.length >= 2 && boot.lo != null && boot.hi != null && boot.hi - boot.lo < 1e-12) {
+      const w = wilson(means.reduce((acc, x) => acc + x, 0), means.length, level);
+      return est(boot.estimate, w.lo, w.hi, "wilson-task-means");
+    }
+    return fromBoot(boot, "cluster-bootstrap-percentile", 2, means.length);
   }
 
   const perArmCategory: ArmCategoryStats[] = [];

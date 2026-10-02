@@ -278,7 +278,10 @@ export interface RoutingStats {
   armId: string;
   kind: ArmKind;
   nWithModel: number;
+  /** Successful samples whose response named no served model. */
   nUnknownModel: number;
+  /** Failed calls (no routing decision observable). */
+  nErrored: number;
   distinctModels: number;
   models: ModelShare[];
   byCategory: { category: string; n: number; models: ModelShare[] }[];

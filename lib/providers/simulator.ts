@@ -80,9 +80,13 @@ export async function simulateChat(
 
   let text: string;
   if (hint) {
+    // Correctness depends only on (model, prompt, seed), not on which router asked,
+    // so the same model answers the same task the same way whoever routed it, and
+    // the two models' outcomes on a task are independent draws.
+    const answerRand = mulberry32(hashString(`${model}|${req.seed ?? 0}|${prompt}`));
     const pCorrect = Math.max(0.02, m.skill - m.slope * difficulty * difficulty);
-    const correct = rand() < pCorrect;
-    const answer = correct ? hint.expected : wrongAnswer(hint.expected, rand);
+    const correct = answerRand() < pCorrect;
+    const answer = correct ? hint.expected : wrongAnswer(hint.expected, answerRand);
     text = `Working through the ${hint.category} task on ${model}.\nAnswer: ${answer}`;
   } else {
     text =

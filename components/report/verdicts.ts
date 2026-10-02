@@ -105,13 +105,13 @@ export function buildVerdicts(report: RunReport): Verdict[] {
       .filter((p) => !p.significant && fin(p.meanDiff.value))
       .map((p) => ({ p, score: (accOf(report, p.a) ?? 0) + (accOf(report, p.b) ?? 0) }))
       .sort((a, b) => b.score - a.score);
-    const tie = nonSig[0]?.p;
-    if (tie && !(tie.a === lead.armId && tie.b === second.armId) && !(tie.b === lead.armId && tie.a === second.armId)) {
+    const isLeadPair = (p: PairwiseStats) => (p.a === lead.armId && p.b === second.armId) || (p.b === lead.armId && p.a === second.armId);
+    const tie = nonSig.find((x) => !isLeadPair(x.p))?.p;
+    if (tie) {
       const [hi, lo] = (accOf(report, tie.a) ?? 0) >= (accOf(report, tie.b) ?? 0) ? [tie.a, tie.b] : [tie.b, tie.a];
       out.push({ key: "tie", kind: "tie", tone: "neutral", parts: tieParts(report, hi, lo, tie) });
-    } else if (tie) {
-      const [hi, lo] = (accOf(report, tie.a) ?? 0) >= (accOf(report, tie.b) ?? 0) ? [tie.a, tie.b] : [tie.b, tie.a];
-      out.push({ key: "tie", kind: "tie", tone: "neutral", parts: powerParts(report, hi, lo) });
+    } else if (nonSig.length) {
+      out.push({ key: "tie", kind: "tie", tone: "neutral", parts: powerParts(report, lead.armId, second.armId) });
     }
   }
 

@@ -12,7 +12,8 @@ import type { BenchRun, RunArmSummary, RunSummary } from "./types";
 
 /** Resolved per call so tests (and deployments) can point it elsewhere via TEJROUTER_RUNS_DIR. */
 export function runsDir(): string {
-  return process.env.TEJROUTER_RUNS_DIR || path.join(process.cwd(), "data", "runs");
+  // The runs directory holds user data, not app code: keep it out of output file tracing.
+  return path.resolve(/*turbopackIgnore: true*/ process.env.TEJROUTER_RUNS_DIR || path.join(process.cwd(), "data", "runs"));
 }
 const ID_RE = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/;
 

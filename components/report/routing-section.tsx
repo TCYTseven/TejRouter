@@ -218,7 +218,7 @@ function RouterDetail({ r, pal }: { r: RoutingStats; pal: Palette }) {
   return (
     <div className="flex flex-col gap-5">
       <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-6">
-        <StatTile label="Distinct models" value={r.distinctModels} sub={r.nUnknownModel ? `${r.nUnknownModel} samples unreported` : `${r.nWithModel} samples`} />
+        <StatTile label="Distinct models" value={r.distinctModels} sub={[r.nUnknownModel ? `${r.nUnknownModel} unreported` : `${r.nWithModel} samples`, r.nErrored ? `${r.nErrored} errored` : null].filter(Boolean).join(" · ")} />
         <StatTile label="Escalation rate" value={<Val v={e?.rate} fmt={(v) => pct(v)} reason={r.escalationReason ?? "not estimable"} />} sub={e ? `${e.nEscalated} of ${e.n} to the pricier tier` : (r.escalationReason ?? "")} />
         <StatTile
           label="Adaptivity slope"

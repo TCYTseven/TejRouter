@@ -102,7 +102,7 @@ export function LatencySection({ index }: { index: number }) {
           <div className="grid gap-x-6 gap-y-5 xl:grid-cols-3">
             <MedianPlot title="Time to first token" arms={arms} get={(a) => [a.ttft, a.ttftMedianCI]} fmt={ms} why="no streamed first token" />
             <MedianPlot title="End-to-end latency" arms={arms} get={(a) => [a.latency, a.latencyMedianCI]} fmt={ms} why="no successful calls" />
-            <MedianPlot title="Output speed" arms={arms} get={(a) => [a.outputTps, a.outputTpsMedianCI]} fmt={formatTps} why="no throughput measured" higherIsBetter />
+            <MedianPlot title="Output speed" arms={arms} get={(a) => [a.outputTps, a.outputTpsMedianCI]} fmt={formatTps} axisFmt={(v) => `${Math.round(v)}`} axisLabel="tokens / s" why="no throughput measured" higherIsBetter />
           </div>
         </>
       ) : (
@@ -138,7 +138,11 @@ function MedianPlot({
   fmt,
   why,
   higherIsBetter,
+  axisFmt,
+  axisLabel,
 }: {
+  axisFmt?: (v: number) => string;
+  axisLabel?: string;
   title: string;
   arms: ArmStats[];
   get: (a: ArmStats) => [Summary, Estimate];
@@ -184,7 +188,7 @@ function MedianPlot({
       <h4 className="mb-1 text-[11.5px] font-medium text-fg-muted">
         {title} <span className="text-fg-subtle">· {higherIsBetter ? "higher is better" : "lower is better"}</span>
       </h4>
-      <IntervalPlot rows={rows} domain={domain} format={fmt} ariaLabel={`${title}: median per arm with intervals`} />
+      <IntervalPlot rows={rows} domain={domain} format={axisFmt ?? fmt} axisLabel={axisLabel} ariaLabel={`${title}: median per arm with intervals`} />
     </div>
   );
 }

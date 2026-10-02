@@ -131,7 +131,7 @@ export function OracleSection({ index }: { index: number }) {
                   { value: 1, label: "oracle" },
                 ]}
               />
-              <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-[11.5px]">
+              <dl className="mt-3 grid gap-x-4 gap-y-1 text-[11.5px] sm:grid-cols-2">
                 <Item label="Gap to oracle accuracy" value={<Val v={r.accuracyGapToOracle} fmt={(v) => pp(v).replace("+", "")} reason="oracle accuracy not available" />} />
                 <Item label="Cost vs oracle" value={<Val v={r.costRatioToOracle} fmt={times} reason="no cost data" />} />
                 <Item label="Regret vs best fixed" value={<span className="num">{pp(r.regretVsBestFixed.value)}</span>} />

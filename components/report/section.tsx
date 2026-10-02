@@ -178,7 +178,7 @@ export function ArmLabel({ arm, className, showKind, truncate = true }: { arm: A
 
 export function KindBadge({ arm }: { arm: ArmInfo }) {
   return (
-    <Tooltip content={arm.kindReason || (arm.kind === "router" ? "The router picks the model" : "Pinned to one model")}>
+    <Tooltip align="end" content={arm.kindReason || (arm.kind === "router" ? "The router picks the model" : "Pinned to one model")}>
       <span
         tabIndex={0}
         className={cn(

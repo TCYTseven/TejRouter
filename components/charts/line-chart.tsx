@@ -6,6 +6,8 @@ import { Legend } from "./legend";
 import { interpolateAt } from "./scale";
 import { TipNote, TipRow, TipTitle } from "./tooltip";
 import { XYChart, type AxisSpec, type Margin } from "./xy-chart";
+import { cn } from "@/lib/client/cn";
+import styles from "./viz.module.css";
 
 export interface LineSeries {
   key: string;
@@ -65,7 +67,7 @@ export function LineChart({
   const labelW = endLabels ? Math.max(0, ...series.map((s) => textWidth(s.shortLabel ?? s.label, 11))) + 14 : 0;
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className={cn(styles.viz, "flex flex-col gap-2")}>
       {legend && series.length >= 2 ? (
         <Legend
           items={series.map((s) => ({ key: s.key, label: s.label, color: s.color, shape: s.band ? "band" : "line", dimmed: focus != null && focus !== s.key }))}

@@ -138,7 +138,7 @@ export function DataTable<T>({
                       key={c.key}
                       className={cn(
                         "px-3 py-1.5 align-middle",
-                        c.align === "right" && "num text-right",
+                        c.align === "right" && "num text-right whitespace-nowrap",
                         c.align === "center" && "text-center",
                         c.hideOnMobile && "hidden sm:table-cell",
                         c.className,

@@ -53,11 +53,15 @@ export function AxisBottom({
   return (
     <g aria-hidden="true" transform={`translate(0,${y})`}>
       {baseline ? <line x1={0} x2={width} y1={0.5} y2={0.5} stroke="var(--viz-axis)" strokeWidth={1} /> : null}
-      {kept.map((l) => (
-        <text key={l.t} x={l.x} y={14} textAnchor="middle" fontSize={AXIS_FONT} fill="var(--viz-muted)" className="num">
-          {l.s}
-        </text>
-      ))}
+      {kept.map((l) => {
+        const half = (l.s.length * 6.2) / 2;
+        const anchor = l.x - half < -4 ? "start" : l.x + half > width + 4 ? "end" : "middle";
+        return (
+          <text key={l.t} x={anchor === "start" ? Math.max(l.x - 2, -4) : anchor === "end" ? Math.min(l.x + 2, width + 4) : l.x} y={14} textAnchor={anchor} fontSize={AXIS_FONT} fill="var(--viz-muted)" className="num">
+            {l.s}
+          </text>
+        );
+      })}
       {label ? (
         <text x={width} y={30} textAnchor="end" fontSize={AXIS_FONT} fill="var(--viz-ink-2)">
           {label}

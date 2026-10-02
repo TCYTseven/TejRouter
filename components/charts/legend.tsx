@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/client/cn";
+import styles from "./viz.module.css";
 
 export interface LegendItem {
   key: string;
@@ -43,7 +44,7 @@ export function Legend({
   label?: string;
 }) {
   return (
-    <ul aria-label={label} className={cn("flex flex-wrap items-center gap-x-3.5 gap-y-1 text-[11px] text-fg-muted", className)}>
+    <ul aria-label={label} className={cn(styles.viz, "flex flex-wrap items-center gap-x-3.5 gap-y-1 text-[11px] text-fg-muted", className)}>
       {items.map((it) => (
         <li
           key={it.key}

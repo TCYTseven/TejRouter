@@ -12,7 +12,7 @@ const TOP = 12;
 
 export function CategorySection({ index }: { index: number }) {
   const { report, arm } = useReportCtx();
-  const [sort, setSort] = useState<"tasks" | "spread" | "name">("spread");
+  const [sort, setSort] = useState<"tasks" | "spread" | "name">("tasks");
   const [showAll, setShowAll] = useState(false);
   const [view, setView] = useState<"chart" | "table">("chart");
   const armIds = report.meta.arms.map((a) => a.id);
@@ -68,7 +68,7 @@ export function CategorySection({ index }: { index: number }) {
       method={[METHOD.byCategory, METHOD.difficulty]}
       actions={
         <>
-          <Segmented size="xs" label="Sort categories" value={sort} onChange={setSort} options={[{ value: "spread", label: "Biggest gap" }, { value: "tasks", label: "Most tasks" }, { value: "name", label: "A–Z" }]} />
+          <Segmented size="xs" label="Sort categories" value={sort} onChange={setSort} options={[{ value: "tasks", label: "Most tasks" }, { value: "spread", label: "Biggest gap" }, { value: "name", label: "A–Z" }]} />
           <Segmented size="xs" label="Category view" value={view} onChange={setView} options={[{ value: "chart", label: "Heatmap" }, { value: "table", label: "Table" }]} />
         </>
       }
@@ -95,7 +95,16 @@ export function CategorySection({ index }: { index: number }) {
                   <TipTitle>
                     {cat} · {a.label}
                   </TipTitle>
-                  <TipRow color={a.color} shape="rect" label={`accuracy ${ci(c.accuracy.lo, c.accuracy.hi, (x) => pctNum(x, 0))}`} value={pct(v)} />
+                  <TipRow
+                    color={a.color}
+                    shape="rect"
+                    label={
+                      c.accuracy.lo != null && c.accuracy.hi != null && c.accuracy.hi - c.accuracy.lo > 1e-9
+                        ? `accuracy ${ci(c.accuracy.lo, c.accuracy.hi, (x) => pctNum(x, 0))}`
+                        : `accuracy · Wilson ${ci(c.correctRate.lo, c.correctRate.hi, (x) => pctNum(x, 0))}`
+                    }
+                    value={pct(v)}
+                  />
                   <TipRow label="cost / request" value={usd(c.meanCostUsd)} shape="none" />
                   <TipRow label="median latency" value={ms(c.medianLatencyMs)} shape="none" />
                   <TipNote>
