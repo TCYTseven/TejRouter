@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { cn } from "@/lib/client/cn";
 
 export interface TabItem<T extends string = string> {
@@ -31,6 +31,36 @@ export function Tabs<T extends string>({
   const auto = useId();
   const idBase = idBaseProp ?? auto;
   const ref = useRef<HTMLDivElement>(null);
+  // When the strip is wider than the screen, fade the edge that has more tabs
+  // behind it and keep the selected tab in view.
+  const [more, setMore] = useState({ left: false, right: false });
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () =>
+      setMore({ left: el.scrollLeft > 2, right: el.scrollLeft + el.clientWidth < el.scrollWidth - 2 });
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("scroll", update);
+      ro.disconnect();
+    };
+  }, []);
+  useEffect(() => {
+    ref.current
+      ?.querySelector<HTMLElement>("[role=tab][aria-selected=true]")
+      ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [value]);
+  const mask =
+    more.left && more.right
+      ? "linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent)"
+      : more.right
+        ? "linear-gradient(to right, #000 calc(100% - 40px), transparent)"
+        : more.left
+          ? "linear-gradient(to right, transparent, #000 40px)"
+          : undefined;
   const onKey = (e: KeyboardEvent) => {
     const i = items.findIndex((t) => t.value === value);
     let n = -1;
@@ -50,7 +80,8 @@ export function Tabs<T extends string>({
       role="tablist"
       aria-label={label}
       onKeyDown={onKey}
-      className={cn("flex items-center gap-1 overflow-x-auto border-b border-border", className)}
+      style={mask ? { maskImage: mask, WebkitMaskImage: mask } : undefined}
+      className={cn("flex items-center gap-1 overflow-x-auto border-b border-border [scrollbar-width:none]", className)}
     >
       {items.map((t) => {
         const active = t.value === value;
