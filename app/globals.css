@@ -1,26 +1,383 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * TejRouter design tokens.
+ * Dark is the default (server render); the boot script in app/layout.tsx stamps
+ * data-theme="light" | "dark" on <html> from the stored preference or the OS.
+ * `dark:` utilities follow the stamped theme, not only the OS.
+ */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+  /* planes */
+  --bg: #07080a;
+  --bg-subtle: #0b0c0f;
+  --surface: #0f1013;
+  --surface-2: #15171b;
+  --surface-3: #1c1e23;
+  --overlay: rgba(4, 5, 7, 0.72);
+  /* lines */
+  --border: #23262c;
+  --border-strong: #33363e;
+  --grid-line: rgba(255, 255, 255, 0.045);
+  /* ink */
+  --fg: #ededf0;
+  --fg-muted: #a3a4ad;
+  --fg-subtle: #80818b;
+  --fg-inverse: #0a0b0d;
+  /* brand: phosphor lime */
+  --accent: #c6f24e;
+  --accent-strong: #d7fa6e;
+  --accent-fg: #0b0e03;
+  --accent-text: #d2f770;
+  --accent-soft: rgba(198, 242, 78, 0.1);
+  --accent-line: rgba(198, 242, 78, 0.35);
+  /* status (always paired with an icon or label) */
+  --success: #3ecf8e;
+  --success-soft: rgba(62, 207, 142, 0.12);
+  --warning: #f5b544;
+  --warning-soft: rgba(245, 181, 68, 0.12);
+  --danger: #ff6369;
+  --danger-soft: rgba(255, 99, 105, 0.12);
+  --info: #6aa8ff;
+  --info-soft: rgba(106, 168, 255, 0.12);
+  /* misc */
+  --ring: #c6f24e;
+  --shadow-lg: 0 24px 60px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --shadow-sm: 0 1px 0 0 rgba(255, 255, 255, 0.03) inset, 0 1px 2px rgba(0, 0, 0, 0.4);
+  --glow: 0 0 0 1px rgba(198, 242, 78, 0.25), 0 0 24px -4px rgba(198, 242, 78, 0.35);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f6f6f3;
+  --bg-subtle: #efefeb;
+  --surface: #ffffff;
+  --surface-2: #f4f4f1;
+  --surface-3: #eaeae6;
+  --overlay: rgba(20, 20, 18, 0.35);
+  --border: #e2e2dc;
+  --border-strong: #cdcdc6;
+  --grid-line: rgba(10, 10, 10, 0.05);
+  --fg: #0c0c0d;
+  --fg-muted: #52525a;
+  --fg-subtle: #6a6a72;
+  --fg-inverse: #ffffff;
+  --accent: #4a7a00;
+  --accent-strong: #3d6600;
+  --accent-fg: #ffffff;
+  --accent-text: #3f6a00;
+  --accent-soft: rgba(110, 170, 10, 0.12);
+  --accent-line: rgba(74, 122, 0, 0.35);
+  --success: #0f8a55;
+  --success-soft: rgba(15, 138, 85, 0.1);
+  --warning: #a36100;
+  --warning-soft: rgba(214, 140, 0, 0.12);
+  --danger: #d1242f;
+  --danger-soft: rgba(209, 36, 47, 0.08);
+  --info: #1f6feb;
+  --info-soft: rgba(31, 111, 235, 0.08);
+  --ring: #4a7a00;
+  --shadow-lg: 0 24px 60px -16px rgba(20, 20, 18, 0.22), 0 0 0 1px rgba(10, 10, 10, 0.04);
+  --shadow-sm: 0 1px 2px rgba(20, 20, 18, 0.06);
+  --glow: 0 0 0 1px rgba(74, 122, 0, 0.25), 0 0 20px -6px rgba(74, 122, 0, 0.35);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* No JS + light OS: still honor the system preference. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    color-scheme: light;
+    --bg: #f6f6f3;
+    --bg-subtle: #efefeb;
+    --surface: #ffffff;
+    --surface-2: #f4f4f1;
+    --surface-3: #eaeae6;
+    --border: #e2e2dc;
+    --border-strong: #cdcdc6;
+    --grid-line: rgba(10, 10, 10, 0.05);
+    --fg: #0c0c0d;
+    --fg-muted: #52525a;
+    --fg-subtle: #6a6a72;
+    --accent: #4a7a00;
+    --accent-fg: #ffffff;
+    --accent-text: #3f6a00;
+    --accent-soft: rgba(110, 170, 10, 0.12);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-overlay: var(--overlay);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-fg-inverse: var(--fg-inverse);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-text: var(--accent-text);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-line: var(--accent-line);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-ring: var(--ring);
+  /* legacy names from the starter */
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --shadow-lg: var(--shadow-lg);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-glow: var(--glow);
+  --animate-fade-in: fade-in 240ms ease-out both;
+  --animate-rise: rise 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-pulse-dot: pulse-dot 1.6s ease-in-out infinite;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-caret: caret 1s steps(1) infinite;
+}
+
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--border);
+  }
+  html {
+    background: var(--bg);
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: var(--accent-soft);
+    color: var(--fg);
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  /* Keep form controls on-theme */
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+  input[type="number"]::-webkit-inner-spin-button {
+    opacity: 0.4;
+  }
+  code,
+  kbd,
+  pre,
+  samp {
+    font-family: var(--font-mono);
+  }
+  /* Scrollbars that match the instrument look */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
+}
+
+@layer components {
+  /* Engineering grid that fades out toward the bottom */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: 32px 32px;
+    background-position: -1px -1px;
+  }
+  .bg-grid-fade {
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 100%);
+  }
+  .bg-dots {
+    background-image: radial-gradient(var(--grid-line) 1px, transparent 1px);
+    background-size: 16px 16px;
+  }
+  /* Metric numerals: monospace + tabular so columns align */
+  .num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums slashed-zero;
+    font-feature-settings: "tnum", "zero";
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    line-height: 1rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+  }
+  .hairline-t {
+    border-top: 1px solid var(--border);
+  }
+  .skeleton {
+    background: linear-gradient(90deg, var(--surface-2) 0%, var(--surface-3) 50%, var(--surface-2) 100%);
+    background-size: 200% 100%;
+    animation: var(--animate-shimmer);
+  }
+  /* Rendered model output (see components/ui/markdown.tsx) */
+  .prose-output {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+  }
+  .prose-output > * + * {
+    margin-top: 0.6em;
+  }
+  .prose-output h1,
+  .prose-output h2,
+  .prose-output h3,
+  .prose-output h4 {
+    font-weight: 600;
+    line-height: 1.3;
+    margin-top: 1em;
+  }
+  .prose-output h1 {
+    font-size: 1.125rem;
+  }
+  .prose-output h2 {
+    font-size: 1rem;
+  }
+  .prose-output h3,
+  .prose-output h4 {
+    font-size: 0.9375rem;
+  }
+  .prose-output ul,
+  .prose-output ol {
+    padding-left: 1.25rem;
+  }
+  .prose-output ul {
+    list-style: disc;
+  }
+  .prose-output ol {
+    list-style: decimal;
+  }
+  .prose-output li + li {
+    margin-top: 0.2em;
+  }
+  .prose-output li::marker {
+    color: var(--fg-subtle);
+  }
+  .prose-output :not(pre) > code {
+    font-size: 0.8125em;
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+  }
+  .prose-output blockquote {
+    border-left: 2px solid var(--border-strong);
+    padding-left: 0.75rem;
+    color: var(--fg-muted);
+  }
+  .prose-output a {
+    color: var(--accent-text);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .prose-output hr {
+    border-color: var(--border);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.85);
+  }
+}
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+@keyframes caret {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes dash-flow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+@keyframes travel {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
