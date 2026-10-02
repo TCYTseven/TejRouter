@@ -68,35 +68,17 @@ export function draftArmId(a: Pick<ArmDraft, "providerId" | "model">): string {
 }
 
 export interface Preset {
-  id: string;
+  id: "quick" | "standard" | "thorough";
   label: string;
-  description: string;
-  suiteIds: string[] | null;
   maxTasksPerSuite: number | null;
   repetitions: number;
 }
 
-export const ROUTING_STRESS_SUITES = ["math", "reasoning", "long-context", "trivial"];
-
+/** Task presets. Suite selection is independent (set under "Customize"). */
 export const PRESETS: Preset[] = [
-  {
-    id: "quick",
-    label: "Quick smoke",
-    description: "10 tasks per suite, 1 rep",
-    suiteIds: null,
-    maxTasksPerSuite: 10,
-    repetitions: 1,
-  },
-  { id: "standard", label: "Standard", description: "All tasks, 1 rep", suiteIds: null, maxTasksPerSuite: null, repetitions: 1 },
-  { id: "rigorous", label: "Rigorous", description: "All tasks, 3 reps", suiteIds: null, maxTasksPerSuite: null, repetitions: 3 },
-  {
-    id: "stress",
-    label: "Routing stress",
-    description: "Math, reasoning, long context and trivial: the mix where routing choices matter most",
-    suiteIds: ROUTING_STRESS_SUITES,
-    maxTasksPerSuite: null,
-    repetitions: 1,
-  },
+  { id: "quick", label: "Quick", maxTasksPerSuite: 10, repetitions: 1 },
+  { id: "standard", label: "Standard", maxTasksPerSuite: null, repetitions: 1 },
+  { id: "thorough", label: "Thorough", maxTasksPerSuite: null, repetitions: 3 },
 ];
 
 export function resolveSuiteIds(c: LauncherConfig, suites: SuiteInfo[]): string[] {
@@ -105,19 +87,9 @@ export function resolveSuiteIds(c: LauncherConfig, suites: SuiteInfo[]): string[
   return all.filter((id) => c.suiteIds!.includes(id));
 }
 
-export function activePreset(c: LauncherConfig, suites: SuiteInfo[]): string | null {
-  const ids = resolveSuiteIds(c, suites);
-  for (const p of PRESETS) {
-    const pIds = p.suiteIds == null ? suites.map((s) => s.id) : suites.map((s) => s.id).filter((id) => p.suiteIds!.includes(id));
-    if (
-      pIds.length === ids.length &&
-      pIds.every((id) => ids.includes(id)) &&
-      (p.maxTasksPerSuite ?? null) === (c.maxTasksPerSuite ?? null) &&
-      p.repetitions === c.repetitions
-    )
-      return p.id;
-  }
-  return null;
+export function activePreset(c: LauncherConfig): Preset["id"] | null {
+  const p = PRESETS.find((p) => (p.maxTasksPerSuite ?? null) === (c.maxTasksPerSuite ?? null) && p.repetitions === c.repetitions);
+  return p?.id ?? null;
 }
 
 /** Build the POST /api/bench body. Duplicate arms are dropped (the server would drop them too). */
@@ -140,4 +112,9 @@ export function toRunConfig(c: LauncherConfig, suites: SuiteInfo[], arms: ArmDra
     ...(c.maxTasksPerSuite ? { maxTasksPerSuite: c.maxTasksPerSuite } : {}),
     ...(c.name.trim() ? { name: c.name.trim() } : {}),
   };
+}
+
+/** Display name for a router in a run: the provider name, plus the model when it is fixed. */
+export function armName(arm: { label: string; model?: string }): string {
+  return arm.model ? arm.label : arm.label.split(" · ")[0];
 }

@@ -1,29 +1,27 @@
 import type { ProviderStatus } from "@/lib/types";
-import { Badge, StatusDot } from "@/components/ui/badge";
-import { IconCheck, IconCpu, IconKey } from "@/components/ui/icons";
+import { StatusDot } from "@/components/ui/badge";
+import { cn } from "@/lib/client/cn";
 
-/** Status badge with icon + label (never color alone). */
-export function ProviderStatusBadge({ provider }: { provider: ProviderStatus }) {
-  if (provider.simulated)
-    return (
-      <Badge tone="info">
-        <IconCpu size={11} />
-        Offline simulator
-      </Badge>
-    );
-  if (provider.configured)
-    return (
-      <Badge tone="success">
-        <IconCheck size={11} />
-        Configured
-      </Badge>
-    );
-  const needsBase = !provider.effectiveBaseUrl;
+export type RouterStatusTone = "ok" | "warn" | "practice";
+
+/** Plain-words connection status for a router. */
+export function routerStatus(p: ProviderStatus): { label: string; tone: RouterStatusTone } {
+  if (p.simulated) return { label: "Practice router, no key needed", tone: "practice" };
+  if (p.configured) return { label: "Connected", tone: "ok" };
+  const needsUrl = !p.effectiveBaseUrl;
+  if (needsUrl && !p.keySource) return { label: "Needs URL and key", tone: "warn" };
+  if (needsUrl) return { label: "Needs URL", tone: "warn" };
+  return { label: "Needs API key", tone: "warn" };
+}
+
+/** Status in words, with a small dot for scanning. */
+export function RouterStatusText({ provider, className }: { provider: ProviderStatus; className?: string }) {
+  const s = routerStatus(provider);
   return (
-    <Badge tone="warning">
-      <IconKey size={11} />
-      {needsBase && !provider.keySource ? "Needs key + URL" : needsBase ? "Needs base URL" : "Missing key"}
-    </Badge>
+    <span className={cn("inline-flex items-center gap-2 text-sm text-fg-muted", className)}>
+      <StatusDot status={s.tone === "ok" ? "ok" : s.tone === "warn" ? "warn" : "idle"} />
+      <span className={s.tone === "ok" ? "text-fg" : undefined}>{s.label}</span>
+    </span>
   );
 }
 
@@ -31,25 +29,8 @@ export function providerStatusKind(p: ProviderStatus) {
   return p.simulated ? "offline" : p.configured ? "ok" : "warn";
 }
 
+/** Used by the landing page. */
 export function ProviderStatusDot({ provider, pulse }: { provider: ProviderStatus; pulse?: boolean }) {
   const kind = providerStatusKind(provider);
-  return (
-    <StatusDot
-      status={kind}
-      pulse={pulse && kind === "ok"}
-      label={provider.simulated ? "Offline simulator" : provider.configured ? "Configured" : "Not configured"}
-    />
-  );
-}
-
-/** "…a3f1 via OPENROUTER_API_KEY" */
-export function KeyHint({ provider }: { provider: ProviderStatus }) {
-  if (provider.simulated) return <span className="text-fg-subtle">no key needed</span>;
-  if (!provider.keyHint) return <span className="text-fg-subtle">not set</span>;
-  return (
-    <span>
-      <span className="text-fg">…{provider.keyHint}</span>
-      {provider.keySource ? <span className="text-fg-subtle"> via {provider.keySource}</span> : null}
-    </span>
-  );
+  return <StatusDot status={kind} pulse={pulse && kind === "ok"} label={routerStatus(provider).label} />;
 }

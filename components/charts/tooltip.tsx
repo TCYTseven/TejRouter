@@ -57,13 +57,13 @@ export function useChartTooltip() {
 export function ChartTooltip({ tip, containerWidth }: { tip: TipState | null; containerWidth?: number }) {
   if (!tip) return null;
   const w = containerWidth ?? 0;
-  const edge = w > 0 && tip.x > w - 110 ? "end" : tip.x < 110 ? "start" : "center";
+  const edge = w > 0 && tip.x > w - 140 ? "end" : tip.x < 140 ? "start" : "center";
   const below = tip.y < 70;
   return (
     <div
       role="tooltip"
       className={cn(
-        "pointer-events-none absolute z-40 w-max max-w-[min(18rem,90vw)] rounded-md border border-border-strong bg-surface px-2.5 py-2 text-[11px] leading-snug text-fg shadow-lg",
+        "pointer-events-none absolute z-40 w-max max-w-[min(18rem,90vw)] rounded-lg border border-border bg-surface px-3 py-2 text-[13px] leading-snug text-fg shadow-lg",
         "animate-fade-in",
       )}
       style={{
@@ -79,7 +79,7 @@ export function ChartTooltip({ tip, containerWidth }: { tip: TipState | null; co
 
 /** Tooltip title line (category / x value). */
 export function TipTitle({ children }: { children: ReactNode }) {
-  return <div className="mb-1 text-[11px] font-medium text-fg-muted">{children}</div>;
+  return <div className="mb-1 text-[13px] font-medium text-fg">{children}</div>;
 }
 
 /** One tooltip row: value leads (strong), label follows; keyed by a short line of the series color. */
@@ -107,12 +107,12 @@ export function TipRow({
       ) : null}
       <span className="num font-semibold text-fg">{value}</span>
       <span className="min-w-0 truncate text-fg-muted">{label}</span>
-      {sub ? <span className="num text-fg-subtle">{sub}</span> : null}
+      {sub ? <span className="num text-fg-muted">{sub}</span> : null}
     </div>
   );
 }
 
 /** Small note line in a tooltip. */
 export function TipNote({ children }: { children: ReactNode }) {
-  return <div className="mt-1 max-w-64 text-[10.5px] leading-snug text-fg-subtle">{children}</div>;
+  return <div className="mt-1 max-w-64 text-[13px] leading-snug text-fg-muted">{children}</div>;
 }

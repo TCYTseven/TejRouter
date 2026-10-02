@@ -1,21 +1,6 @@
 "use client";
 
-import { useCallback, useState, useSyncExternalStore } from "react";
-
-/** Width of an element, tracked with a ResizeObserver (0 until measured). */
-export function useElementWidth<T extends HTMLElement>(): [(el: T | null) => void | (() => void), number] {
-  const [width, setWidth] = useState(0);
-  const ref = useCallback((el: T | null) => {
-    if (!el) return;
-    const ro = new ResizeObserver((entries) => {
-      const w = Math.round(entries[0]?.contentRect.width ?? 0);
-      setWidth((prev) => (prev === w ? prev : w));
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-  return [ref, width];
-}
+import { useSyncExternalStore } from "react";
 
 /* A shared, coarse clock so relative timestamps ("3m ago") stay fresh without
    every row owning a timer, and render stays pure. */

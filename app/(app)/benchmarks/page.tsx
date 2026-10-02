@@ -6,13 +6,13 @@ import { providerStatuses } from "@/lib/providers/server";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
-  title: "Benchmarks",
+  title: "Benchmark",
   description:
-    "Benchmark LLM routers on graded suites (math, reasoning, code, knowledge, long context, instruction following). Pre-flight cost and power estimates, live per-task results, Wilson confidence intervals and routing decisions as they stream.",
+    "Score LLM routers on graded tasks with known answers (math, reasoning, code, knowledge, long context, instruction following), with live results and a cost estimate before you start.",
   path: "/benchmarks",
 });
 
-/** Mean prompt tokens (chars / 4) and a rough completion prior per suite, for the pre-flight estimate. */
+/** Mean prompt tokens (chars / 4) and a rough completion prior per suite, for the cost estimate. */
 function tokenPriors(): Record<string, SuiteTokenPrior> {
   const out: Record<string, SuiteTokenPrior> = {};
   for (const s of SUITES) {

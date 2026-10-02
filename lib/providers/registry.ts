@@ -112,8 +112,8 @@ export const PROVIDERS: ProviderSpec[] = [
   },
   {
     id: "sim-greedy",
-    name: "Sim: Greedy",
-    tagline: "Simulator that always picks the cheap model",
+    name: "Practice: Budget",
+    tagline: "Practice router that almost always picks the cheap model",
     baseUrl: "sim://greedy",
     baseUrlEnv: "",
     keyEnvs: [],
@@ -123,12 +123,12 @@ export const PROVIDERS: ProviderSpec[] = [
     docsUrl: "",
     color: "#e66767",
     simulated: true,
-    notes: "Offline simulator. Lets you exercise the dashboard and the statistics with no keys.",
+    notes: "Runs offline with no key, so you can try everything before connecting a real router.",
   },
   {
     id: "sim-oracle",
-    name: "Sim: Difficulty-aware",
-    tagline: "Simulator that escalates hard prompts to the large model",
+    name: "Practice: Smart",
+    tagline: "Practice router that sends hard prompts to the larger model",
     baseUrl: "sim://oracle",
     baseUrlEnv: "",
     keyEnvs: [],
@@ -138,7 +138,7 @@ export const PROVIDERS: ProviderSpec[] = [
     docsUrl: "",
     color: "#78716c",
     simulated: true,
-    notes: "Offline simulator. Routes by a noisy difficulty estimate, like a learned router would.",
+    notes: "Runs offline with no key. Estimates how hard each prompt is and picks a model the way a learned router would.",
   },
 ];
 

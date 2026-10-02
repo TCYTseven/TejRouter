@@ -5,9 +5,9 @@ import { PROVIDERS } from "@/lib/providers/registry";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
-  title: "Runs",
+  title: "Results",
   description:
-    "Saved LLM router benchmark runs: accuracy, mean latency and total cost per arm at a glance, with import, export and full per-run reports.",
+    "Saved LLM router benchmark results: the leading router and its accuracy for each run, with import, download and full reports.",
   path: "/runs",
 });
 
