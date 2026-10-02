@@ -16,9 +16,9 @@ export function HeadingAnchor({ id, label, className }: { id: string; label: str
       aria-label={`Copy link to section: ${label}`}
       title="Copy link to this section"
       className={cn(
-        "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-fg-subtle transition-[opacity,color,background-color] hover:bg-surface-2 hover:text-fg",
-        "opacity-60 focus-visible:opacity-100 md:opacity-0 md:group-hover/h:opacity-100",
-        done && "opacity-100 md:opacity-100",
+        "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-fg-muted transition-[opacity,color] hover:text-fg",
+        "opacity-0 group-hover/h:opacity-100 focus-visible:opacity-100",
+        done && "opacity-100",
         className,
       )}
       onClick={async () => {

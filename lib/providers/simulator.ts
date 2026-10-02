@@ -90,9 +90,9 @@ export async function simulateChat(
     text = `Working through the ${hint.category} task on ${model}.\nAnswer: ${answer}`;
   } else {
     text =
-      `[${spec.name}] routed this prompt to ${model} ` +
-      `(estimated difficulty ${difficulty.toFixed(2)}). ` +
-      `This is a simulated router: add real API keys in .env.local to compare live routers.`;
+      `${spec.name} judged this prompt ${difficulty < 0.4 ? "easy" : difficulty < 0.7 ? "medium" : "hard"} ` +
+      `and sent it to ${model === "sim/large" ? "the larger" : "the smaller"} practice model (${model}). ` +
+      `This is a practice answer: connect a real router to see real responses.`;
   }
 
   const promptTokens = Math.ceil(prompt.length / 4);

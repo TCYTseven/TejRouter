@@ -6,27 +6,27 @@ export type ButtonVariant = "primary" | "accent" | "secondary" | "ghost" | "outl
 export type ButtonSize = "xs" | "sm" | "md" | "lg" | "icon" | "icon-sm";
 
 const base =
-  "inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-md font-medium select-none " +
+  "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg font-medium select-none " +
   "transition-[background-color,border-color,color,box-shadow,opacity] duration-150 " +
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring " +
   "disabled:pointer-events-none disabled:opacity-45 aria-disabled:pointer-events-none aria-disabled:opacity-45";
 
 const variants: Record<ButtonVariant, string> = {
-  primary: "bg-fg text-fg-inverse hover:bg-fg/85 shadow-sm",
-  accent: "bg-accent text-accent-fg hover:bg-accent-strong shadow-sm",
-  secondary: "bg-surface-2 text-fg border border-border hover:bg-surface-3 hover:border-border-strong",
+  primary: "bg-fg text-fg-inverse hover:bg-fg/85",
+  accent: "bg-fg text-fg-inverse hover:bg-fg/85",
+  secondary: "bg-surface text-fg border border-border hover:bg-surface-2 hover:border-border-strong",
   outline: "border border-border text-fg hover:bg-surface-2 hover:border-border-strong",
   ghost: "text-fg-muted hover:text-fg hover:bg-surface-2",
   danger: "bg-danger-soft text-danger border border-danger/30 hover:bg-danger/15",
 };
 
 const sizes: Record<ButtonSize, string> = {
-  xs: "h-6 px-2 text-xs",
-  sm: "h-7 px-2.5 text-xs",
-  md: "h-8 px-3 text-sm",
-  lg: "h-10 px-4 text-sm",
-  icon: "h-8 w-8",
-  "icon-sm": "h-7 w-7",
+  xs: "h-7 px-2.5 text-[13px]",
+  sm: "h-8 px-3 text-sm",
+  md: "h-9 px-3.5 text-sm",
+  lg: "h-11 px-5 text-[15px]",
+  icon: "h-9 w-9",
+  "icon-sm": "h-8 w-8",
 };
 
 export function buttonClasses(variant: ButtonVariant = "secondary", size: ButtonSize = "md", className?: string) {

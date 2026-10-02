@@ -53,6 +53,7 @@ export const IconChevronDown = make("IconChevronDown", <path d="M6 9l6 6 6-6" />
 export const IconChevronRight = make("IconChevronRight", <path d="M9 6l6 6-6 6" />);
 export const IconChevronLeft = make("IconChevronLeft", <path d="M15 6l-6 6 6 6" />);
 export const IconArrowRight = make("IconArrowRight", <path d="M5 12h14M13 6l6 6-6 6" />);
+export const IconArrowLeft = make("IconArrowLeft", <path d="M19 12H5M11 6l-6 6 6 6" />);
 export const IconArrowUpRight = make("IconArrowUpRight", <path d="M7 17L17 7M8 7h9v9" />);
 export const IconSearch = make(
   "IconSearch",

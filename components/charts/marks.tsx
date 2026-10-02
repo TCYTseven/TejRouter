@@ -196,7 +196,7 @@ export function DirectLabel({
   anchor = "start",
   weight = 500,
   muted,
-  size = 11,
+  size = 13,
 }: {
   x: number;
   y: number;
@@ -226,8 +226,8 @@ export function DirectLabel({
   );
 }
 
-/** Rough text width in px for an 11px UI font (good enough for collision checks). */
-export function textWidth(s: string, size = 11): number {
+/** Rough text width in px for the UI font (good enough for collision checks). */
+export function textWidth(s: string, size = 13): number {
   return s.length * size * 0.56;
 }
 
@@ -235,7 +235,7 @@ export function textWidth(s: string, size = 11): number {
  * Nudge label y-positions apart so they do not overlap (keeps order, min gap).
  * Returns new y positions in the original order.
  */
-export function separateLabels(ys: number[], minGap = 13, lo = -Infinity, hi = Infinity): number[] {
+export function separateLabels(ys: number[], minGap = 16, lo = -Infinity, hi = Infinity): number[] {
   const idx = ys.map((y, i) => ({ y, i })).sort((a, b) => a.y - b.y);
   for (let k = 1; k < idx.length; k++) if (idx[k].y - idx[k - 1].y < minGap) idx[k].y = idx[k - 1].y + minGap;
   const overflow = idx.length ? idx[idx.length - 1].y - hi : 0;

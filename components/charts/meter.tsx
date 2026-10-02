@@ -55,7 +55,7 @@ export function Meter({
         ))}
       </div>
       {marks.length ? (
-        <div className="relative mt-1 h-3.5 text-[10px] text-fg-subtle" aria-hidden="true">
+        <div className="relative mt-1.5 h-5 text-[13px] text-fg-muted" aria-hidden="true">
           {marks.map((m) => {
             const p = pos(m.value);
             return (

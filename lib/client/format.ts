@@ -85,12 +85,13 @@ export function formatRelativeTime(ts: number | null | undefined, now: number = 
   if (bad(ts)) return DASH;
   const d = Math.max(0, now - ts);
   if (d < 45_000) return "just now";
+  const plural = (n: number, unit: string) => `${n} ${unit}${n === 1 ? "" : "s"} ago`;
   const minutes = Math.round(d / 60_000);
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 60) return plural(Math.max(1, minutes), "minute");
   const hours = Math.round(d / 3_600_000);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return plural(hours, "hour");
   const days = Math.round(d / 86_400_000);
-  if (days < 7) return `${days}d ago`;
+  if (days < 7) return plural(days, "day");
   return formatDate(ts);
 }
 

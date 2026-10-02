@@ -22,7 +22,7 @@ export function Disclosure({
     <details className={cn("group/disc", className)} open={defaultOpen}>
       <summary
         className={cn(
-          "flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium text-fg-muted select-none hover:text-fg [&::-webkit-details-marker]:hidden",
+          "flex cursor-pointer list-none items-center gap-1.5 text-sm font-medium text-fg-muted select-none hover:text-fg [&::-webkit-details-marker]:hidden",
           summaryClassName,
         )}
       >

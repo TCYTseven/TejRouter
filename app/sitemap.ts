@@ -3,7 +3,6 @@ import { SITE_URL } from "@/lib/seo";
 
 const ROUTES: { path: string; priority: number; changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"] }[] = [
   { path: "/", priority: 1, changeFrequency: "weekly" },
-  { path: "/dashboard", priority: 0.8, changeFrequency: "daily" },
   { path: "/playground", priority: 0.9, changeFrequency: "weekly" },
   { path: "/benchmarks", priority: 0.8, changeFrequency: "weekly" },
   { path: "/runs", priority: 0.6, changeFrequency: "daily" },

@@ -4,15 +4,16 @@ import { useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type
 import type { BenchArm, BenchTaskMeta } from "@/lib/bench/types";
 import { cn } from "@/lib/client/cn";
 import { formatMs, formatPercent, truncate } from "@/lib/client/format";
-import { ArmKey } from "./arm-tiles";
+import { ProviderDot } from "@/components/ui/provider";
+import { armName } from "./config";
 import { cellKey, type CellLive } from "./live-stats";
 
 type Row = { kind: "suite"; suiteId: string; name: string; count: number } | { kind: "task"; task: BenchTaskMeta; r: number };
 
-/** Sequential single-hue ramp (accent), light to strong; pending cells are hollow. */
+/** Sequential single-hue ramp (link blue), light to strong; pending cells are hollow. */
 export function scoreFill(score: number): string {
   const pct = Math.round(14 + 86 * Math.max(0, Math.min(1, score)));
-  return `color-mix(in oklab, var(--accent) ${pct}%, var(--surface-3))`;
+  return `color-mix(in oklab, var(--link) ${pct}%, var(--surface-3))`;
 }
 
 function cellStyle(cell: CellLive | undefined): CSSProperties {
@@ -26,30 +27,6 @@ function cellStyle(cell: CellLive | undefined): CSSProperties {
 
 function shortTaskId(id: string, suiteId: string): string {
   return id.startsWith(`${suiteId}/`) ? id.slice(suiteId.length + 1) : id;
-}
-
-export function ScoreLegend() {
-  return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10.5px] text-fg-muted" aria-label="Heatmap legend">
-      <span className="flex items-center gap-1">
-        <span className="h-2.5 w-3.5 rounded-[2px]" style={{ boxShadow: "inset 0 0 0 1px var(--border-strong)" }} />
-        pending
-      </span>
-      <span className="flex items-center gap-1">
-        score
-        <span className="num text-fg-subtle">0</span>
-        <span
-          className="h-2.5 w-16 rounded-[2px]"
-          style={{ background: `linear-gradient(to right, ${scoreFill(0)}, ${scoreFill(0.5)}, ${scoreFill(1)})` }}
-        />
-        <span className="num text-fg-subtle">1</span>
-      </span>
-      <span className="flex items-center gap-1">
-        <span className="h-2.5 w-3.5 rounded-[2px] bg-surface-3" style={{ boxShadow: "inset 0 0 0 1.5px var(--danger)" }} />
-        call failed
-      </span>
-    </div>
-  );
 }
 
 /**
@@ -148,14 +125,14 @@ export function Heatmap({
   const activeTask = active ? taskRows[active.r]?.task : undefined;
   const activeArm = active ? arms[active.c] : undefined;
   const activeCell = activeTask && activeArm ? cells.get(cellKey(activeTask.id, activeArm.id)) : undefined;
-  const cols = `minmax(84px, 168px) repeat(${arms.length}, minmax(26px, 72px))`;
-  const minWidth = 84 + arms.length * 26;
+  const cols = `minmax(120px, 220px) repeat(${arms.length}, minmax(64px, 120px))`;
+  const minWidth = 120 + arms.length * 64;
 
   const describe = (): string => {
     if (!activeTask || !activeArm) return "";
-    if (!activeCell) return `${activeTask.id}, ${activeArm.label}: pending.`;
+    if (!activeCell) return `${activeTask.id}, ${armName(activeArm)}: pending.`;
     const mean = activeCell.scoreSum / activeCell.n;
-    return `${activeTask.id}, ${activeArm.label}: score ${mean.toFixed(2)} over ${activeCell.n} repetition${activeCell.n === 1 ? "" : "s"}${activeCell.errors ? `, ${activeCell.errors} failed` : ""}.`;
+    return `${activeTask.id}, ${armName(activeArm)}: score ${mean.toFixed(2)} over ${activeCell.n} repetition${activeCell.n === 1 ? "" : "s"}${activeCell.errors ? `, ${activeCell.errors} failed` : ""}.`;
   };
 
   return (
@@ -164,7 +141,7 @@ export function Heatmap({
         ref={scrollRef}
         tabIndex={0}
         role="group"
-        aria-label={`Task by arm score grid, ${taskRows.length} tasks by ${arms.length} arms. Use arrow keys to inspect cells.`}
+        aria-label={`Score for every task and router, ${taskRows.length} tasks by ${arms.length} routers. Use arrow keys to inspect squares.`}
         onPointerMove={onPointerMove}
         onPointerLeave={() => !focused && setHover(null)}
         onKeyDown={onKeyDown}
@@ -180,26 +157,25 @@ export function Heatmap({
         className="max-h-[26rem] overflow-auto overscroll-contain rounded-md border border-border bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 sm:max-h-[32rem]"
       >
         <div className="grid w-full" style={{ gridTemplateColumns: cols, minWidth }}>
-          <div className="sticky top-0 left-0 z-20 border-b border-border bg-surface px-2 py-1.5 text-[10px] font-medium text-fg-subtle">
-            task
-          </div>
-          {arms.map((a, c) => (
+          <div className="sticky top-0 left-0 z-20 border-b border-border bg-surface px-3 py-2 text-[13px] text-fg-muted">Task</div>
+          {arms.map((a) => (
             <div
               key={a.id}
-              className="sticky top-0 z-10 flex items-center justify-center border-b border-border bg-surface py-1.5"
+              className="sticky top-0 z-10 flex min-w-0 items-center justify-center gap-1.5 border-b border-border bg-surface px-1 py-2"
               title={a.label}
             >
-              <ArmKey arm={a} index={c} simulated={simulated(a.providerId)} />
+              <ProviderDot color={a.color} simulated={simulated(a.providerId)} />
+              <span className="truncate text-[13px] text-fg-muted">{armName(a)}</span>
             </div>
           ))}
           {rows.map((row) =>
             row.kind === "suite" ? (
               <div
                 key={`s-${row.suiteId}`}
-                className="sticky left-0 col-span-full flex items-baseline gap-2 border-b border-border bg-surface-2 px-2 pt-2 pb-1"
+                className="sticky left-0 col-span-full flex items-baseline gap-2 border-b border-border bg-surface-2 px-3 py-1.5"
               >
-                <span className="text-[11px] font-medium text-fg">{row.name}</span>
-                <span className="num text-[10px] text-fg-subtle">{row.count} tasks · easy → hard</span>
+                <span className="text-[13px] font-medium text-fg">{row.name}</span>
+                <span className="num text-[13px] text-fg-muted">{row.count} tasks, easiest first</span>
               </div>
             ) : (
               <HeatRow
@@ -222,9 +198,9 @@ export function Heatmap({
       {active && activeTask && activeArm ? (
         <div
           role="tooltip"
-          className="pointer-events-none absolute z-30 w-64 max-w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-full rounded-md border border-border-strong bg-surface px-2.5 py-2 text-[11px] leading-snug shadow-lg"
+          className="pointer-events-none absolute z-30 w-72 max-w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-full rounded-lg border border-border bg-surface px-3 py-2.5 text-[13px] leading-snug shadow-lg"
           style={{
-            left: `clamp(8.5rem, ${active.x}px, calc(100% - 8.5rem))`,
+            left: `clamp(9.5rem, ${active.x}px, calc(100% - 9.5rem))`,
             top: active.y - 6,
           }}
         >
@@ -250,24 +226,18 @@ function HeatRow({
 }) {
   return (
     <>
-      <div className="sticky left-0 z-[5] flex h-4 items-center gap-1.5 bg-surface px-2">
-        <span
-          className="h-1 shrink-0 rounded-full bg-fg-subtle/60"
-          style={{ width: `${4 + task.difficulty * 18}px` }}
-          title={`difficulty ${task.difficulty.toFixed(2)}`}
-          aria-hidden="true"
-        />
-        <span className="truncate font-mono text-[9.5px] text-fg-subtle">{shortTaskId(task.id, task.suiteId)}</span>
+      <div className="sticky left-0 z-[5] flex h-7 items-center bg-surface px-3">
+        <span className="truncate text-[13px] text-fg-muted">{shortTaskId(task.id, task.suiteId)}</span>
       </div>
       {arms.map((a, c) => {
         const cell = cells.get(cellKey(task.id, a.id));
         return (
-          <div key={a.id} className="flex h-4 items-center px-[1px]">
+          <div key={a.id} className="flex h-7 items-center px-0.5">
             <div
               data-r={r}
               data-c={c}
               className={cn(
-                "h-3 w-full rounded-[2px] transition-[background-color] duration-200 hover:outline hover:outline-1 hover:outline-fg",
+                "h-5 w-full rounded-[3px] transition-[background-color] duration-200 hover:outline hover:outline-1 hover:outline-fg",
                 cursor === c && "outline outline-2 outline-ring",
               )}
               style={cellStyle(cell)}
@@ -285,33 +255,25 @@ function CellDetail({ task, arm, cell }: { task: BenchTaskMeta; arm: BenchArm; c
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-baseline justify-between gap-2">
-        <span className="num text-sm font-semibold text-fg">
-          {mean == null ? "pending" : cell!.n > 1 ? formatPercent(mean, 0) : mean.toFixed(2)}
-        </span>
-        <span className="text-[10px] text-fg-subtle">
-          {cell ? `${cell.n} rep${cell.n === 1 ? "" : "s"}${cell.n > 1 ? " mean" : " score"}` : ""}
-        </span>
+        <span className="truncate font-medium text-fg">{shortTaskId(task.id, task.suiteId)}</span>
+        <span className="num shrink-0 text-fg">{mean == null ? "Waiting" : `Score ${formatPercent(mean, 0)}`}</span>
       </div>
-      <div className="truncate font-mono text-[10.5px] text-fg">{task.id}</div>
       <div className="flex items-center gap-1.5 text-fg-muted">
-        <span className="h-0.5 w-3 shrink-0 rounded-full" style={{ background: arm.color }} />
-        <span className="truncate">{arm.label}</span>
-      </div>
-      <div className="text-[10px] text-fg-subtle">
-        {task.category} · difficulty {task.difficulty.toFixed(2)}
+        <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: arm.color }} />
+        <span className="truncate">{armName(arm)}</span>
       </div>
       {s ? (
-        <dl className="mt-1 grid grid-cols-[auto_minmax(0,1fr)] gap-x-2 gap-y-0.5 border-t border-border pt-1">
-          <dt className="text-fg-subtle">served</dt>
-          <dd className="truncate font-mono text-fg">{cell!.served.size ? [...cell!.served].join(", ") : (s.result.servedModel ?? "—")}</dd>
-          <dt className="text-fg-subtle">latency</dt>
+        <dl className="mt-1 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-0.5 border-t border-border pt-1.5">
+          <dt className="text-fg-muted">Model</dt>
+          <dd className="truncate text-fg">{cell!.served.size ? [...cell!.served].join(", ") : (s.result.servedModel ?? "—")}</dd>
+          <dt className="text-fg-muted">Time</dt>
           <dd className="num text-fg">{formatMs(s.result.latencyMs)}</dd>
-          <dt className="text-fg-subtle">answer</dt>
-          <dd className="truncate font-mono text-fg">{s.grade.extracted != null ? truncate(s.grade.extracted, 60) : "—"}</dd>
+          <dt className="text-fg-muted">Answer</dt>
+          <dd className="truncate text-fg">{s.grade.extracted != null ? truncate(s.grade.extracted, 60) : "—"}</dd>
           {s.result.ok ? null : (
             <>
-              <dt className="text-danger">error</dt>
-              <dd className="line-clamp-2 text-danger">{s.result.error ?? "request failed"}</dd>
+              <dt className="text-danger">Error</dt>
+              <dd className="line-clamp-2 text-danger">{s.result.error ?? "Request failed"}</dd>
             </>
           )}
         </dl>

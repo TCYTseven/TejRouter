@@ -146,12 +146,12 @@ export function CodeBlock({ code, lang, streaming }: { code: string; lang?: stri
   return (
     <div className="group/code relative overflow-hidden rounded-md border border-border bg-bg-subtle">
       <div className="flex h-7 items-center justify-between border-b border-border px-2.5">
-        <span className="font-mono text-[10px] tracking-wider text-fg-subtle uppercase">{lang || "text"}</span>
+        <span className="text-[13px] text-fg-muted">{lang || "text"}</span>
         {streaming ? null : (
           <CopyButton text={code} iconOnly label="Copy code" size="xs" className="opacity-70 group-hover/code:opacity-100" />
         )}
       </div>
-      <pre className="overflow-x-auto p-3 font-mono text-[12px] leading-relaxed text-fg">
+      <pre className="overflow-x-auto p-4 font-mono text-[13px] leading-relaxed text-fg">
         <code>{code}</code>
       </pre>
     </div>

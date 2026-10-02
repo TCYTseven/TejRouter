@@ -98,8 +98,8 @@ export function CommandPalette() {
         icon: <n.icon size={15} />,
         run: go(n.href),
       })),
-      { id: "onboarding", group: "Navigate", label: "Setup guide", hint: "Connect your routers in 3 steps", icon: <IconSparkles size={15} />, keywords: "onboarding keys env setup", run: go("/onboarding") },
-      { id: "run", group: "Actions", label: onPlayground ? "Run prompt on all arms" : "New playground round", hint: "Ctrl/Cmd + Enter in the playground", icon: <IconPlay size={15} />, keywords: "start go send race", run: pg("playground:run") },
+      { id: "onboarding", group: "Navigate", label: "Connect a router", hint: "Add keys in three steps", icon: <IconSparkles size={15} />, keywords: "onboarding keys env setup", run: go("/onboarding") },
+      { id: "run", group: "Actions", label: onPlayground ? "Send prompt to all routers" : "New comparison", hint: "Ctrl/Cmd + Enter on Compare", icon: <IconPlay size={15} />, keywords: "start go send race", run: pg("playground:run") },
       ...(onPlayground
         ? [
             { id: "stop", group: "Actions" as const, label: "Stop the running round", icon: <IconStop size={15} />, keywords: "abort cancel", run: pg("playground:stop") },
@@ -187,7 +187,7 @@ export function CommandPalette() {
             lastGroup = c.group;
             return (
               <li key={c.id} role="presentation">
-                {header ? <div className="eyebrow px-2.5 pt-2.5 pb-1">{header}</div> : null}
+                {header ? <div className="px-3 pt-3 pb-1 text-[13px] font-medium text-fg-muted">{header}</div> : null}
                 <div
                   id={`${listId}-${c.id}`}
                   role="option"
@@ -195,14 +195,14 @@ export function CommandPalette() {
                   onMouseMove={() => setActive(i)}
                   onClick={() => runAt(i)}
                   className={cn(
-                    "flex cursor-pointer items-center gap-3 rounded-md px-2.5 py-2 text-sm",
-                    i === safeActive ? "bg-surface-3 text-fg" : "text-fg-muted",
+                    "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm",
+                    i === safeActive ? "bg-surface-2 text-fg" : "text-fg-muted",
                   )}
                 >
-                  <span className={cn(i === safeActive ? "text-accent-text" : "text-fg-subtle")}>{c.icon}</span>
+                  <span className={cn(i === safeActive ? "text-fg" : "text-fg-subtle")}>{c.icon}</span>
                   <span className="min-w-0 flex-1 truncate">
                     {c.label}
-                    {c.hint ? <span className="ml-2 hidden text-xs text-fg-subtle sm:inline">{c.hint}</span> : null}
+                    {c.hint ? <span className="ml-2 hidden text-[13px] text-fg-subtle sm:inline">{c.hint}</span> : null}
                   </span>
                   {i === safeActive ? <IconArrowRight size={13} className="text-fg-subtle" /> : null}
                 </div>
@@ -210,7 +210,7 @@ export function CommandPalette() {
             );
           })}
         </ul>
-        <div className="flex items-center justify-between border-t border-border px-3.5 py-2 text-[11px] text-fg-subtle">
+        <div className="flex items-center justify-between border-t border-border px-4 py-2.5 text-[13px] text-fg-muted">
           <span className="flex items-center gap-1.5">
             <Kbd>↑</Kbd>
             <Kbd>↓</Kbd> navigate <Kbd>↵</Kbd> run
@@ -227,19 +227,33 @@ export function CommandPalette() {
 
 /** Button that opens the palette (shows the shortcut). */
 export function CommandPaletteTrigger({ className, compact }: { className?: string; compact?: boolean }) {
+  if (compact) {
+    return (
+      <button
+        type="button"
+        onClick={() => dispatchCommand({ type: "open-palette" })}
+        className={cn("inline-flex h-8 w-8 items-center justify-center rounded-lg text-fg-subtle hover:bg-surface-2 hover:text-fg", className)}
+        aria-label="Search (Ctrl or Cmd + K)"
+        title="Search (⌘K)"
+        aria-keyshortcuts="Meta+K Control+K"
+      >
+        <IconSearch size={16} />
+      </button>
+    );
+  }
   return (
     <button
       type="button"
       onClick={() => dispatchCommand({ type: "open-palette" })}
       className={cn(
-        "flex h-8 items-center gap-2 rounded-md border border-border bg-surface-2 px-2.5 text-xs text-fg-subtle transition-colors hover:border-border-strong hover:text-fg",
+        "flex h-9 items-center gap-2 rounded-lg border border-border bg-surface px-3 text-sm text-fg-muted transition-colors hover:border-border-strong hover:text-fg",
         className,
       )}
       aria-label="Open command palette"
       aria-keyshortcuts="Meta+K Control+K"
     >
-      <IconSearch size={13} />
-      {compact ? null : <span className="flex-1 text-left">Search or jump…</span>}
+      <IconSearch size={14} />
+      <span className="flex-1 text-left">Search</span>
       <span className="flex items-center gap-0.5">
         <Kbd>⌘</Kbd>
         <Kbd>K</Kbd>

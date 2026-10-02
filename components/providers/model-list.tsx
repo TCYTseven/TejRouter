@@ -2,29 +2,21 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { CopyButton } from "@/components/ui/copy-button";
-import { IconRefresh, IconSearch } from "@/components/ui/icons";
+import { IconSearch } from "@/components/ui/icons";
 import { SkeletonText } from "@/components/ui/skeleton";
 import { useProviderModels } from "@/lib/client/providers";
 
-/** Lazily discovered model list with search. Nothing is fetched until opened. */
-export function ModelList({ providerId, suggested }: { providerId: string; suggested: string[] }) {
+/** Searchable list of the router's models. Nothing is fetched until asked. */
+export function ModelList({ providerId, providerName }: { providerId: string; providerName: string }) {
   const [enabled, setEnabled] = useState(false);
   const [query, setQuery] = useState("");
   const { models, error, loading, reload } = useProviderModels(providerId, enabled);
 
   if (!enabled) {
     return (
-      <div className="flex flex-wrap items-center gap-2">
-        <Button size="sm" variant="secondary" leftIcon={<IconSearch size={13} />} onClick={() => setEnabled(true)}>
-          Discover models
-        </Button>
-        {suggested.length ? (
-          <span className="text-[11px] text-fg-subtle">
-            Suggested: <span className="font-mono text-fg-muted">{suggested.join(", ")}</span>
-          </span>
-        ) : null}
-      </div>
+      <Button size="sm" variant="secondary" className="self-start" onClick={() => setEnabled(true)}>
+        Show available models
+      </Button>
     );
   }
 
@@ -33,46 +25,38 @@ export function ModelList({ providerId, suggested }: { providerId: string; sugge
 
   return (
     <div className="flex flex-col gap-2" aria-busy={loading}>
-      <div className="flex items-center gap-2">
-        <div className="relative flex-1">
-          <IconSearch size={13} className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-fg-subtle" />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={loading ? "Loading…" : `Search ${models.length} models`}
-            aria-label={`Search models for ${providerId}`}
-            className="h-7 w-full rounded-md border border-border bg-surface-2 pr-2 pl-7 font-mono text-[12px] text-fg placeholder:font-sans placeholder:text-fg-subtle focus:border-accent-line focus:ring-2 focus:ring-accent-soft focus:outline-none"
-          />
-        </div>
-        <Button size="icon-sm" variant="ghost" aria-label="Refresh model list" title="Refresh" onClick={reload} loading={loading}>
-          {loading ? null : <IconRefresh size={13} />}
-        </Button>
+      <div className="relative">
+        <IconSearch size={15} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-fg-subtle" />
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={loading ? "Loading models…" : `Search ${models.length} models`}
+          aria-label={`Search ${providerName} models`}
+          className="h-9 w-full rounded-lg border border-border bg-surface pr-3 pl-9 text-sm text-fg placeholder:text-fg-subtle hover:border-border-strong focus:border-link focus:ring-2 focus:ring-link/20 focus:outline-none"
+        />
       </div>
       {error ? (
-        <p className="rounded-md border border-warning/30 bg-warning-soft px-2.5 py-1.5 text-[11px] text-warning">
-          Discovery failed: {error}
-          {models.length ? " (showing fallback list)" : ""}
+        <p className="text-[13px] text-warning">
+          Could not load the live model list ({error}).{models.length ? " Showing the built-in list instead." : ""}{" "}
+          <button type="button" onClick={reload} className="text-link hover:underline">
+            Try again
+          </button>
         </p>
       ) : null}
       {loading && !models.length ? (
         <SkeletonText lines={3} />
       ) : list.length ? (
-        <ul className="max-h-48 divide-y divide-border overflow-y-auto rounded-md border border-border bg-bg-subtle">
+        <ul className="max-h-56 overflow-y-auto rounded-lg border border-border">
           {list.map((m) => (
-            <li key={m} className="group flex items-center justify-between gap-2 px-2.5 py-1">
-              <span className="truncate font-mono text-[11.5px] text-fg-muted">{m}</span>
-              <CopyButton text={m} iconOnly label={`Copy ${m}`} size="xs" toastTitle="Model id copied" className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100" />
+            <li key={m} className="border-b border-border px-3 py-1.5 last:border-b-0">
+              <code className="text-[13px] break-all text-fg-muted">{m}</code>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-[11px] text-fg-subtle">{q ? "No models match." : "No models reported."}</p>
+        <p className="text-[13px] text-fg-muted">{q ? "No models match." : "This router did not report any models."}</p>
       )}
-      <p className="num text-[10px] text-fg-subtle">
-        {list.length}
-        {q ? ` of ${models.length}` : ""} models
-      </p>
     </div>
   );
 }

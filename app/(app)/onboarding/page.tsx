@@ -1,29 +1,25 @@
 import { connection } from "next/server";
 import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
-import { IconSparkles } from "@/components/ui/icons";
 import { PageHeader } from "@/components/ui/page-header";
 import { providerStatuses } from "@/lib/providers/server";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
-  title: "Setup guide",
+  title: "Connect a router",
   description:
-    "Connect your LLM routers to TejRouter in three steps: pick the routers you use, add their keys to .env.local, re-check, and race them. No account required.",
+    "Connect your LLM routers to TejRouter in three steps: pick the routers you use, add their keys to .env.local and restart, then test. No account needed.",
   path: "/onboarding",
 });
 
 export default async function OnboardingPage() {
   await connection();
-  const providers = providerStatuses();
   return (
-    <>
+    <div className="mx-auto w-full max-w-5xl">
       <PageHeader
-        breadcrumbs={[{ label: "TejRouter", href: "/" }, { label: "Setup guide" }]}
-        icon={<IconSparkles size={16} />}
-        title="Setup guide"
-        description="Three steps, no account. Everything stays on your machine."
+        title="Connect a router"
+        description="Three short steps. No account needed, and your keys never leave your machine."
       />
-      <OnboardingFlow initial={providers} />
-    </>
+      <OnboardingFlow initial={providerStatuses()} />
+    </div>
   );
 }

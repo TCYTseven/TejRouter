@@ -1,4 +1,4 @@
-import type { ArenaArmStats, ArenaLeaderboard } from "@/lib/analysis/arena";
+import type { ArenaArmStats } from "@/lib/analysis/arena";
 import { parseArmId } from "@/lib/client/arena-votes";
 import { getProviderSpec } from "@/lib/providers/registry";
 
@@ -39,11 +39,6 @@ export function armLabel(armId: string): string {
   return a.model ? `${a.name} (${a.model})` : a.name;
 }
 
-/** Arms that received a rating, in rank order. */
-export function ratedArms(lb: ArenaLeaderboard): ArenaArmStats[] {
-  return lb.arms.filter((a) => a.rating != null);
-}
-
 /**
  * The leaderboard's matrices are indexed in first-seen order; return the
  * index of each arm in that order so callers can redraw them in rank order.
@@ -67,19 +62,3 @@ export function ratingDomain(arms: ArenaArmStats[]): [number, number] {
   return [lo - span * 0.06, hi + span * 0.06];
 }
 
-/** Round, evenly spaced axis ticks (1/2/5 x 10^k steps). */
-export function niceTicks(min: number, max: number, target = 5): number[] {
-  if (!(max > min)) return [min];
-  const raw = (max - min) / Math.max(1, target);
-  const mag = 10 ** Math.floor(Math.log10(raw));
-  const norm = raw / mag;
-  const step = (norm >= 5 ? 10 : norm >= 2 ? 5 : norm >= 1 ? 2 : 1) * mag;
-  const out: number[] = [];
-  for (let v = Math.ceil(min / step) * step; v <= max + 1e-9; v += step) out.push(Math.round(v * 1e6) / 1e6);
-  return out;
-}
-
-export function rankRange(a: Pick<ArenaArmStats, "rankLo" | "rankHi">): string | null {
-  if (a.rankLo == null || a.rankHi == null) return null;
-  return a.rankLo === a.rankHi ? null : `${a.rankLo}–${a.rankHi}`;
-}

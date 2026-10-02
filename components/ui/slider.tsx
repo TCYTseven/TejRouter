@@ -30,10 +30,10 @@ export function Slider({
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
       <div className="flex items-center justify-between">
-        <label htmlFor={id} className="text-xs font-medium text-fg-muted">
+        <label htmlFor={id} className="text-sm font-medium text-fg">
           {label}
         </label>
-        <output htmlFor={id} className="num text-xs text-fg">
+        <output htmlFor={id} className="num text-sm text-fg-muted">
           {format(value)}
         </output>
       </div>

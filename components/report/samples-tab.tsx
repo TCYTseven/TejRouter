@@ -2,21 +2,21 @@
 
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { DataTable } from "@/components/charts";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Disclosure } from "@/components/ui/disclosure";
 import { Input, Select } from "@/components/ui/field";
-import { IconCheckCircle, IconChevronLeft, IconChevronRight, IconSearch, IconX, IconXCircle } from "@/components/ui/icons";
+import { IconAlert, IconCheckCircle, IconChevronLeft, IconChevronRight, IconSearch, IconX, IconXCircle } from "@/components/ui/icons";
 import { Markdown } from "@/components/ui/markdown";
 import type { BenchSample } from "@/lib/bench/types";
 import { formatTps } from "@/lib/client/format";
 import { ms, num, usd } from "./format";
-import { ArmLabel, ReportSection, Val, useReportCtx } from "./section";
+import { ArmLabel, Panel, Val, useReportCtx } from "./section";
 
 type Outcome = "all" | "correct" | "wrong" | "error";
 
 const keyOf = (s: BenchSample) => `${s.armId}|${s.taskId}|${s.rep}`;
 
-export function SamplesSection({ index }: { index: number }) {
+export function SamplesTab() {
   const { run, arm } = useReportCtx();
   const samples = run.samples;
   const [q, setQ] = useState("");
@@ -76,28 +76,27 @@ export function SamplesSection({ index }: { index: number }) {
   const openSample = openIdx >= 0 ? filtered[openIdx] : open ? samples.find((s) => keyOf(s) === open) ?? null : null;
 
   return (
-    <ReportSection
-      id="samples"
-      index={index}
-      title="Sample explorer"
+    <Panel
+      id="answers"
+      title="Every answer"
       takeaway={
         <>
-          Every one of the {samples.length.toLocaleString("en-US")} graded responses{nErr ? `, including ${nErr} failed calls` : ""}. Filter, sort, and open a row for the full response, grade and routing headers.
+          All {samples.length.toLocaleString("en-US")} graded answers{nErr ? `, including ${nErr} failed calls` : ""}. Open a row to read the full answer and how it was graded.
         </>
       }
     >
-      <div className="mb-3 flex flex-wrap items-end gap-2" role="search" aria-label="Filter samples">
-        <label className="relative flex min-w-[180px] flex-1 flex-col gap-1 text-[11px] text-fg-muted sm:max-w-[260px]">
+      <div className="mb-4 flex flex-wrap items-end gap-3" role="search" aria-label="Filter answers">
+        <label className="relative flex min-w-[180px] flex-1 flex-col gap-1 text-[13px] text-fg-muted sm:max-w-[260px]">
           Search
           <span className="relative">
             <IconSearch size={13} className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-fg-subtle" />
-            <Input value={q} onChange={(e) => setter(setQ)(e.target.value)} placeholder="Task id, answer, error…" className="pl-8" />
+            <Input value={q} onChange={(e) => setter(setQ)(e.target.value)} placeholder="Task, answer or error" className="pl-8" />
           </span>
         </label>
-        <Filter label="Arm" value={armF} onChange={setter(setArmF)} options={run.arms.map((a) => ({ value: a.id, label: arm(a.id).label }))} />
-        <Filter label="Suite" value={suite} onChange={setter(setSuite)} options={opts.suites.map((s) => ({ value: s, label: s }))} />
-        <Filter label="Category" value={cat} onChange={setter(setCat)} options={opts.cats.map((s) => ({ value: s, label: s }))} />
-        <Filter label="Served model" value={model} onChange={setter(setModel)} options={opts.models.map((s) => ({ value: s, label: s }))} />
+        <Filter label="Router" value={armF} onChange={setter(setArmF)} options={run.arms.map((a) => ({ value: a.id, label: arm(a.id).label }))} />
+        <Filter label="Test set" value={suite} onChange={setter(setSuite)} options={opts.suites.map((s) => ({ value: s, label: s }))} />
+        <Filter label="Task type" value={cat} onChange={setter(setCat)} options={opts.cats.map((s) => ({ value: s, label: s }))} />
+        <Filter label="Model used" value={model} onChange={setter(setModel)} options={opts.models.map((s) => ({ value: s, label: s }))} />
         <Filter
           label="Outcome"
           value={outcome}
@@ -111,34 +110,29 @@ export function SamplesSection({ index }: { index: number }) {
         <Button size="sm" variant="ghost" onClick={reset}>
           Reset
         </Button>
-        <span className="num ml-auto self-center text-[11px] text-fg-subtle" aria-live="polite">
+        <span className="num ml-auto self-center text-[13px] text-fg-muted" aria-live="polite">
           {filtered.length.toLocaleString("en-US")} of {samples.length.toLocaleString("en-US")}
         </span>
       </div>
       <DataTable
-        caption="Benchmark samples"
+        caption="Graded answers"
         rows={filtered}
         getKey={keyOf}
         pageSize={25}
         page={page}
         onPageChange={setPage}
-        minWidth={1040}
+        minWidth={900}
         selectedKey={open}
         onRowClick={(s) => setOpen(keyOf(s))}
-        rowLabel={(s) => `Open sample ${s.taskId}, ${arm(s.armId).label}, repetition ${s.rep + 1}`}
+        rowLabel={(s) => `Open answer to ${s.taskId} from ${arm(s.armId).label}, run ${s.rep + 1}`}
         columns={[
-          { key: "task", header: "Task", render: (s) => <span className="block max-w-[220px] truncate font-mono text-[11px]" title={s.taskId}>{s.taskId}</span>, sort: (s) => s.taskId },
-          { key: "arm", header: "Arm", render: (s) => <ArmLabel arm={arm(s.armId)} className="max-w-[180px]" />, sort: (s) => arm(s.armId).label },
-          { key: "rep", header: "Rep", align: "right", render: (s) => s.rep + 1, sort: (s) => s.rep },
-          { key: "cat", header: "Category", render: (s) => s.category, sort: (s) => s.category },
-          { key: "diff", header: "Diff.", align: "right", render: (s) => num(s.difficulty, 2), sort: (s) => s.difficulty },
-          { key: "model", header: "Served model", render: (s) => (s.result.servedModel ? <span className="font-mono text-[11px]">{s.result.servedModel}</span> : <Val v={null} fmt={String} reason="the router did not report a model" />), sort: (s) => s.result.servedModel },
-          { key: "score", header: "Score", align: "right", render: (s) => (s.result.ok ? num(s.grade.score, 2) : "—"), sort: (s) => (s.result.ok ? s.grade.score : -1) },
-          { key: "ok", header: "Result", align: "center", render: (s) => <Outcome s={s} />, sort: (s) => (!s.result.ok ? 0 : s.grade.correct ? 2 : 1) },
-          { key: "lat", header: "Latency", align: "right", render: (s) => ms(s.result.latencyMs), sort: (s) => s.result.latencyMs },
-          { key: "ttft", header: "TTFT", align: "right", render: (s) => <Val v={s.result.ttftMs} fmt={ms} reason="no first-token timing" />, sort: (s) => s.result.ttftMs, hideOnMobile: true },
+          { key: "task", header: "Task", render: (s) => <span className="inline-block max-w-[220px] truncate align-middle" title={s.taskId}>{s.taskId}</span>, sort: (s) => s.taskId },
+          { key: "arm", header: "Router", render: (s) => <ArmLabel arm={arm(s.armId)} className="max-w-[200px]" />, sort: (s) => arm(s.armId).label },
+          { key: "cat", header: "Task type", render: (s) => s.category, sort: (s) => s.category, hideOnMobile: true },
+          { key: "model", header: "Model used", render: (s) => (s.result.servedModel ? <span className="font-mono text-[13px]">{s.result.servedModel}</span> : <Val v={null} fmt={String} reason="the router did not say which model answered" />), sort: (s) => s.result.servedModel },
+          { key: "ok", header: "Result", render: (s) => <Outcome s={s} />, sort: (s) => (!s.result.ok ? 0 : s.grade.correct ? 2 : 1) },
+          { key: "lat", header: "Time", align: "right", render: (s) => ms(s.result.latencyMs), sort: (s) => s.result.latencyMs },
           { key: "cost", header: "Cost", align: "right", render: (s) => <Val v={s.result.costUsd} fmt={usd} reason="no cost reported or estimated" />, sort: (s) => s.result.costUsd },
-          { key: "err", header: "Error", render: (s) => (s.result.error ? <span className="line-clamp-1 max-w-[180px] text-danger" title={s.result.error}>{s.result.error}</span> : ""), hideOnMobile: true },
         ]}
       />
       {openSample ? (
@@ -150,13 +144,13 @@ export function SamplesSection({ index }: { index: number }) {
           position={openIdx >= 0 ? `${openIdx + 1} of ${filtered.length}` : undefined}
         />
       ) : null}
-    </ReportSection>
+    </Panel>
   );
 }
 
 function Filter({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
   return (
-    <label className="flex min-w-[130px] flex-col gap-1 text-[11px] text-fg-muted">
+    <label className="flex min-w-[140px] flex-col gap-1 text-[13px] text-fg-muted">
       {label}
       <Select value={value} onChange={(e) => onChange(e.target.value)} className="max-w-[200px]">
         <option value="all">All</option>
@@ -171,16 +165,22 @@ function Filter({ label, value, onChange, options }: { label: string; value: str
 }
 
 function Outcome({ s }: { s: BenchSample }) {
-  if (!s.result.ok) return <Badge tone="danger">error</Badge>;
+  if (!s.result.ok)
+    return (
+      <span className="inline-flex items-center gap-1.5 text-danger">
+        <IconAlert size={14} />
+        <span className="text-[13px]">Failed</span>
+      </span>
+    );
   return s.grade.correct ? (
-    <span className="inline-flex items-center gap-1 text-success">
-      <IconCheckCircle size={13} />
-      <span className="text-[11px]">correct</span>
+    <span className="inline-flex items-center gap-1.5 text-success">
+      <IconCheckCircle size={14} />
+      <span className="text-[13px]">Correct</span>
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1 text-fg-muted">
-      <IconXCircle size={13} />
-      <span className="text-[11px]">wrong</span>
+    <span className="inline-flex items-center gap-1.5 text-fg-muted">
+      <IconXCircle size={14} />
+      <span className="text-[13px]">Wrong</span>
     </span>
   );
 }
@@ -212,25 +212,25 @@ function SampleDrawer({ s, onClose, onPrev, onNext, position }: { s: BenchSample
         ref={ref}
         role="dialog"
         aria-modal="true"
-        aria-label={`Sample ${s.taskId} from ${a.label}`}
+        aria-label={`Answer to ${s.taskId} from ${a.label}`}
         tabIndex={-1}
-        className="relative flex h-full w-full max-w-[560px] flex-col border-l border-border bg-surface shadow-lg outline-none animate-rise"
+        className="relative flex h-full w-full max-w-[600px] flex-col border-l border-border bg-surface shadow-lg outline-none animate-rise"
       >
-        <div className="flex items-start justify-between gap-2 border-b border-border px-4 py-3">
+        <div className="flex items-start justify-between gap-3 border-b border-border px-6 py-4 max-sm:px-5">
           <div className="min-w-0">
-            <p className="font-mono text-[12px] break-all text-fg">{s.taskId}</p>
-            <div className="mt-1 flex flex-wrap items-center gap-2 text-[11.5px] text-fg-muted">
+            <p className="text-[15px] font-semibold break-all text-fg">{s.taskId}</p>
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-fg-muted">
               <ArmLabel arm={a} />
-              <span>· rep {s.rep + 1}</span>
+              <span>Run {s.rep + 1}</span>
               <Outcome s={s} />
             </div>
           </div>
           <div className="flex items-center gap-1">
-            {position ? <span className="num mr-1 text-[10.5px] text-fg-subtle">{position}</span> : null}
-            <Button size="icon-sm" variant="ghost" aria-label="Previous sample" disabled={!onPrev} onClick={onPrev}>
+            {position ? <span className="num mr-1 text-[13px] text-fg-muted">{position}</span> : null}
+            <Button size="icon-sm" variant="ghost" aria-label="Previous answer" disabled={!onPrev} onClick={onPrev}>
               <IconChevronLeft size={14} />
             </Button>
-            <Button size="icon-sm" variant="ghost" aria-label="Next sample" disabled={!onNext} onClick={onNext}>
+            <Button size="icon-sm" variant="ghost" aria-label="Next answer" disabled={!onNext} onClick={onNext}>
               <IconChevronRight size={14} />
             </Button>
             <Button size="icon-sm" variant="ghost" aria-label="Close" onClick={onClose}>
@@ -238,27 +238,31 @@ function SampleDrawer({ s, onClose, onPrev, onNext, position }: { s: BenchSample
             </Button>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto px-4 py-4">
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11.5px] sm:grid-cols-3">
-            <Kv k="Suite" v={s.suiteId} />
-            <Kv k="Category" v={s.category} />
-            <Kv k="Difficulty" v={num(s.difficulty, 2)} />
-            <Kv k="Requested" v={<span className="font-mono">{r.requestedModel || "—"}</span>} />
-            <Kv k="Served model" v={r.servedModel ? <span className="font-mono">{r.servedModel}</span> : <Val v={null} fmt={String} reason="not reported by the router" />} />
-            <Kv k="Upstream" v={r.servedProvider ?? "—"} />
-            <Kv k="Latency" v={ms(r.latencyMs)} />
-            <Kv k="TTFT" v={<Val v={r.ttftMs} fmt={ms} reason="no first-token timing" />} />
-            <Kv k="Output speed" v={<Val v={r.outputTps} fmt={formatTps} reason="not measured" />} />
+        <div className="flex-1 overflow-y-auto px-6 py-5 max-sm:px-5">
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-3">
+            <Kv k="Model used" v={r.servedModel ?? <Val v={null} fmt={String} reason="not reported by the router" />} />
+            <Kv k="Time" v={ms(r.latencyMs)} />
             <Kv k="Cost" v={<Val v={r.costUsd} fmt={usd} reason="not reported or estimated" />} />
-            <Kv k="Cost source" v={r.costSource ?? "—"} />
-            <Kv k="Tokens in / out" v={`${r.usage.promptTokens ?? "—"} / ${r.usage.completionTokens ?? "—"}`} />
-            <Kv k="HTTP" v={r.httpStatus ?? "—"} />
-            <Kv k="Finish" v={r.finishReason ?? "—"} />
-            <Kv k="Attempts" v={s.attempts ?? 1} />
+            <Kv k="Task type" v={s.category} />
+            <Kv k="Difficulty" v={num(s.difficulty, 2)} />
+            <Kv k="Test set" v={s.suiteId} />
           </dl>
+          <Disclosure className="mt-4" summary="Technical details">
+            <dl className="grid grid-cols-2 gap-x-6 gap-y-2 pt-1 sm:grid-cols-3">
+              <Kv k="Requested model" v={r.requestedModel || "—"} />
+              <Kv k="Upstream" v={r.servedProvider ?? "—"} />
+              <Kv k="First token" v={<Val v={r.ttftMs} fmt={ms} reason="no first-token timing" />} />
+              <Kv k="Output speed" v={<Val v={r.outputTps} fmt={formatTps} reason="not measured" />} />
+              <Kv k="Cost source" v={r.costSource ?? "—"} />
+              <Kv k="Tokens in / out" v={`${r.usage.promptTokens ?? "—"} / ${r.usage.completionTokens ?? "—"}`} />
+              <Kv k="HTTP status" v={r.httpStatus ?? "—"} />
+              <Kv k="Finish reason" v={r.finishReason ?? "—"} />
+              <Kv k="Attempts" v={s.attempts ?? 1} />
+            </dl>
+          </Disclosure>
 
-          <h3 className="eyebrow mt-5 mb-1.5">Grade</h3>
-          <div className="rounded-md border border-border bg-surface-2/60 p-3 text-[12px]">
+          <h3 className="mt-6 mb-2 text-[15px] font-semibold text-fg">Grade</h3>
+          <div className="rounded-lg border border-border bg-surface-2/60 p-4 text-sm">
             <div className="flex flex-wrap items-center gap-3">
               <span>
                 Score <span className="num font-semibold text-fg">{r.ok ? num(s.grade.score, 2) : "0 (error)"}</span>
@@ -267,34 +271,34 @@ function SampleDrawer({ s, onClose, onPrev, onNext, position }: { s: BenchSample
             </div>
             <p className="mt-1.5 text-fg-muted">{s.grade.detail || "—"}</p>
             <p className="mt-1.5 text-fg-muted">
-              Extracted answer: <span className="font-mono text-fg">{s.grade.extracted ?? "—"}</span>
+              Answer found: <code className="text-fg">{s.grade.extracted ?? "—"}</code>
             </p>
           </div>
 
           {r.error ? (
             <>
-              <h3 className="eyebrow mt-5 mb-1.5">Error</h3>
-              <p className="rounded-md border border-danger/30 bg-danger-soft p-3 font-mono text-[11.5px] break-words text-danger">{r.error}</p>
+              <h3 className="mt-6 mb-2 text-[15px] font-semibold text-fg">Error</h3>
+              <pre className="rounded-lg border border-danger/30 bg-danger-soft p-3 text-[13px] break-words whitespace-pre-wrap text-danger">{r.error}</pre>
             </>
           ) : null}
 
-          <h3 className="eyebrow mt-5 mb-1.5">Response</h3>
-          <div className="rounded-md border border-border p-3">
-            {r.text ? <Markdown text={r.text} /> : <p className="text-[12px] text-fg-subtle">Empty response.</p>}
+          <h3 className="mt-6 mb-2 text-[15px] font-semibold text-fg">Answer</h3>
+          <div className="rounded-lg border border-border p-4">
+            {r.text ? <Markdown text={r.text} /> : <p className="text-sm text-fg-muted">Empty answer.</p>}
           </div>
 
-          <h3 className="eyebrow mt-5 mb-1.5">Routing headers</h3>
+          <h3 className="mt-6 mb-2 text-[15px] font-semibold text-fg">Routing headers</h3>
           {headers.length ? (
-            <dl className="rounded-md border border-border font-mono text-[11px]">
+            <dl className="rounded-lg border border-border text-[13px]">
               {headers.map(([k, v]) => (
                 <div key={k} className="flex gap-3 border-b border-border px-3 py-1.5 last:border-b-0">
-                  <dt className="shrink-0 text-fg-subtle">{k}</dt>
-                  <dd className="min-w-0 break-all text-fg">{v}</dd>
+                  <dt className="shrink-0 text-fg-muted"><code>{k}</code></dt>
+                  <dd className="min-w-0 break-all text-fg"><code>{v}</code></dd>
                 </div>
               ))}
             </dl>
           ) : (
-            <p className="text-[12px] text-fg-subtle">No routing headers were captured for this response.</p>
+            <p className="text-sm text-fg-muted">No routing headers were captured for this answer.</p>
           )}
         </div>
       </div>
@@ -305,8 +309,8 @@ function SampleDrawer({ s, onClose, onPrev, onNext, position }: { s: BenchSample
 function Kv({ k, v }: { k: string; v: React.ReactNode }) {
   return (
     <div className="min-w-0 py-0.5">
-      <dt className="text-[10.5px] text-fg-subtle">{k}</dt>
-      <dd className="num truncate text-fg">{v}</dd>
+      <dt className="text-[13px] text-fg-muted">{k}</dt>
+      <dd className="num truncate text-sm text-fg">{v}</dd>
     </div>
   );
 }

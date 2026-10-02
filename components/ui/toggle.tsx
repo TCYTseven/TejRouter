@@ -38,21 +38,21 @@ export function Toggle({
         className={cn(
           "relative inline-flex shrink-0 items-center rounded-full border p-[1px] transition-colors duration-150",
           track,
-          checked ? "border-accent bg-accent" : "border-border-strong bg-surface-3",
+          checked ? "border-link bg-link" : "border-border-strong bg-surface-3",
         )}
       >
         <span
           className={cn(
             "inline-block rounded-full shadow-sm transition-transform duration-150",
             knob,
-            checked ? cn(shift, "bg-accent-fg") : "translate-x-0 bg-fg-muted",
+            checked ? cn(shift, "bg-white") : "translate-x-0 bg-fg-muted",
           )}
         />
       </button>
       {label || description ? (
         <span className="flex flex-col">
-          {label ? <span className="text-xs font-medium text-fg">{label}</span> : null}
-          {description ? <span className="text-[11px] text-fg-subtle">{description}</span> : null}
+          {label ? <span className="text-sm font-medium text-fg">{label}</span> : null}
+          {description ? <span className="text-[13px] text-fg-muted">{description}</span> : null}
         </span>
       ) : null}
     </label>

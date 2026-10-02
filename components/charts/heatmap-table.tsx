@@ -67,17 +67,17 @@ export function HeatmapTable({
     <div ref={measureRef} className={cn(styles.viz, "w-full")}>
       <div ref={containerRef} className="relative">
         <div className="overflow-x-auto pb-1">
-          <table className="border-separate text-xs" style={{ borderSpacing: 2, minWidth: rhw + cols.length * (narrow ? Math.min(cellMinWidth, 56) : cellMinWidth) }}>
+          <table className="border-separate text-[13px]" style={{ borderSpacing: 2, minWidth: rhw + cols.length * (narrow ? Math.min(cellMinWidth, 56) : cellMinWidth) }}>
             <caption className="sr-only">{caption}</caption>
             <thead>
               <tr>
-                <th scope="col" className="px-2 pb-1.5 text-left align-bottom text-[11px] font-medium text-fg-subtle" style={{ width: rhw, minWidth: rhw }}>
+                <th scope="col" className="px-2 pb-2 text-left align-bottom text-[13px] font-medium text-fg-muted" style={{ width: rhw, minWidth: rhw }}>
                   {rowHeader}
                 </th>
                 {cols.map((c) => (
-                  <th key={c.key} scope="col" title={c.text} className="px-1 pb-1.5 text-center align-bottom text-[11px] leading-tight font-medium text-fg-muted">
+                  <th key={c.key} scope="col" title={c.text} className="px-1 pb-2 text-center align-bottom text-[13px] leading-tight font-medium text-fg-muted">
                     <span className="mx-auto line-clamp-3 block max-w-[9rem] break-words">{c.label}</span>
-                    {c.sub ? <span className="mt-0.5 block text-[10px] font-normal text-fg-subtle">{c.sub}</span> : null}
+                    {c.sub ? <span className="mt-0.5 block text-[13px] font-normal text-fg-muted">{c.sub}</span> : null}
                   </th>
                 ))}
               </tr>
@@ -85,20 +85,20 @@ export function HeatmapTable({
             <tbody>
               {rows.map((r) => (
                 <tr key={r.key}>
-                  <th scope="row" className="px-2 py-0 text-left text-[11.5px] font-normal text-fg" style={{ width: rhw, maxWidth: rhw }}>
+                  <th scope="row" className="px-2 py-0 text-left text-[13px] font-normal text-fg" style={{ width: rhw, maxWidth: rhw }}>
                     <span className="block truncate" title={r.text}>
                       {r.label}
                     </span>
-                    {r.sub ? <span className="block truncate text-[10px] text-fg-subtle">{r.sub}</span> : null}
+                    {r.sub ? <span className="block truncate text-[13px] text-fg-muted">{r.sub}</span> : null}
                   </th>
                   {cols.map((c) => {
                     const v = cell(r.key, c.key);
                     if (v.blank) return <td key={c.key} aria-hidden="true" className="rounded-[4px] bg-surface-2/40" />;
                     const isSel = selected?.row === r.key && selected?.col === c.key;
                     const content = (
-                      <span className="num inline-flex items-baseline gap-0.5 text-[11.5px] font-medium">
+                      <span className="num inline-flex items-baseline gap-0.5 text-[13px] font-medium">
                         {v.display}
-                        {v.marker ? <span className="text-[10px]">{v.marker}</span> : null}
+                        {v.marker ? <span className="text-[13px]">{v.marker}</span> : null}
                       </span>
                     );
                     const label = v.ariaLabel ?? `${r.text}, ${c.text}: ${v.display}${v.marker ? ` ${v.marker}` : ""}`;
@@ -115,7 +115,7 @@ export function HeatmapTable({
                             aria-pressed={isSel}
                             onClick={() => onSelect(r.key, c.key)}
                             className={cn(
-                              "flex h-8 w-full items-center justify-center rounded-[4px] px-1.5 transition-[box-shadow,filter] hover:brightness-110",
+                              "flex h-9 w-full items-center justify-center rounded-[4px] px-1.5 transition-[box-shadow,filter] hover:brightness-110",
                               isSel && "shadow-[0_0_0_2px_var(--viz-surface),0_0_0_4px_var(--fg)]",
                             )}
                             style={style}
@@ -128,7 +128,7 @@ export function HeatmapTable({
                             tabIndex={0}
                             role="img"
                             aria-label={label}
-                            className="flex h-8 items-center justify-center rounded-[4px] px-1.5 outline-none hover:brightness-110 focus-visible:shadow-[0_0_0_2px_var(--viz-surface),0_0_0_4px_var(--ring)]"
+                            className="flex h-9 items-center justify-center rounded-[4px] px-1.5 outline-none hover:brightness-110 focus-visible:shadow-[0_0_0_2px_var(--viz-surface),0_0_0_4px_var(--ring)]"
                             style={style}
                             {...bind(v.tip ?? null)}
                           >
@@ -166,14 +166,14 @@ export function ScaleLegend({
   label?: string;
 }) {
   return (
-    <div className={cn(styles.viz, "flex flex-wrap items-center gap-2 text-[11px] text-fg-muted")}>
+    <div className={cn(styles.viz, "flex flex-wrap items-center gap-2 text-[13px] text-fg-muted")}>
       {label ? <span>{label}</span> : null}
-      <span className="num text-fg-subtle">{left}</span>
+      <span className="num">{left}</span>
       <span className="relative inline-block h-2 w-32 rounded-full" style={{ background: `linear-gradient(to right, ${stops.join(",")})` }} aria-hidden="true">
         {middle ? <span className="absolute top-1/2 left-1/2 h-3 w-px -translate-y-1/2 bg-fg-subtle" /> : null}
       </span>
-      <span className="num text-fg-subtle">{right}</span>
-      {middle ? <span className="text-fg-subtle">(midpoint {middle})</span> : null}
+      <span className="num">{right}</span>
+      {middle ? <span>(midpoint {middle})</span> : null}
     </div>
   );
 }

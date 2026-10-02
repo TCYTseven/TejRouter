@@ -2,7 +2,7 @@
 
 import { useId, useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
 import { cn } from "@/lib/client/cn";
-import { AxisBottom, AxisLeft, GridX, GridY } from "./axis";
+import { AxisBottom, AxisLeft, CHAR_W, GridX, GridY } from "./axis";
 import { linearScale, logScale, type Scale } from "./scale";
 import { ChartTooltip, useChartTooltip } from "./tooltip";
 import { useElementWidth } from "./use-width";
@@ -91,14 +91,14 @@ export function XYChart({
 
   const yTicksRaw = useMemo(() => {
     const s = (ySpec.type === "log" ? logScale : linearScale)(ySpec.domain, [1, 0]);
-    return ySpec.ticks ?? s.ticks(ySpec.tickCount ?? 5);
+    return ySpec.ticks ?? s.ticks(ySpec.tickCount ?? 4);
   }, [ySpec.domain, ySpec.ticks, ySpec.tickCount, ySpec.type]);
-  const yLabelWidth = Math.max(...yTicksRaw.map((t) => ySpec.format(t).length), 2) * 6.3 + 12;
+  const yLabelWidth = Math.max(...yTicksRaw.map((t) => ySpec.format(t).length), 2) * CHAR_W + 14;
 
   const margin: Margin = {
-    top: ySpec.label ? 22 : 10,
-    right: 14,
-    bottom: xSpec.label ? 38 : 24,
+    top: ySpec.label ? 28 : 12,
+    right: 16,
+    bottom: xSpec.label ? 46 : 28,
     left: Math.ceil(yLabelWidth),
     ...marginProp,
   };
@@ -113,7 +113,7 @@ export function XYChart({
     () => (ySpec.type === "log" ? logScale : linearScale)(ySpec.domain, [innerHeight, 0]),
     [ySpec.type, ySpec.domain, innerHeight],
   );
-  const xTicks = xSpec.ticks ?? x.ticks(xSpec.tickCount ?? Math.max(2, Math.min(8, Math.floor(innerWidth / 80))));
+  const xTicks = xSpec.ticks ?? x.ticks(xSpec.tickCount ?? Math.max(2, Math.min(7, Math.floor(innerWidth / 100))));
   const yTicks = yTicksRaw;
 
   const ctx: XYContext = { x, y, innerWidth, innerHeight, width, bind, hide };

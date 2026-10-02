@@ -15,9 +15,9 @@ import type { Metadata } from "next";
  */
 
 export const SITE_NAME = "TejRouter";
-export const SITE_TAGLINE = "the router that tests routers";
+export const SITE_TAGLINE = "find out which LLM router is actually better";
 export const SITE_DESCRIPTION =
-  "TejRouter benchmarks LLM routers (Ramp Router, Enclave Cyberouter, OpenRouter, Requesty, FastLLM, Martian and your own) side by side: live playground races, graded benchmark suites, and rigorous statistics on quality, latency, cost and routing decisions.";
+  "TejRouter sends the same prompts to LLM routers like Ramp Router, Enclave Cyberouter, OpenRouter and Requesty, and shows which model each picked, how fast it answered, what it cost and whether it got the answer right.";
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "");
 export const REPO_URL = "https://github.com/TCYTseven/tejrouter";
 
@@ -34,10 +34,6 @@ export const SITE_KEYWORDS = [
   "AI gateway",
   "LLM evaluation",
   "latency benchmark",
-  "TTFT",
-  "Bradley-Terry",
-  "Elo",
-  "Pareto frontier",
 ];
 
 /** The generated 1200x630 card from app/opengraph-image.tsx. */
@@ -45,7 +41,7 @@ export const OG_IMAGE = {
   url: "/opengraph-image",
   width: 1200,
   height: 630,
-  alt: "TejRouter: the router that tests routers",
+  alt: "TejRouter: find out which LLM router is actually better",
 };
 
 export function pageMetadata({

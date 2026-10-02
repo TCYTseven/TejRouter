@@ -1,56 +1,46 @@
 "use client";
 
-import { useMemo } from "react";
+import { useSearchParams } from "next/navigation";
+import { useCallback, useMemo } from "react";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { IconAlert, IconFlask } from "@/components/ui/icons";
 import { Skeleton, SkeletonText } from "@/components/ui/skeleton";
+import { TabPanel, Tabs } from "@/components/ui/tabs";
 import { vizStyles } from "@/components/charts";
 import { cn } from "@/lib/client/cn";
-import { AccuracySection } from "./accuracy-section";
 import { buildArms } from "./arms";
-import { CategorySection } from "./category-section";
-import { CostQualitySection } from "./cost-quality-section";
-import { LatencySection } from "./latency-section";
-import { OracleSection } from "./oracle-section";
-import { PairwiseSection } from "./pairwise-section";
-import { PowerSection } from "./power-section";
-import { RatingsSection } from "./ratings-section";
+import { OverviewTab } from "./overview-tab";
 import { ReportHeader } from "./report-header";
-import { RoutingSection } from "./routing-section";
-import { SamplesSection } from "./samples-section";
+import { RoutingTab } from "./routing-tab";
+import { SamplesTab } from "./samples-tab";
 import { makeCtx, ReportProvider } from "./section";
-import { TejScoreSection } from "./tejscore-section";
+import { StatisticsTab } from "./statistics-tab";
+import { TaskTypeTab } from "./task-type-tab";
 import { useRunReport } from "./use-run-report";
-import { VerdictStrip } from "./verdict-strip";
+import { Verdict } from "./verdict";
 
-const NAV = [
-  { id: "tejscore", label: "TejScore" },
-  { id: "accuracy", label: "Accuracy" },
-  { id: "cost-quality", label: "Cost vs quality" },
-  { id: "latency", label: "Latency" },
-  { id: "categories", label: "Categories" },
-  { id: "routing", label: "Routing" },
-  { id: "oracle", label: "vs Oracle" },
-  { id: "pairwise", label: "Pairwise" },
-  { id: "ratings", label: "Ratings" },
-  { id: "power", label: "Power" },
-  { id: "samples", label: "Samples" },
-];
+const TABS = [
+  { value: "overview", label: "Overview" },
+  { value: "routing", label: "Routing" },
+  { value: "task-types", label: "By task type" },
+  { value: "answers", label: "Every answer" },
+  { value: "statistics", label: "Statistics" },
+] as const;
+type Tab = (typeof TABS)[number]["value"];
+const isTab = (v: string | null): v is Tab => TABS.some((t) => t.value === v);
 
-/** Client root of /runs/[id]: loads the run, analyzes it off the main thread and renders every section. */
+/** Client root of /runs/[id]: loads the run, analyzes it off the main thread, then answers "which router?" first. */
 export function RunReportView({ id, name }: { id: string; name: string }) {
   const { state, settings, reanalyze } = useRunReport(id);
 
   if (state.status === "not-found") {
     return (
       <EmptyState
-        icon={<IconFlask size={18} />}
         title="Run not found"
-        description={`No stored run has the id "${id}". It may have been deleted.`}
+        description="This run may have been deleted."
         action={
-          <ButtonLink href="/runs" size="sm">
-            All runs
+          <ButtonLink href="/runs" size="sm" variant="primary">
+            All results
           </ButtonLink>
         }
       />
@@ -59,19 +49,35 @@ export function RunReportView({ id, name }: { id: string; name: string }) {
   if (state.status === "error") {
     return (
       <EmptyState
-        icon={<IconAlert size={18} />}
         title="Could not build the report"
-        description={state.message}
+        description={`${state.message} Reload the page to try again.`}
         action={
-          <ButtonLink href="/runs" size="sm">
-            All runs
+          <ButtonLink href="/runs" size="sm" variant="primary">
+            All results
           </ButtonLink>
         }
       />
     );
   }
-  if (state.status !== "ready") return <ReportSkeleton name={name} stage={state.status === "loading" ? "Loading run…" : "Running statistics…"} />;
+  if (state.status !== "ready") return <ReportSkeleton name={name} stage={state.status === "loading" ? "Loading the run" : "Working out the statistics"} />;
   return <Ready state={state} settings={settings} reanalyze={reanalyze} />;
+}
+
+function useTabParam(): [Tab, (t: Tab) => void] {
+  const params = useSearchParams();
+  const raw = params.get("tab");
+  const tab: Tab = isTab(raw) ? raw : "overview";
+  const setTab = useCallback(
+    (t: Tab) => {
+      const next = new URLSearchParams(params.toString());
+      if (t === "overview") next.delete("tab");
+      else next.set("tab", t);
+      const qs = next.toString();
+      window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}${window.location.hash}`);
+    },
+    [params],
+  );
+  return [tab, setTab];
 }
 
 function Ready({
@@ -86,66 +92,53 @@ function Ready({
   const { run, result, analyzing } = state;
   const report = result.report;
   const ctx = useMemo(() => makeCtx(report, run, buildArms(report)), [report, run]);
+  const [tab, setTab] = useTabParam();
+  const idBase = "report";
   return (
     <ReportProvider value={ctx}>
-      <div className={cn(vizStyles.viz, "flex flex-col gap-5")}>
-        <div className="overflow-x-clip">
-          <ReportHeader result={result} settings={settings} analyzing={analyzing} onReanalyze={reanalyze} />
-        </div>
-        <nav aria-label="Report sections" className="sticky top-14 z-20 -mx-4 border-y border-border bg-bg/85 px-4 backdrop-blur-md sm:-mx-6 sm:px-6 lg:top-0 lg:-mx-8 lg:px-8">
-          <ol className="flex gap-1 overflow-x-auto py-1.5 text-[12px]">
-            {NAV.map((n, i) => (
-              <li key={n.id} className="shrink-0">
-                <a href={`#${n.id}`} className="inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-fg-muted hover:bg-surface-2 hover:text-fg">
-                  <span className="num text-[10px] text-fg-subtle">{String(i + 1).padStart(2, "0")}</span>
-                  {n.label}
-                </a>
-              </li>
+      <div className={cn(vizStyles.viz, "flex flex-col gap-8")}>
+        <ReportHeader />
+        <div className={cn("flex flex-col gap-8 transition-opacity duration-200", analyzing && "pointer-events-none opacity-60")} aria-busy={analyzing || undefined}>
+          <Verdict />
+          <div>
+            <Tabs idBase={idBase} label="Report views" items={TABS.map((t) => ({ value: t.value, label: t.label }))} value={tab} onChange={setTab} className="mb-6" />
+            {TABS.map((t) => (
+              <TabPanel key={t.value} idBase={idBase} value={t.value} active={tab === t.value}>
+                {t.value === "overview" ? <OverviewTab /> : null}
+                {t.value === "routing" ? <RoutingTab /> : null}
+                {t.value === "task-types" ? <TaskTypeTab /> : null}
+                {t.value === "answers" ? <SamplesTab /> : null}
+                {t.value === "statistics" ? <StatisticsTab result={result} settings={settings} analyzing={analyzing} onReanalyze={reanalyze} /> : null}
+              </TabPanel>
             ))}
-          </ol>
-        </nav>
-        <div className={cn("flex flex-col gap-5 overflow-x-clip transition-opacity duration-200", analyzing && "pointer-events-none opacity-55")} aria-busy={analyzing || undefined}>
-          <VerdictStrip />
-          <TejScoreSection index={1} />
-          <AccuracySection index={2} />
-          <CostQualitySection index={3} />
-          <LatencySection index={4} />
-          <CategorySection index={5} />
-          <RoutingSection index={6} />
-          <OracleSection index={7} />
-          <PairwiseSection index={8} />
-          <RatingsSection index={9} />
-          <PowerSection index={10} />
-          <SamplesSection index={11} />
+          </div>
         </div>
       </div>
     </ReportProvider>
   );
 }
 
-function ReportSkeleton({ name, stage }: { name: string; stage: string }) {
+export function ReportSkeleton({ name, stage }: { name: string; stage: string }) {
   return (
-    <div role="status" aria-live="polite" className="flex flex-col gap-5 animate-fade-in">
-      <div className="flex flex-col gap-3 pb-2">
-        <Skeleton className="h-3 w-40" />
-        <h1 className="text-xl font-semibold tracking-tight text-fg sm:text-2xl">{name}</h1>
-        <p className="text-sm text-fg-muted">{stage}</p>
+    <div role="status" aria-live="polite" className="flex flex-col gap-8 animate-fade-in">
+      <div className="flex flex-col gap-4">
+        <Skeleton className="h-5 w-20" />
+        <h1 className="text-[28px] leading-tight font-semibold tracking-tight text-fg">{name}</h1>
+        <p className="text-[15px] text-fg-muted">{stage}…</p>
       </div>
-      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-        {Array.from({ length: 4 }, (_, i) => (
-          <Skeleton key={i} className="h-11" />
-        ))}
-      </div>
-      <div className="rounded-lg border border-border bg-surface p-4">
-        <SkeletonText lines={4} />
-      </div>
-      {Array.from({ length: 3 }, (_, i) => (
-        <div key={i} className="rounded-lg border border-border bg-surface p-4">
-          <Skeleton className="mb-3 h-4 w-48" />
-          <Skeleton className="h-56 w-full" />
+      <div className="rounded-xl border border-border bg-surface p-6">
+        <SkeletonText lines={2} />
+        <div className="mt-6 flex flex-col gap-3">
+          {Array.from({ length: 4 }, (_, i) => (
+            <Skeleton key={i} className="h-9 w-full" />
+          ))}
         </div>
-      ))}
-      <span className="sr-only">{stage}</span>
+      </div>
+      <Skeleton className="h-10 w-full max-w-lg" />
+      <div className="rounded-xl border border-border bg-surface p-6">
+        <Skeleton className="mb-4 h-5 w-48" />
+        <Skeleton className="h-72 w-full" />
+      </div>
     </div>
   );
 }

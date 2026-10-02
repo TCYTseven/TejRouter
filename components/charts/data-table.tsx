@@ -82,10 +82,10 @@ export function DataTable<T>({
 
   return (
     <div className="w-full">
-      <div className="overflow-x-auto rounded-md border border-border">
-        <table className="w-full text-left text-xs" style={{ minWidth }}>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full text-left text-sm" style={{ minWidth }}>
           <caption className="sr-only">{caption}</caption>
-          <thead className="bg-surface-2 text-[11px] text-fg-subtle">
+          <thead className="bg-surface-2 text-[13px] text-fg-muted">
             <tr>
               {columns.map((c) => {
                 const active = sort?.key === c.key;
@@ -108,8 +108,8 @@ export function DataTable<T>({
                         className={cn("inline-flex items-center gap-1 rounded hover:text-fg", active && "text-fg")}
                       >
                         {c.header}
-                        <span aria-hidden="true" className="text-[9px]">
-                          {active ? (sort!.dir === "asc" ? "▲" : "▼") : "↕"}
+                        <span aria-hidden="true" className={cn("text-[13px]", !active && "opacity-40")}>
+                          {active ? (sort!.dir === "asc" ? "↑" : "↓") : "↕"}
                         </span>
                       </button>
                     ) : (
@@ -137,7 +137,7 @@ export function DataTable<T>({
                     <td
                       key={c.key}
                       className={cn(
-                        "px-3 py-1.5 align-middle",
+                        "px-3 py-2 align-middle",
                         c.align === "right" && "num text-right whitespace-nowrap",
                         c.align === "center" && "text-center",
                         c.hideOnMobile && "hidden sm:table-cell",
@@ -175,7 +175,7 @@ export function DataTable<T>({
         </table>
       </div>
       {pageSize && pages > 1 ? (
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-fg-muted">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[13px] text-fg-muted">
           <span className="num">
             {current * pageSize + 1}–{Math.min(sorted.length, (current + 1) * pageSize)} of {sorted.length.toLocaleString("en-US")}
           </span>
@@ -209,7 +209,7 @@ function PageButton({ children, disabled, onClick, label }: { children: ReactNod
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
-      className="inline-flex h-7 min-w-7 items-center justify-center rounded-md border border-border bg-surface-2 px-2 text-xs text-fg hover:border-border-strong disabled:opacity-40"
+      className="inline-flex h-8 min-w-8 items-center justify-center rounded-md border border-border bg-surface px-2 text-sm text-fg hover:bg-surface-2 disabled:opacity-40"
     >
       {children}
     </button>

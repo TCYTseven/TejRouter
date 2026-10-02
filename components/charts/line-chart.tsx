@@ -64,7 +64,7 @@ export function LineChart({
     return [...set].sort((a, b) => a - b);
   }, [series]);
   const snapValues = xsAll.length <= 120 ? xsAll : undefined;
-  const labelW = endLabels ? Math.max(0, ...series.map((s) => textWidth(s.shortLabel ?? s.label, 11))) + 14 : 0;
+  const labelW = endLabels ? Math.max(0, ...series.map((s) => textWidth(s.shortLabel ?? s.label, 13))) + 14 : 0;
 
   return (
     <div className={cn(styles.viz, "flex flex-col gap-2")}>
@@ -164,7 +164,7 @@ function EndLabels({ series, ctx }: { series: LineSeries[]; ctx: { x: (v: number
     return last ? { s, px: ctx.x(last.x), py: ctx.y(last.y) } : null;
   });
   const valid = ends.filter((e): e is NonNullable<typeof e> => e != null);
-  const ys = separateLabels(valid.map((e) => e.py), 13, 4, ctx.innerHeight - 4);
+  const ys = separateLabels(valid.map((e) => e.py), 16, 6, ctx.innerHeight - 6);
   return (
     <g aria-hidden="true">
       {valid.map((e, i) => (

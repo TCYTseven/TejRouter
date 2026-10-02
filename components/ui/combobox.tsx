@@ -121,7 +121,7 @@ export function Combobox({
           }, 120);
         }}
         onKeyDown={onKey}
-        className="h-8 w-full rounded-md border border-border bg-surface-2 pr-7 pl-2.5 font-mono text-[12px] text-fg placeholder:font-sans placeholder:text-fg-subtle hover:border-border-strong focus:border-accent-line focus:ring-2 focus:ring-accent-soft focus:outline-none"
+        className="h-9 w-full rounded-lg border border-border bg-surface pr-8 pl-3 text-sm text-fg placeholder:text-fg-subtle hover:border-border-strong focus:border-link focus:ring-2 focus:ring-link/20 focus:outline-none"
       />
       <button
         type="button"
@@ -143,7 +143,7 @@ export function Combobox({
         <div className="absolute top-full right-0 left-0 z-40 mt-1 overflow-hidden rounded-md border border-border-strong bg-surface shadow-lg">
           <ul id={listId} role="listbox" className="max-h-60 overflow-y-auto py-1">
             {filtered.length === 0 ? (
-              <li className="px-2.5 py-2 text-xs text-fg-subtle" role="presentation">
+              <li className="px-3 py-2 text-sm text-fg-muted" role="presentation">
                 {loading ? "Loading models…" : emptyText}
               </li>
             ) : (
@@ -159,7 +159,7 @@ export function Combobox({
                   }}
                   onMouseEnter={() => setActive(i)}
                   className={cn(
-                    "flex cursor-pointer items-center justify-between gap-2 px-2.5 py-1.5 font-mono text-[12px]",
+                    "flex cursor-pointer items-center justify-between gap-2 px-3 py-2 text-sm",
                     i === active ? "bg-surface-3 text-fg" : "text-fg-muted",
                   )}
                 >
@@ -169,7 +169,7 @@ export function Combobox({
               ))
             )}
           </ul>
-          {footer ? <div className="border-t border-border px-2.5 py-1.5 text-[11px] text-fg-subtle">{footer}</div> : null}
+          {footer ? <div className="border-t border-border px-3 py-2 text-[13px] text-fg-muted">{footer}</div> : null}
         </div>
       ) : null}
     </div>

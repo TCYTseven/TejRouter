@@ -52,7 +52,7 @@ export function StackedBar({
         const share = sum > 0 ? s.value / sum : 0;
         const px = share * width;
         const text = labelFormat?.(s, share) ?? "";
-        const fits = text && px >= text.length * 6.4 + 10 && height >= 14;
+        const fits = text && px >= text.length * 7.4 + 12 && height >= 18;
         const last = i === visible.length - 1;
         return (
           <div
@@ -67,7 +67,7 @@ export function StackedBar({
             {...(bind ? bind(s.tip ?? null) : {})}
           >
             {fits ? (
-              <span className="num px-1 text-[10.5px] font-medium whitespace-nowrap" style={{ color: s.ink ?? "#fff" }}>
+              <span className="num px-1 text-[13px] font-medium whitespace-nowrap" style={{ color: s.ink ?? "#fff" }}>
                 {text}
               </span>
             ) : null}
@@ -112,20 +112,20 @@ export function StackedBarRows({
   return (
     <div ref={ref} className={cn(styles.viz, "w-full", className)}>
       <div ref={containerRef} className="relative">
-        <ul aria-label={ariaLabel} className="flex flex-col gap-1.5">
+        <ul aria-label={ariaLabel} className="flex flex-col gap-2">
           {rows.map((r) => (
             <li key={r.key} className={cn("grid items-center gap-x-3", narrow ? "grid-cols-[1fr_auto] gap-y-1" : "")} style={narrow ? undefined : { gridTemplateColumns: `${labelWidth}px 1fr auto` }}>
-              <div className="min-w-0 text-[11.5px] text-fg">
+              <div className="min-w-0 text-[13px] text-fg">
                 <span className="block truncate" title={r.text}>
                   {r.label}
                 </span>
-                {r.sub ? <span className="block truncate text-[10px] text-fg-subtle">{r.sub}</span> : null}
+                {r.sub ? <span className="block truncate text-[13px] text-fg-muted">{r.sub}</span> : null}
               </div>
-              {narrow ? <div className="num text-right text-[11px] text-fg-muted">{r.trailing}</div> : null}
+              {narrow ? <div className="num text-right text-[13px] text-fg-muted">{r.trailing}</div> : null}
               <div className={cn(narrow && "col-span-2")}>
                 <StackedBar segments={r.segments} total={r.total} height={height} ariaLabel={`${r.text}: ${r.segments.map((s) => `${s.label} ${s.value.toFixed(2)}`).join(", ")}`} bind={bind} labelFormat={labelFormat} />
               </div>
-              {!narrow ? <div className="num min-w-10 text-right text-[11px] text-fg-muted">{r.trailing}</div> : null}
+              {!narrow ? <div className="num min-w-10 text-right text-[13px] text-fg-muted">{r.trailing}</div> : null}
             </li>
           ))}
         </ul>

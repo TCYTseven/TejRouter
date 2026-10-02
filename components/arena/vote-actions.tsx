@@ -39,7 +39,7 @@ export function ImportVotesButton({ variant = "secondary", size = "sm" }: { vari
         }}
       />
       <Button variant={variant} size={size} leftIcon={<IconFile size={13} />} onClick={() => input.current?.click()}>
-        Import JSON
+        Import
       </Button>
     </>
   );
@@ -53,7 +53,7 @@ export function ExportVotesButton({ votes, size = "sm" }: { votes: ArenaVote[]; 
       disabled={!votes.length}
       onClick={() => downloadJson(`tejrouter-arena-votes-${new Date().toISOString().slice(0, 10)}.json`, buildExport(votes))}
     >
-      Export JSON
+      Export
     </Button>
   );
 }

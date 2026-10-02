@@ -1,6 +1,10 @@
 import type { Scale } from "./scale";
 
-const AXIS_FONT = 10.5;
+/** Every chart label is 13px (docs/DESIGN.md). */
+export const CHART_FONT = 13;
+/** Rough advance width of one 13px digit/character, for collision checks. */
+export const CHAR_W = 7.3;
+const AXIS_FONT = CHART_FONT;
 
 /** Horizontal gridlines at the given y ticks (hairline, recessive). */
 export function GridY({ scale, ticks, width }: { scale: Scale; ticks: number[]; width: number }) {
@@ -42,28 +46,28 @@ export function AxisBottom({
   width: number;
   baseline?: boolean;
 }) {
-  // Thin out labels that would collide (~ 6px per char + gap).
+  // Thin out labels that would collide.
   const labels = ticks.map((t) => ({ t, s: format(t), x: scale(t) }));
   const kept: typeof labels = [];
   for (const l of labels) {
-    const w = l.s.length * 6.2 + 10;
+    const w = l.s.length * CHAR_W + 14;
     const prev = kept[kept.length - 1];
-    if (!prev || l.x - prev.x >= (w + prev.s.length * 6.2 + 10) / 2) kept.push(l);
+    if (!prev || l.x - prev.x >= (w + prev.s.length * CHAR_W + 14) / 2) kept.push(l);
   }
   return (
     <g aria-hidden="true" transform={`translate(0,${y})`}>
       {baseline ? <line x1={0} x2={width} y1={0.5} y2={0.5} stroke="var(--viz-axis)" strokeWidth={1} /> : null}
       {kept.map((l) => {
-        const half = (l.s.length * 6.2) / 2;
+        const half = (l.s.length * CHAR_W) / 2;
         const anchor = l.x - half < -4 ? "start" : l.x + half > width + 4 ? "end" : "middle";
         return (
-          <text key={l.t} x={anchor === "start" ? Math.max(l.x - 2, -4) : anchor === "end" ? Math.min(l.x + 2, width + 4) : l.x} y={14} textAnchor={anchor} fontSize={AXIS_FONT} fill="var(--viz-muted)" className="num">
+          <text key={l.t} x={anchor === "start" ? Math.max(l.x - 2, -4) : anchor === "end" ? Math.min(l.x + 2, width + 4) : l.x} y={18} textAnchor={anchor} fontSize={AXIS_FONT} fill="var(--viz-muted)" className="num">
             {l.s}
           </text>
         );
       })}
       {label ? (
-        <text x={width} y={30} textAnchor="end" fontSize={AXIS_FONT} fill="var(--viz-ink-2)">
+        <text x={width} y={38} textAnchor="end" fontSize={AXIS_FONT} fill="var(--viz-ink-2)">
           {label}
         </text>
       ) : null}
@@ -91,7 +95,7 @@ export function AxisLeft({
         </text>
       ))}
       {label ? (
-        <text x={-8} y={-12} textAnchor="start" fontSize={AXIS_FONT} fill="var(--viz-ink-2)" transform="translate(0,0)">
+        <text x={-8} y={-14} textAnchor="start" fontSize={AXIS_FONT} fill="var(--viz-ink-2)">
           {label}
         </text>
       ) : null}

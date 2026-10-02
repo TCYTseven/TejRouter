@@ -76,19 +76,19 @@ export function IntervalPlot({
   const hasSecondary = rows.some((r) => r.secondary && r.secondary.value != null);
   const hasSub = rows.some((r) => r.subText);
   const labelCap = Math.min(300, Math.max(150, width * 0.24));
-  const labelW = wide ? Math.min(labelCap, Math.max(120, Math.max(...rows.map((r) => textWidth(r.label, 12))) + 30)) : 0;
+  const labelW = wide ? Math.min(labelCap, Math.max(120, Math.max(...rows.map((r) => textWidth(r.label, 13))) + 30)) : 0;
   const valueW = wide
-    ? Math.min(220, Math.max(110, Math.max(0, ...rows.map((r) => textWidth(r.valueText, 11.5)), ...rows.map((r) => textWidth(r.subText ?? "", 10.5))) + 18))
+    ? Math.min(220, Math.max(110, Math.max(0, ...rows.map((r) => textWidth(r.valueText, 13)), ...rows.map((r) => textWidth(r.subText ?? "", 13))) + 18))
     : 0;
   const padL = wide ? labelW + 8 : 8;
   const padR = wide ? valueW + 8 : 12;
   const plotW = Math.max(40, width - padL - padR);
-  const rowH = wide ? (hasSecondary || hasSub ? 36 : 28) : hasSecondary ? 54 : 46;
+  const rowH = wide ? (hasSecondary || hasSub ? 44 : 34) : hasSecondary ? 62 : 52;
   const top = 6;
-  const axisH = axisLabel ? 38 : 24;
+  const axisH = axisLabel ? 46 : 28;
   const height = top + rows.length * rowH + axisH;
   const x = linearScale(domain, [0, plotW]);
-  const ticks = x.ticks(Math.max(2, Math.min(7, Math.floor(plotW / 70))));
+  const ticks = x.ticks(Math.max(2, Math.min(6, Math.floor(plotW / 90))));
   const cx = (v: number) => x(Math.min(domain[1], Math.max(domain[0], v)));
 
   return (
@@ -101,13 +101,13 @@ export function IntervalPlot({
             <g transform={`translate(${padL},${top})`}>
               <GridX scale={x} ticks={ticks} height={rows.length * rowH} />
               {reference ? (
-                <line x1={x(reference.value)} x2={x(reference.value)} y1={-2} y2={rows.length * rowH} stroke="var(--viz-axis)" strokeWidth={1.5} />
+                <line x1={x(reference.value)} x2={x(reference.value)} y1={-2} y2={rows.length * rowH} stroke="var(--viz-axis)" strokeWidth={1} />
               ) : null}
               <AxisBottom scale={x} ticks={ticks} y={rows.length * rowH} format={format} label={axisLabel} width={plotW} />
             </g>
             {rows.map((r, i) => {
               const y0 = top + i * rowH;
-              const lineY = wide ? y0 + (hasSecondary ? 14 : rowH / 2) : y0 + 28;
+              const lineY = wide ? y0 + (hasSecondary ? 16 : rowH / 2) : y0 + 34;
               const ok = r.value != null;
               const hasCI = r.lo != null && r.hi != null;
               const sec = r.secondary;
@@ -126,21 +126,21 @@ export function IntervalPlot({
                   {wide ? (
                     <g opacity={op}>
                       <Swatch x={10} y={lineY} color={r.color} hollow={r.hollowSwatch} />
-                      <text x={24} y={lineY} dy="0.32em" fontSize={12} fill="var(--viz-ink)">
-                        {truncateTo(r.label, labelW - 30, 12)}
+                      <text x={24} y={lineY} dy="0.32em" fontSize={13} fill="var(--viz-ink)">
+                        {truncateTo(r.label, labelW - 30, 13)}
                       </text>
                     </g>
                   ) : (
                     <g opacity={op}>
                       <Swatch x={12} y={y0 + 10} color={r.color} hollow={r.hollowSwatch} />
-                      <text x={24} y={y0 + 10} dy="0.32em" fontSize={11.5} fill="var(--viz-ink)" {...HALO}>
-                        {truncateTo(r.label, width - 24 - textWidth(r.valueText, 11) - 16, 11.5)}
+                      <text x={24} y={y0 + 12} dy="0.32em" fontSize={13} fill="var(--viz-ink)" {...HALO}>
+                        {truncateTo(r.label, width - 24 - textWidth(r.valueText, 13) - 16, 13)}
                       </text>
-                      <text x={width - 6} y={y0 + 10} dy="0.32em" fontSize={11} textAnchor="end" fill="var(--viz-ink)" className="num" {...HALO}>
-                        {r.subText && textWidth(r.label, 11.5) + textWidth(`${r.valueText} · ${r.subText}`, 11) + 48 < width ? (
+                      <text x={width - 6} y={y0 + 12} dy="0.32em" fontSize={13} textAnchor="end" fill="var(--viz-ink)" className="num" {...HALO}>
+                        {r.subText && textWidth(r.label, 13) + textWidth(`${r.valueText} · ${r.subText}`, 13) + 48 < width ? (
                           <>
                             {r.valueText}
-                            <tspan fill="var(--viz-muted)" fontSize={10.5}>{` · ${r.subText}`}</tspan>
+                            <tspan fill="var(--viz-muted)" fontSize={13}>{` · ${r.subText}`}</tspan>
                           </>
                         ) : (
                           r.valueText
@@ -163,18 +163,18 @@ export function IntervalPlot({
                     ) : null}
                     {r.marker != null ? <Dot cx={cx(r.marker)} cy={lineY} r={3.5} color={r.color} hollow shape="diamond" hitRadius={0} aria-hidden="true" /> : null}
                     {ok ? <Dot cx={cx(r.value!)} cy={lineY} r={5} color={r.color} hitRadius={0} aria-hidden="true" /> : (
-                      <text x={4} y={lineY} dy="0.32em" fontSize={11} fill="var(--viz-muted)">
-                        — not estimable
+                      <text x={4} y={lineY} dy="0.32em" fontSize={13} fill="var(--viz-muted)">
+                        not estimable
                       </text>
                     )}
                   </g>
                   {wide ? (
                     <g opacity={op}>
-                      <text x={width - valueW + 10} y={r.subText ? lineY - 6 : lineY} dy="0.32em" fontSize={11.5} fill="var(--viz-ink)" className="num">
+                      <text x={width - valueW + 10} y={r.subText ? lineY - 8 : lineY} dy="0.32em" fontSize={13} fill="var(--viz-ink)" className="num">
                         {r.valueText}
                       </text>
                       {r.subText ? (
-                        <text x={width - valueW + 10} y={lineY + 8} dy="0.32em" fontSize={10.5} fill="var(--viz-muted)" className="num">
+                        <text x={width - valueW + 10} y={lineY + 9} dy="0.32em" fontSize={13} fill="var(--viz-muted)" className="num">
                           {r.subText}
                         </text>
                       ) : null}
@@ -188,7 +188,7 @@ export function IntervalPlot({
         <ChartTooltip tip={tip} containerWidth={width} />
       </div>
       {secondaryLabel || markerLabel ? (
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-fg-muted">
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-fg-muted">
           <span className="inline-flex items-center gap-1.5">
             <svg width="22" height="10" aria-hidden="true">
               <line x1="2" x2="20" y1="5" y2="5" stroke="var(--fg-muted)" strokeWidth="2.5" strokeLinecap="round" />
