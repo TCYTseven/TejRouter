@@ -2,8 +2,9 @@ import { BenchConfigError, newRunId, planRun, runBench, type RunPlan } from "@/l
 import { saveRun } from "@/lib/bench/store";
 import type { BenchEvent, BenchRun } from "@/lib/bench/types";
 
-// Long benchmark runs stream for many minutes.
-export const maxDuration = 800;
+// 300 s is the most Vercel allows on the Hobby plan; longer benchmarks are cut off
+// there, so run big suites locally (no limit) or raise this on a Pro plan (max 800).
+export const maxDuration = 300;
 
 type RunEnd = Extract<BenchEvent, { type: "run-end" }>;
 
