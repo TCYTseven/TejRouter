@@ -38,14 +38,14 @@ export function Toggle({
         className={cn(
           "relative inline-flex shrink-0 items-center rounded-full border p-[1px] transition-colors duration-150",
           track,
-          checked ? "border-accent bg-accent" : "border-border-strong bg-surface-3",
+          checked ? "border-link bg-link" : "border-border-strong bg-surface-3",
         )}
       >
         <span
           className={cn(
             "inline-block rounded-full shadow-sm transition-transform duration-150",
             knob,
-            checked ? cn(shift, "bg-accent-fg") : "translate-x-0 bg-fg-muted",
+            checked ? cn(shift, "bg-white") : "translate-x-0 bg-fg-muted",
           )}
         />
       </button>

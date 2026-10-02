@@ -14,22 +14,22 @@ cp .env.example .env.local   # add whichever router keys you have (all optional)
 npm run dev                  # http://localhost:3000
 ```
 
-Then open `/onboarding` for a three-step setup check, or go straight to the playground.
+Then open `/onboarding` to connect your routers, or go straight to Compare.
 
 ## Pages
 
-| Route | What it does |
-| --- | --- |
-| `/` | Landing page with a live simulator race |
-| `/dashboard` | Router status, latest benchmark, quick actions |
-| `/playground` | One prompt to many routers at once, streamed side by side with TTFT, latency, tokens/s, cost and the served model. Repeat runs, blind mode and arena voting |
-| `/benchmarks` | Pick suites and arms, see a pre-flight cost and power estimate, then watch the run fill in live |
-| `/runs` | Saved runs: import, export, delete |
-| `/runs/[id]` | The full statistical report for one run |
-| `/arena` | Bradley-Terry leaderboard from your blind playground votes |
-| `/providers` | Per-router config, model discovery and health checks |
-| `/methodology` | Every metric and formula, rendered from [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md) |
-| `/onboarding` | Guided setup, no account |
+| Page | Route | What it does |
+| --- | --- | --- |
+| Home | `/` | What TejRouter is, with an example result |
+| Compare | `/playground` | Send one prompt to several routers and read the answers side by side; vote for the best one |
+| Benchmark | `/benchmarks` | Pick routers and a task set (Quick, Standard, Thorough) and watch the run fill in |
+| Results | `/runs`, `/runs/[id]` | Saved runs, and a report that leads with a plain verdict, with routing, task-type and full statistics in tabs |
+| Leaderboard | `/arena` | Rankings from your blind votes on Compare |
+| Routers | `/providers` | Which routers are connected, how to add one, and a one-click test |
+| How it works | `/methodology` | Every metric and formula, rendered from [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md) |
+| Connect a router | `/onboarding` | Three-step setup, no account |
+
+UI rules live in [`docs/DESIGN.md`](docs/DESIGN.md).
 
 ## Routers
 
@@ -44,7 +44,7 @@ Each router is one entry in [`lib/providers/registry.ts`](lib/providers/registry
 | FastLLM | `FASTLLM_API_KEY` | self-hosted: set `FASTLLM_BASE_URL` | `FASTLLM_MODEL` |
 | Martian | `MARTIAN_API_KEY` | `https://api.withmartian.com/v1` (unverified) | `MARTIAN_MODEL` |
 | Custom | `CUSTOM_ROUTER_API_KEY` | `CUSTOM_ROUTER_BASE_URL` | `CUSTOM_ROUTER_MODEL` |
-| Sim: Greedy, Sim: Difficulty-aware | none | offline | `sim/auto` |
+| Practice: Budget, Practice: Smart | none | offline | `sim/auto` |
 
 Every base URL and model can be overridden with the `*_BASE_URL` and `*_MODEL` variables in [`.env.example`](.env.example). Adding a router is one registry entry; the playground, benchmarks and reports pick it up automatically.
 

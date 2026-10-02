@@ -10,7 +10,7 @@ export const PROVIDERS: ProviderSpec[] = [
   {
     id: "ramp",
     name: "Ramp Router",
-    tagline: "Ramp's model gateway with spend controls",
+    tagline: "Ramp's model gateway, with spend controls built in",
     baseUrl: "https://api.router.com/v1",
     baseUrlEnv: "RAMP_ROUTER_BASE_URL",
     keyEnvs: ["RAMP_ROUTER_API_KEY", "RAMP_ROUTER_KEY", "RAMP_API_KEY", "ROUTER_API_KEY"],
@@ -25,7 +25,7 @@ export const PROVIDERS: ProviderSpec[] = [
   {
     id: "enclave",
     name: "Enclave Cyberouter",
-    tagline: "cyberouter/auto picks the task and the model",
+    tagline: "Works out what kind of task each prompt is and picks a model for it",
     baseUrl: "https://router.enclave.ai/v1",
     baseUrlEnv: "ENCLAVE_ROUTER_BASE_URL",
     keyEnvs: [
@@ -44,7 +44,7 @@ export const PROVIDERS: ProviderSpec[] = [
   {
     id: "openrouter",
     name: "OpenRouter",
-    tagline: "openrouter/auto over hundreds of models",
+    tagline: "Picks from hundreds of models for each prompt",
     baseUrl: "https://openrouter.ai/api/v1",
     baseUrlEnv: "OPENROUTER_BASE_URL",
     keyEnvs: ["OPENROUTER_API_KEY"],
@@ -58,7 +58,7 @@ export const PROVIDERS: ProviderSpec[] = [
   {
     id: "requesty",
     name: "Requesty",
-    tagline: "Routing policies with fallback and load balancing",
+    tagline: "Routes by policies you define, with fallbacks if a model fails",
     baseUrl: "https://router.requesty.ai/v1",
     baseUrlEnv: "REQUESTY_BASE_URL",
     keyEnvs: ["REQUESTY_API_KEY"],
@@ -72,7 +72,7 @@ export const PROVIDERS: ProviderSpec[] = [
   {
     id: "fastllm",
     name: "FastLLM",
-    tagline: "Self-hosted Rust proxy with rule-based frontend models",
+    tagline: "A gateway you run yourself, routing by rules you write",
     baseUrl: "",
     baseUrlEnv: "FASTLLM_BASE_URL",
     keyEnvs: ["FASTLLM_API_KEY"],
@@ -86,7 +86,7 @@ export const PROVIDERS: ProviderSpec[] = [
   {
     id: "martian",
     name: "Martian",
-    tagline: "Model router that predicts the best model per prompt",
+    tagline: "Predicts which model will answer each prompt best",
     baseUrl: "https://api.withmartian.com/v1",
     baseUrlEnv: "MARTIAN_BASE_URL",
     keyEnvs: ["MARTIAN_API_KEY"],
@@ -100,7 +100,7 @@ export const PROVIDERS: ProviderSpec[] = [
   {
     id: "custom",
     name: "Custom Router",
-    tagline: "Any OpenAI-compatible endpoint",
+    tagline: "Any other router with an OpenAI-compatible API",
     baseUrl: "",
     baseUrlEnv: "CUSTOM_ROUTER_BASE_URL",
     keyEnvs: ["CUSTOM_ROUTER_API_KEY"],
