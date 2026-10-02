@@ -4,7 +4,7 @@ import type { ChatResult } from "@/lib/types";
 import { simulateChat } from "@/lib/providers/simulator";
 import { getProviderSpec } from "@/lib/providers/registry";
 import { mulberry32 } from "@/lib/stats";
-import { analyzeRun, arenaLeaderboard, computeTejScore, type ArenaVote, type RunReport } from "./index";
+import { analyzeRun, arenaLeaderboard, computeTejScore, type ArenaVote } from "./index";
 
 const CATS = [
   { name: "lookup", lo: 0.0 },
@@ -386,4 +386,3 @@ describe("arenaLeaderboard", () => {
   });
 });
 
-export type { RunReport };
