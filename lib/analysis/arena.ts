@@ -7,7 +7,8 @@ import type { Estimate } from "./types";
  *
  * Vote semantics:
  * - winner = an arm id: that arm beats every other arm in `armIds` (k - 1 matches).
- * - "tie": every pair of arms in the vote ties (½ win each).
+ * - "tie": every pair of arms in the vote ties (½ win each), each pair weighted 2/k so a
+ *   k-arm tie carries the same k-1 games of evidence as a decisive vote.
  * - "all-bad": also every pair ties (no preference revealed); counted separately.
  * All matches from one vote share a bootstrap group, so a multi-arm vote is
  * resampled as a unit.
@@ -103,8 +104,12 @@ export function arenaLeaderboard(votes: ArenaVote[], opts: ArenaOptions = {}): A
         if (v.winner === "tie") t(id).ties++;
         else t(id).allBad++;
       }
+      // A tie among k arms yields k(k-1)/2 pairs; weight each by 2/k so the vote carries
+      // the same k-1 games of evidence as a decisive vote over the same arms.
+      const weight = 2 / ids.length;
       for (let i = 0; i < ids.length; i++)
-        for (let j = i + 1; j < ids.length; j++) matches.push({ a: ids[i], b: ids[j], scoreA: 0.5, group: v.id });
+        for (let j = i + 1; j < ids.length; j++)
+          matches.push({ a: ids[i], b: ids[j], scoreA: 0.5, weight, group: v.id });
     }
   }
   const k = items.length;

@@ -85,9 +85,12 @@ export function formatRelativeTime(ts: number | null | undefined, now: number = 
   if (bad(ts)) return DASH;
   const d = Math.max(0, now - ts);
   if (d < 45_000) return "just now";
-  if (d < 3_600_000) return `${Math.round(d / 60_000)}m ago`;
-  if (d < 86_400_000) return `${Math.round(d / 3_600_000)}h ago`;
-  if (d < 7 * 86_400_000) return `${Math.round(d / 86_400_000)}d ago`;
+  const minutes = Math.round(d / 60_000);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.round(d / 3_600_000);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.round(d / 86_400_000);
+  if (days < 7) return `${days}d ago`;
   return formatDate(ts);
 }
 

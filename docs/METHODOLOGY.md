@@ -628,10 +628,10 @@ Implemented in `lib/analysis/arena.ts` (`arenaLeaderboard(votes)`).
 A vote `{ id, at, prompt, armIds, winner }`:
 
 - `winner` = an arm id: that arm beats every other arm in `armIds` (k − 1 matches).
-- `"tie"`: every pair in the vote ties.
+- `"tie"`: every pair in the vote ties. With k arms there are k(k−1)/2 pairs, so each is weighted 2/k: a tie then carries the same k−1 games of evidence as a decisive vote over the same arms.
 - `"all-bad"`: also a tie for every pair (no preference revealed), counted separately as `allBad`.
 
-Votes with fewer than two arms, or whose winner is not one of the arms, are invalid and skipped (`invalidVotes`). Ratings use the Bradley-Terry fit of Section 20 with the bootstrap resampling **votes** (a multi-arm vote is one unit). Each arm also gets `wins`, `losses`, `ties`, `allBad`, a `winRate = wins / votes` with a Wilson interval, a `decisiveWinRate = wins / (wins + losses)`, the observed head-to-head score matrix (`headToHead`) and the model win-probability matrix.
+Votes with fewer than two distinct arms, or whose winner is not one of the arms, are invalid and skipped (`invalidVotes`). Ratings use the Bradley-Terry fit of Section 20 with the bootstrap resampling **votes** (a multi-arm vote is one unit). Each arm also gets `wins`, `losses`, `ties`, `allBad`, a `winRate = wins / votes` with a Wilson interval, a `decisiveWinRate = wins / (wins + losses)`, the observed head-to-head score matrix (`headToHead`) and the model win-probability matrix.
 
 Human votes are subjective and prompt-dependent. Many votes on varied prompts are needed before rating gaps under about 50 points become reliable; check the bootstrap intervals.
 
@@ -779,7 +779,7 @@ Implemented in `lib/stats/info.ts`. All in bits.
 | Jensen-Shannon divergence | `½D(p ‖ m) + ½D(q ‖ m)`, m = ½(p + q), bounded in [0, 1] |
 | Mutual information | `I(X;Y) = H(X) + H(Y) − H(X,Y)` |
 | NMI | `I / √(H(X)H(Y))`; also `I / min(H(X), H(Y))` |
-| Uncertainty coefficient | `U(Y|X) = I / H(Y)` |
+| Uncertainty coefficient | `U(Y\|X) = I / H(Y)` |
 | Bias-corrected MI | `I − (r − 1)(c − 1)/(2N ln 2)`, floored at 0 |
 | G-test | `G = 2N·I·ln 2 ~ χ²_{(r−1)(c−1)}` |
 

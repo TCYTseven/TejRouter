@@ -136,7 +136,7 @@ export const PROVIDERS: ProviderSpec[] = [
     autoModel: "sim/auto",
     suggestedModels: ["sim/auto", "sim/small", "sim/large"],
     docsUrl: "",
-    color: "#a8a29e",
+    color: "#78716c",
     simulated: true,
     notes: "Offline simulator. Routes by a noisy difficulty estimate, like a learned router would.",
   },
