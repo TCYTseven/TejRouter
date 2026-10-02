@@ -1,5 +1,5 @@
 import type { BenchSuite } from "../types";
-import { FORMAT, binom, factorial, gcd, hash32, pick, randInt, rng, type Rand, type TaskInput, makeTask } from "./util";
+import { FORMAT, binom, factorial, hash32, pick, randInt, rng, type Rand, type TaskInput, makeTask } from "./util";
 
 const SUITE = "math";
 const N = FORMAT.number;
@@ -24,13 +24,14 @@ interface GenSpec {
 const NAMES = ["Maya", "Omar", "Lena", "Diego", "Priya", "Tomás", "Aiko", "Noah", "Zara", "Ivan"];
 const ITEMS = ["notebooks", "candles", "jars of honey", "potted plants", "bike lights", "puzzles"];
 
-function modPow(base: bigint, exp: bigint, mod: bigint): bigint {
-  let result = 1n;
+/** base^exp mod m for small moduli (m² stays far below 2^53). */
+function modPow(base: number, exp: number, mod: number): number {
+  let result = 1;
   base %= mod;
-  while (exp > 0n) {
-    if (exp & 1n) result = (result * base) % mod;
+  while (exp > 0) {
+    if (exp % 2 === 1) result = (result * base) % mod;
     base = (base * base) % mod;
-    exp >>= 1n;
+    exp = Math.floor(exp / 2);
   }
   return result;
 }
@@ -364,7 +365,7 @@ const GENERATED: GenSpec[] = [
       const e = randInt(r, 1000, 3000);
       return {
         prompt: `What is the remainder when ${b}^${e} is divided by 1000? ${N}`,
-        answer: Number(modPow(BigInt(b), BigInt(e), 1000n)),
+        answer: modPow(b, e, 1000),
       };
     },
   },
@@ -377,7 +378,7 @@ const GENERATED: GenSpec[] = [
       const e = randInt(r, 100, 999);
       return {
         prompt: `What are the last two digits of ${b}^${e}? Give them as a number between 0 and 99. ${N}`,
-        answer: Number(modPow(BigInt(b), BigInt(e), 100n)),
+        answer: modPow(b, e, 100),
       };
     },
   },
@@ -634,6 +635,3 @@ export const mathSuite: BenchSuite = {
     "Arithmetic, original word problems, multi-step, modular arithmetic, combinatorics and competition-style problems. Answers are computed in code from seeded parameters.",
   tasks: [...buildGenerated(), ...COMPETITION].map((t) => makeTask(SUITE, t)),
 };
-
-// Exported for tests.
-export const _internals = { modPow, gcd };

@@ -16,7 +16,7 @@ import type { BenchTask, ConstraintCheck, GradeResult, GraderSpec } from "./type
 
 /** Matches an "Answer:" marker at the start of a line, tolerating markdown and "Final answer". */
 const ANSWER_MARKER =
-  /^[ \t>*_#-]*(?:the\s+)?(?:final\s+)?answer(?:\s+is)?[ \t]*[*_]*[ \t]*[:：][ \t]*[*_]*[ \t]*/gim;
+  /^[ \t>*_#-]*(?:the\s+)?(?:final\s+)?answer(?:\s+is)?[ \t]*(?:\*\*|__)?[ \t]*[:：][ \t]*(?:\*\*|__)?[ \t]*/gim;
 
 function markerMatches(text: string): RegExpExecArray[] {
   const out: RegExpExecArray[] = [];
@@ -57,9 +57,9 @@ export function cleanAnswer(s: string): string {
   if (boxed) t = boxed[1];
   for (let i = 0; i < 3; i++) {
     const before = t;
-    t = t.replace(/^\*\*(.*)\*\*$/s, "$1").replace(/^__(.*)__$/s, "$1").replace(/^\*(.*)\*$/s, "$1");
-    t = t.replace(/^`+(.*?)`+$/s, "$1").replace(/^\$+(.*?)\$+$/s, "$1");
-    t = t.replace(/^["'“”‘’«](.*)["'“”‘’»]$/s, "$1");
+    t = t.replace(/^[*_]+|[*_]+$/g, "").trim();
+    t = t.replace(/^`+([\s\S]*?)`+$/, "$1").replace(/^\$+([\s\S]*?)\$+$/, "$1");
+    t = t.replace(/^["'“”‘’«]([\s\S]*)["'“”‘’»]$/, "$1");
     t = t.replace(/[.!。;]+$/, "").trim();
     if (t === before) break;
   }
@@ -654,9 +654,17 @@ export function describeConstraint(c: ConstraintCheck): string {
 
 function gradeConstraints(spec: Extract<GraderSpec, { kind: "constraints" }>, text: string): GradeResult {
   if (!spec.checks.length) return result(0, null, "grader misconfigured: no checks");
+  // Grade the whole reply, and also the part after an `Answer:` marker (simulators and some
+  // models prefix their reply with reasoning); the better of the two counts.
+  const candidates = [text.trim()];
   const block = extractAnswerBlock(text);
-  const target = (block != null ? block : text).trim();
-  const failed = spec.checks.filter((c) => !checkConstraint(c, target));
+  if (block != null && block.trim() !== candidates[0]) candidates.push(block.trim());
+  let best: { target: string; failed: ConstraintCheck[] } | null = null;
+  for (const target of candidates) {
+    const failed = spec.checks.filter((c) => !checkConstraint(c, target));
+    if (!best || failed.length < best.failed.length) best = { target, failed };
+  }
+  const { target, failed } = best!;
   const passed = spec.checks.length - failed.length;
   return result(
     passed / spec.checks.length,

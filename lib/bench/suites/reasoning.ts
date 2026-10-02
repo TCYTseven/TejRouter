@@ -128,7 +128,8 @@ function orderingTask(p: OrderingPuzzle): TaskInput {
     difficulty: p.difficulty,
     prompt: `${p.intro}\n\n${p.clues.map((c, i) => `${i + 1}. ${c}`).join("\n")}\n\n${p.question} End your reply with a final line of the form \`Answer: <names in order, separated by commas>\`.`,
     expected: answer.join(", "),
-    grader: { kind: "regex", pattern: `^\\W*${answer.join("\\W+")}\\W*$`, flags: "i" },
+    // Names in order, separated by anything that is not a letter (commas, arrows, "1." ...).
+    grader: { kind: "regex", pattern: `^[^A-Za-z]*${answer.join("[^A-Za-z]+")}[^A-Za-z]*$`, flags: "i" },
   };
 }
 
