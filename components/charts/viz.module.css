@@ -1,0 +1,78 @@
+/*
+ * Chart tokens (dataviz reference palette), selected per theme.
+ * Apply `styles.viz` to any ancestor of a chart; series colors are var(--viz-s1..8).
+ * Chrome (grid, axis text) reuses the app tokens so charts sit in both themes.
+ */
+.viz {
+  /* dark (default render) */
+  --viz-s1: #3987e5;
+  --viz-s2: #d95926;
+  --viz-s3: #199e70;
+  --viz-s4: #c98500;
+  --viz-s5: #d55181;
+  --viz-s6: #008300;
+  --viz-s7: #9085e9;
+  --viz-s8: #e66767;
+  --viz-grid: rgba(255, 255, 255, 0.07);
+  --viz-axis: #383835;
+  --viz-ink: var(--fg);
+  --viz-ink-2: var(--fg-muted);
+  --viz-muted: var(--fg-subtle);
+  --viz-surface: var(--surface);
+  /* sequential (blue): low end recedes into the dark surface, high end is bright */
+  --viz-seq-lo: #16283f;
+  --viz-seq-hi: #86b6ef;
+  --viz-seq-ink-lo: #ffffff;
+  --viz-seq-ink-hi: #0b0b0b;
+  /* diverging blue <-> red, neutral gray midpoint */
+  --viz-div-neg: #e66767;
+  --viz-div-mid: #383835;
+  --viz-div-pos: #3987e5;
+  --viz-div-ink: #ffffff;
+  /* ordinal ramp (served models, cheap -> expensive) */
+  --viz-o1: #184f95;
+  --viz-o2: #1c5cab;
+  --viz-o3: #256abf;
+  --viz-o4: #3987e5;
+  --viz-o5: #5598e7;
+  --viz-o6: #6da7ec;
+  --viz-o7: #86b6ef;
+  --viz-other: #6b6a65;
+  --viz-wash: 0.12;
+}
+
+:global([data-theme="light"]) .viz {
+  --viz-s1: #2a78d6;
+  --viz-s2: #eb6834;
+  --viz-s3: #1baf7a;
+  --viz-s4: #eda100;
+  --viz-s5: #e87ba4;
+  --viz-s6: #008300;
+  --viz-s7: #4a3aa7;
+  --viz-s8: #e34948;
+  --viz-grid: #ecebe6;
+  --viz-axis: #c3c2b7;
+  --viz-seq-lo: #eef4fc;
+  --viz-seq-hi: #104281;
+  --viz-seq-ink-lo: #0b0b0b;
+  --viz-seq-ink-hi: #ffffff;
+  --viz-div-neg: #d03b3b;
+  --viz-div-mid: #f0efec;
+  --viz-div-pos: #1c5cab;
+  --viz-div-ink: #ffffff;
+  --viz-o1: #86b6ef;
+  --viz-o2: #6da7ec;
+  --viz-o3: #5598e7;
+  --viz-o4: #3987e5;
+  --viz-o5: #256abf;
+  --viz-o6: #1c5cab;
+  --viz-o7: #104281;
+  --viz-other: #b5b4ae;
+  --viz-wash: 0.1;
+}
+
+@media (forced-colors: active) {
+  .viz {
+    forced-color-adjust: auto;
+  }
+}

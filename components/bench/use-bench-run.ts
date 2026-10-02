@@ -144,7 +144,8 @@ export function useBenchRun() {
         const runId = runIdRef.current;
         const sawEnd = sawEndRef.current;
         setState((s) => {
-          if (!s.run) return { ...s, status: "failed", startError: aborted ? "Stopped before the run started." : message };
+          // Stopped before run-start arrived: back to the setup form (the stop toast explains it).
+          if (!s.run) return aborted ? INITIAL : { ...s, status: "failed", startError: message };
           // Stream cut (user stop or network): the server keeps and saves the partial run.
           return {
             ...s,
