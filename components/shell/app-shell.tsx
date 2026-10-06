@@ -13,6 +13,8 @@ export interface ShellStatus {
   live: number;
   total: number;
   simulators: number;
+  /** Real routers with a key in .env.local; the pill adds keys saved in the browser. */
+  configuredIds: string[];
 }
 
 /** Sidebar application shell used by app/(app)/layout.tsx. */

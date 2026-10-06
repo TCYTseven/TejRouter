@@ -2,6 +2,7 @@
 
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import type { ProviderStatus } from "@/lib/types";
+import { useWithBrowserKeys } from "@/lib/client/keys";
 import { PageHeader } from "@/components/ui/page-header";
 import { onCommand } from "@/components/shell/events";
 import { OnboardingBanner } from "@/components/shell/onboarding-banner";
@@ -38,7 +39,8 @@ export function defaultArms(providers: ProviderStatus[]): ArmConfig[] {
   return pick.map((p) => ({ key: `arm-${p.id}`, providerId: p.id, model: "" }));
 }
 
-export function Playground({ providers }: { providers: ProviderStatus[] }) {
+export function Playground({ providers: serverProviders }: { providers: ProviderStatus[] }) {
+  const providers = useWithBrowserKeys(serverProviders);
   const providerMap = useMemo<ProviderMap>(() => Object.fromEntries(providers.map((p) => [p.id, p])), [providers]);
   const [stored, setSettings] = useStoredState<GenSettings>(SETTINGS_KEY, DEFAULT_SETTINGS, isSettings);
   const settings = useMemo(() => ({ ...DEFAULT_SETTINGS, ...stored }), [stored]);

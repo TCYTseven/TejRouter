@@ -13,7 +13,7 @@ export type HealthState =
   | { kind: "done"; result: ChatResult }
   | { kind: "failed"; error: string };
 
-/** Sends a tiny "pong" request through /api/chat and keeps the outcome. */
+/** Sends a tiny "pong" request (from the browser when its key is saved here, else via /api/chat) and keeps the outcome. */
 export function useHealthCheck(providerId: string) {
   const [state, setState] = useState<HealthState>({ kind: "idle" });
   const ctl = useRef<AbortController | null>(null);

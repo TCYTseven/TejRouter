@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { IconFlask, IconList, IconServer, IconTerminal, IconTrophy, type IconProps } from "@/components/ui/icons";
+import { IconFlask, IconList, IconServer, IconSliders, IconTerminal, IconTrophy, type IconProps } from "@/components/ui/icons";
 
 export interface NavItem {
   href: string;
@@ -17,6 +17,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/runs", label: "Results", description: "Your benchmark reports", icon: IconList, key: "r" },
   { href: "/arena", label: "Leaderboard", description: "Rankings from your blind votes", icon: IconTrophy, key: "l" },
   { href: "/providers", label: "Routers", description: "Connect routers and check them", icon: IconServer, key: "o" },
+  { href: "/settings", label: "Settings", description: "API keys, saved only in this browser", icon: IconSliders, key: "s" },
 ];
 
 export function isActive(pathname: string | null, href: string): boolean {

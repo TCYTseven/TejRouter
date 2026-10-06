@@ -61,7 +61,7 @@ swatch next to a router name), never for chrome.
 
 ## Navigation
 
-Sidebar with five items, in this order:
+Sidebar with six items, in this order:
 
 | Label | Route | Question it answers |
 | --- | --- | --- |
@@ -70,6 +70,7 @@ Sidebar with five items, in this order:
 | Results | `/runs` (and `/runs/[id]`) | "What did my benchmarks find?" |
 | Leaderboard | `/arena` | "Which router do I prefer in blind votes?" |
 | Routers | `/providers` | "Which routers are connected, and how do I add one?" |
+| Settings | `/settings` | "Where do I put my API keys?" (saved in this browser only) |
 
 Methodology is linked from the sidebar footer and from report sections, not a
 primary item. `/dashboard` redirects to `/playground`. The landing page `/` is

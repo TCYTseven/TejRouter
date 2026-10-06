@@ -10,6 +10,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     live: real.filter((p) => p.configured).length,
     total: real.length,
     simulators: providers.length - real.length,
+    configuredIds: real.filter((p) => p.configured).map((p) => p.id),
   };
   return <AppShell status={status}>{children}</AppShell>;
 }

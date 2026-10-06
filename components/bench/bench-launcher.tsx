@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import type { SuiteInfo } from "@/lib/bench/types";
 import type { ProviderStatus } from "@/lib/types";
+import { useWithBrowserKeys } from "@/lib/client/keys";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
@@ -40,7 +41,7 @@ function costRange(low: number | null, high: number | null): string | null {
 }
 
 export function BenchLauncher({
-  providers,
+  providers: serverProviders,
   suites,
   tokenPriors,
 }: {
@@ -49,6 +50,7 @@ export function BenchLauncher({
   tokenPriors: Record<string, SuiteTokenPrior>;
 }) {
   const toast = useToast();
+  const providers = useWithBrowserKeys(serverProviders);
   const providerMap = useMemo(() => Object.fromEntries(providers.map((p) => [p.id, p])), [providers]);
   const [stored, setStored] = useStoredState<LauncherConfig>(CONFIG_KEY, DEFAULT_CONFIG, isLauncherConfig);
   const config = useMemo(() => ({ ...DEFAULT_CONFIG, ...stored }), [stored]);

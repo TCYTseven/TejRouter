@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { ReactNode } from "react";
 import type { ProviderStatus } from "@/lib/types";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { RouterStatusText } from "@/components/providers/provider-status";
 import { RouterRow } from "@/components/providers/router-row";
 import { buildEnvTemplate } from "@/lib/client/env-template";
 import { useOnboarding } from "@/lib/client/onboarding";
+import { useWithBrowserKeys } from "@/lib/client/keys";
 import { useProviders } from "@/lib/client/providers";
 
 function Step({ n, title, description, children }: { n: number; title: string; description: ReactNode; children: ReactNode }) {
@@ -28,7 +30,7 @@ function Step({ n, title, description, children }: { n: number; title: string; d
 /** Pick routers, copy the snippet and restart, then test. All on one page. */
 export function OnboardingFlow({ initial }: { initial: ProviderStatus[] }) {
   const { providers: live, reload, refreshing, error } = useProviders(initial);
-  const providers = live ?? initial;
+  const providers = useWithBrowserKeys(live ?? initial);
   const real = providers.filter((p) => !p.simulated);
   const practice = providers.filter((p) => p.simulated);
   const [state, update] = useOnboarding();
@@ -73,7 +75,11 @@ export function OnboardingFlow({ initial }: { initial: ProviderStatus[] }) {
         description={
           <>
             Paste this into <code className="font-mono text-sm text-fg">.env.local</code> at the project root, fill in your keys,
-            then stop and start <code className="font-mono text-sm text-fg">npm run dev</code> again.
+            then stop and start <code className="font-mono text-sm text-fg">npm run dev</code> again. Or add them in{" "}
+            <Link href="/settings" className="text-link hover:underline">
+              Settings
+            </Link>
+            , where they stay in this browser and need no restart.
           </>
         }
       >

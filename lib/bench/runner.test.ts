@@ -453,3 +453,24 @@ describe("API routes", () => {
     delete process.env.TEJROUTER_RUNS_DIR;
   });
 });
+
+describe("runBenchWith (the engine the browser runs)", () => {
+  it("awaits an async grader and turns a throwing grader into a zero score", async () => {
+    const { runBenchWith } = await import("./engine");
+    const { grade } = await import("./graders");
+    const config = baseConfig({ suiteIds: ["trivial"], arms: [{ providerId: "sim-oracle" }], repetitions: 1 });
+    const server = await runBench(config, () => {});
+    const async = await runBenchWith(config, () => {}, undefined, {
+      call: (req) => import("@/lib/providers/simulator").then((m) => m.simulateChat(getProviderSpec(req.providerId)!, req)),
+      grade: async (task, text) => grade(task, text),
+    });
+    const scores = (r: typeof server) => r.samples.map((s) => [s.taskId, s.grade.score]).sort();
+    expect(scores(async)).toEqual(scores(server));
+
+    const broken = await runBenchWith(config, () => {}, undefined, {
+      call: (req) => Promise.resolve(okResult(req, "Answer: 1")),
+      grade: () => Promise.reject(new Error("worker crashed")),
+    });
+    expect(broken.samples.every((s) => s.grade.score === 0 && s.grade.detail.includes("worker crashed"))).toBe(true);
+  });
+});

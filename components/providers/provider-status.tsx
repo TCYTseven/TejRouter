@@ -7,7 +7,8 @@ export type RouterStatusTone = "ok" | "warn" | "practice";
 /** Plain-words connection status for a router. */
 export function routerStatus(p: ProviderStatus): { label: string; tone: RouterStatusTone } {
   if (p.simulated) return { label: "Practice router, no key needed", tone: "practice" };
-  if (p.configured) return { label: "Connected", tone: "ok" };
+  if (p.configured) return { label: p.keySource === "browser" ? "Connected in this browser" : "Connected", tone: "ok" };
+  if (p.keySource === "browser") return { label: "Needs URL", tone: "warn" };
   const needsUrl = !p.effectiveBaseUrl;
   if (needsUrl && !p.keySource) return { label: "Needs URL and key", tone: "warn" };
   if (needsUrl) return { label: "Needs URL", tone: "warn" };
