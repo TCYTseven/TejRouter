@@ -2,12 +2,14 @@ import { useMemo } from "react";
 import type { ChatRequest, ChatResult, ProviderStatus } from "@/lib/types";
 import { callChatWith, listModelsWith, type CallOptions, type RouterTarget } from "@/lib/providers/openai";
 import { getProviderSpec } from "@/lib/providers/registry";
+import { routerFetch } from "./relay";
 import { readStorage, removeStorage, useStoredValue, writeStorage } from "./storage";
 
 /**
  * API keys the user saves in Settings. They live only in this browser's localStorage.
- * Requests that use one go straight from the browser to the router; nothing in this
- * module talks to TejRouter's own API routes, and no other module may send a key there.
+ * Requests that use one go straight from the browser to the router. When the router
+ * refuses requests from web pages (CORS), routerFetch retries through /api/relay, which
+ * forwards the request and stores nothing. No other API route may receive a key.
  */
 
 export const KEYS_STORAGE_KEY = "tejrouter:browser-keys:v1";
@@ -114,16 +116,16 @@ export function browserTarget(providerId: string): RouterTarget | null {
     apiKey: key.apiKey,
     baseUrl: (key.baseUrl || spec.baseUrl).replace(/\/+$/, ""),
     defaultModel: key.model || spec.autoModel || spec.suggestedModels[0] || "",
+    fetch: routerFetch,
   };
 }
 
-const CORS_HINT =
-  "your browser could not reach this router. It may not accept requests from web pages (CORS). Check the base URL, or put this key in .env.local instead";
+const UNREACHABLE_HINT = "could not reach this router. Check the base URL in Settings";
 
 export const BROWSER_CALL_OPTIONS: Pick<CallOptions, "notConfiguredMessage" | "noModelMessage" | "describeNetworkError"> = {
   notConfiguredMessage: "Not configured: add a base URL for this router in Settings",
   noModelMessage: "No model: set a default model in Settings or pick one in the UI",
-  describeNetworkError: (msg) => (/failed to fetch|load failed|networkerror|fetch failed/i.test(msg) ? CORS_HINT : msg),
+  describeNetworkError: (msg) => (/failed to fetch|load failed|networkerror|fetch failed/i.test(msg) ? UNREACHABLE_HINT : msg),
 };
 
 /** Call a router directly from the browser with a saved key. */

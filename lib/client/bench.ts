@@ -1,3 +1,4 @@
+import { asText } from "@/lib/providers/openai";
 import type { BenchArm, BenchEvent, BenchRun, BenchRunConfig, RunSummary, SuiteInfo } from "@/lib/bench/types";
 import type { ProviderStatus } from "@/lib/types";
 import { lookupPrice } from "@/lib/pricing";
@@ -77,7 +78,14 @@ export async function fetchRuns(signal?: AbortSignal): Promise<RunSummary[]> {
 export async function fetchRun(id: string, signal?: AbortSignal): Promise<BenchRun> {
   const res = await fetch(`/api/runs/${encodeURIComponent(id)}`, { signal, cache: "no-store" });
   if (!res.ok) throw new Error(await errorMessage(res, `GET /api/runs/${id} failed`));
-  return (await res.json()) as BenchRun;
+  const run = (await res.json()) as BenchRun;
+  // Runs saved before asText existed may hold an object where text belongs.
+  for (const s of run.samples ?? []) {
+    s.result.servedModel = asText(s.result.servedModel);
+    s.result.servedProvider = asText(s.result.servedProvider);
+    s.result.error = asText(s.result.error);
+  }
+  return run;
 }
 
 export async function deleteRun(id: string): Promise<void> {

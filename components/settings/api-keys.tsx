@@ -23,12 +23,13 @@ export function ApiKeySettings({ providers }: { providers: ProviderSpec[] }) {
         <IconKey size={18} className="mt-0.5 shrink-0 text-fg-muted" />
         <div className="flex flex-col gap-2">
           <h2 id="privacy-heading" className="text-[15px] font-semibold text-fg">
-            Your keys are never sent to our servers
+            Your keys are stored only in this browser
           </h2>
           <p className="text-sm text-fg-muted">
-            They are stored only in this browser&apos;s local storage. When you use one, your browser sends the request
-            straight to that router, and TejRouter&apos;s server never sees the key. Clearing this site&apos;s data
-            removes them, and anyone who can use this browser profile can read them.
+            They live in this browser&apos;s local storage. When you use one, your browser calls the router directly. If
+            the router blocks calls from web pages, the request passes through TejRouter&apos;s server, which forwards it
+            and saves nothing. Clearing this site&apos;s data removes the keys, and anyone who can use this browser profile
+            can read them.
           </p>
         </div>
       </section>

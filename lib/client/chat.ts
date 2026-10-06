@@ -48,7 +48,7 @@ export function clientFailure(
 
 /**
  * Run one router call and stream its text. With a key saved in Settings the browser
- * calls the router itself and the key never reaches TejRouter's server; otherwise the
+ * calls the router itself (through /api/relay if the router blocks CORS); otherwise the
  * request goes to /api/chat, which uses .env.local. Resolves with the final ChatResult
  * (ok or not). Rejects only on abort (check with isAbortError).
  */

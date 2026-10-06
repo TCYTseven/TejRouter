@@ -6,7 +6,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata = pageMetadata({
   title: "Settings",
   description:
-    "Add API keys for the LLM routers you use. Keys are stored only in your browser and are never sent to TejRouter's servers.",
+    "Add API keys for the LLM routers you use. Keys are stored only in your browser.",
   path: "/settings",
 });
 
