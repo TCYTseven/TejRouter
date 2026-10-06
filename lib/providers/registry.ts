@@ -4,7 +4,8 @@ import type { ProviderSpec } from "@/lib/types";
  * Every router TejRouter knows about. Adding a router means adding one entry here;
  * the playground, benchmark runner and dashboard pick it up automatically.
  *
- * Keys are read server-side only (see ./server.ts) and never reach the browser.
+ * Keys come from .env.local, read server-side only (see ./server.ts) and never sent to the
+ * browser, or from Settings, stored in the browser and never sent to the server (lib/client/keys.ts).
  */
 export const PROVIDERS: ProviderSpec[] = [
   {

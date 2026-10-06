@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ProviderStatus } from "@/lib/types";
+import { browserTarget, listModelsWithBrowserKey, useBrowserKeys } from "./keys";
 
 /** Browser-side access to /api/providers and /api/providers/[id]/models. */
 
@@ -17,23 +18,30 @@ export interface ModelList {
 
 const modelCache = new Map<string, Promise<ModelList>>();
 
-/** Discovered models for a provider. Cached per page load; pass force to refetch. */
+/**
+ * Discovered models for a provider. Cached per page load; pass force to refetch. With a
+ * key saved in Settings the browser asks the router directly.
+ */
 export function fetchModels(providerId: string, force = false): Promise<ModelList> {
+  const target = browserTarget(providerId);
+  const cacheKey = target ? `${providerId}\u0000${target.baseUrl}\u0000${(target.apiKey ?? "").slice(-4)}` : providerId;
   if (!force) {
-    const hit = modelCache.get(providerId);
+    const hit = modelCache.get(cacheKey);
     if (hit) return hit;
   }
-  const p = fetch(`/api/providers/${encodeURIComponent(providerId)}/models`, { cache: "no-store" })
+  const p = target
+    ? listModelsWithBrowserKey(target)
+    : fetch(`/api/providers/${encodeURIComponent(providerId)}/models`, { cache: "no-store" })
     .then(async (res) => {
       if (!res.ok) return { models: [], error: `HTTP ${res.status}` };
       const body = (await res.json()) as Partial<ModelList>;
       return { models: Array.isArray(body.models) ? body.models : [], error: body.error ?? null };
     })
     .catch((e: unknown) => ({ models: [], error: e instanceof Error ? e.message : String(e) }));
-  modelCache.set(providerId, p);
+  modelCache.set(cacheKey, p);
   // Do not cache failures forever: allow a retry on next call.
   p.then((r) => {
-    if (r.error && !r.models.length) modelCache.delete(providerId);
+    if (r.error && !r.models.length) modelCache.delete(cacheKey);
   });
   return p;
 }
@@ -84,19 +92,22 @@ export function useProviders(initial?: ProviderStatus[]) {
 export function useProviderModels(providerId: string, enabled = true) {
   const [state, setState] = useState<{ id: string; nonce: number; list: ModelList } | null>(null);
   const [nonce, setNonce] = useState(0);
+  // Refetch when a key for this router is saved, changed or removed in Settings.
+  const key = useBrowserKeys()[providerId];
+  const id = key ? `${providerId}\u0000${key.baseUrl ?? ""}\u0000${key.savedAt}` : providerId;
 
   useEffect(() => {
     if (!enabled) return;
     let live = true;
     fetchModels(providerId, nonce > 0).then((list) => {
-      if (live) setState({ id: providerId, nonce, list });
+      if (live) setState({ id, nonce, list });
     });
     return () => {
       live = false;
     };
-  }, [providerId, enabled, nonce]);
+  }, [providerId, id, enabled, nonce]);
 
-  const current = state && state.id === providerId ? state : null;
+  const current = state && state.id === id ? state : null;
   return {
     models: current?.list.models ?? [],
     error: current?.list.error ?? null,
@@ -105,7 +116,7 @@ export function useProviderModels(providerId: string, enabled = true) {
   };
 }
 
-/** Real (non-simulated) providers that have a key configured. */
+/** Real (non-simulated) providers that have a key configured (call with browser keys applied). */
 export function configuredRealProviders(providers: ProviderStatus[]): ProviderStatus[] {
   return providers.filter((p) => p.configured && !p.simulated);
 }

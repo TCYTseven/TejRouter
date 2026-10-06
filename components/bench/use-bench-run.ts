@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { BenchEvent, BenchRun, BenchRunConfig, BenchSample } from "@/lib/bench/types";
 import { BenchStartError, fetchRun, startBench } from "@/lib/client/bench";
+import { runsInBrowser, startLocalBench } from "@/lib/client/local-bench";
 
 async function pollSaved(id: string, isCurrent: () => boolean): Promise<boolean> {
   for (let i = 0; i < 15 && isCurrent(); i++) {
@@ -61,7 +62,7 @@ const INITIAL: LiveRunState = {
 };
 
 /**
- * Drives POST /api/bench. Sample events arrive in bursts (simulators finish hundreds per
+ * Drives POST /api/bench, or the in-browser runner when the run uses a browser key. Sample events arrive in bursts (simulators finish hundreds per
  * second), so they are buffered and flushed into React state once per animation frame.
  */
 export function useBenchRun() {
@@ -130,7 +131,9 @@ export function useBenchRun() {
       };
 
       try {
-        await startBench(config, { onEvent, signal: ctl.signal });
+        // A run that uses a key saved in Settings runs in this tab so the key stays here.
+        const begin = runsInBrowser(config) ? startLocalBench : startBench;
+        await begin(config, { onEvent, signal: ctl.signal });
         flush();
         setState((s) => {
           if (s.run) return { ...s, status: "done", endedAt: s.endedAt ?? Date.now() };

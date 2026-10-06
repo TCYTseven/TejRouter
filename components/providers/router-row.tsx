@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useId, useState, type ReactNode } from "react";
 import type { ProviderStatus } from "@/lib/types";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { IconChevronDown, IconExternal } from "@/components/ui/icons";
 import { ProviderDot } from "@/components/ui/provider";
 import { cn } from "@/lib/client/cn";
 import { buildEnvTemplate } from "@/lib/client/env-template";
+import { useWithBrowserKey } from "@/lib/client/keys";
 import { HealthResult, useHealthCheck } from "./health-check";
 import { ModelList } from "./model-list";
 import { RouterStatusText } from "./provider-status";
@@ -16,7 +18,8 @@ import { RouterStatusText } from "./provider-status";
  * One router as a list row: identity, status in words and a Test button.
  * Clicking the row (or "Set up") reveals how to configure it.
  */
-export function RouterRow({ provider: p, expandable = true }: { provider: ProviderStatus; expandable?: boolean }) {
+export function RouterRow({ provider: serverProvider, expandable = true }: { provider: ProviderStatus; expandable?: boolean }) {
+  const p = useWithBrowserKey(serverProvider);
   const [open, setOpen] = useState(false);
   const { state, run } = useHealthCheck(p.id);
   const panelId = useId();
@@ -109,7 +112,15 @@ function SetupDetails({ id, provider: p }: { id: string; provider: ProviderStatu
   } else {
     rows.push([
       "API key",
-      p.configured ? (
+      p.keySource === "browser" ? (
+        <>
+          Saved in this browser{p.keyHint ? `, ending in ${p.keyHint}` : ""}. Calls go straight from your browser to{" "}
+          {p.name}.{" "}
+          <Link href="/settings" className="text-link hover:underline">
+            Change it in Settings
+          </Link>
+        </>
+      ) : p.configured ? (
         <>
           Loaded from <Env name={p.keySource ?? primary} />
           {p.keyHint ? `, ending in ${p.keyHint}` : ""}.
@@ -129,7 +140,11 @@ function SetupDetails({ id, provider: p }: { id: string; provider: ProviderStatu
               )
             </>
           ) : null}
-          , then restart the app.
+          , then restart the app. Or{" "}
+          <Link href="/settings" className="text-link hover:underline">
+            add it in Settings
+          </Link>
+          , where it stays in this browser.
         </>
       ),
     ]);
@@ -139,7 +154,7 @@ function SetupDetails({ id, provider: p }: { id: string; provider: ProviderStatu
         <span className="break-all">{p.effectiveBaseUrl}</span>
       ) : (
         <>
-          Not set. Add <Env name={p.baseUrlEnv} /> with your deployment&apos;s /v1 URL.
+          Not set. Add <Env name={p.baseUrlEnv} /> with your deployment&apos;s /v1 URL, or set it in Settings.
         </>
       ),
     ]);

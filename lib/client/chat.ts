@@ -1,4 +1,5 @@
 import type { ChatRequest, ChatResult, ChatStreamEvent } from "@/lib/types";
+import { browserTarget, callWithBrowserKey } from "./keys";
 import { readNdjson } from "./ndjson";
 
 export interface StreamChatOptions {
@@ -46,11 +47,37 @@ export function clientFailure(
 }
 
 /**
- * POST a ChatRequest to /api/chat and consume the NDJSON stream.
- * Resolves with the final ChatResult (ok or not). Rejects only on abort
- * (check with isAbortError).
+ * Run one router call and stream its text. With a key saved in Settings the browser
+ * calls the router itself and the key never reaches TejRouter's server; otherwise the
+ * request goes to /api/chat, which uses .env.local. Resolves with the final ChatResult
+ * (ok or not). Rejects only on abort (check with isAbortError).
  */
 export async function streamChat(req: ChatRequest, opts: StreamChatOptions = {}): Promise<ChatResult> {
+  const target = browserTarget(req.providerId);
+  if (target) return streamChatInBrowser(target, req, opts);
+  return streamChatViaServer(req, opts);
+}
+
+async function streamChatInBrowser(
+  target: NonNullable<ReturnType<typeof browserTarget>>,
+  req: ChatRequest,
+  opts: StreamChatOptions,
+): Promise<ChatResult> {
+  const startedAt = Date.now();
+  opts.onStart?.({ type: "start", providerId: req.providerId, requestedModel: req.model ?? "", startedAt });
+  let text = "";
+  const result = await callWithBrowserKey(target, req, {
+    signal: opts.signal,
+    onDelta: (delta) => {
+      text += delta;
+      opts.onDelta?.(delta, text);
+    },
+  });
+  if (opts.signal?.aborted) throw new DOMException("Aborted", "AbortError");
+  return result;
+}
+
+async function streamChatViaServer(req: ChatRequest, opts: StreamChatOptions): Promise<ChatResult> {
   const startedAt = Date.now();
   let res: Response;
   try {
