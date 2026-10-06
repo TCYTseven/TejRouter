@@ -5,7 +5,7 @@ import type { ProviderSpec } from "@/lib/types";
  * the playground, benchmark runner and dashboard pick it up automatically.
  *
  * Keys come from .env.local, read server-side only (see ./server.ts) and never sent to the
- * browser, or from Settings, stored in the browser and never sent to the server (lib/client/keys.ts).
+ * browser, or from Settings, stored in the browser and never saved on the server (lib/client/keys.ts).
  */
 export const PROVIDERS: ProviderSpec[] = [
   {

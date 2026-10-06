@@ -11,8 +11,9 @@ import { runCodeTestsInBrowser } from "./code-runner";
 import { browserTarget, callWithBrowserKey, hasBrowserKey } from "./keys";
 
 /**
- * Benchmarks that use a key saved in Settings run here, in the browser, so the key never
- * reaches TejRouter's server. Routers with a saved key are called directly; practice
+ * Benchmarks that use a key saved in Settings run here, in the browser, so the key is never
+ * saved on TejRouter's server. Routers with a saved key are called directly (or through
+ * /api/relay when they block CORS); practice
  * routers run in the page; routers configured in .env.local still go through /api/chat.
  * The finished run (results only, no keys) is then saved through POST /api/runs.
  */

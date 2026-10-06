@@ -2,7 +2,7 @@
 
 **The router that tests routers.** TejRouter sends the same prompts to every LLM router you use (Ramp Router, Enclave Cyberouter, OpenRouter, Requesty, FastLLM, Martian, or any OpenAI-compatible gateway) and measures what comes back: which model each router picked, how fast it answered, what it cost, whether the answer was right, and whether the differences are statistically real.
 
-It runs locally. There are no accounts and no database. Keys go in one of two places: `.env.local` on the machine running the app (read by the server, never sent to the browser), or the Settings page, which stores them in your browser's local storage only and never sends them to TejRouter's server. Two offline simulated routers work with zero keys, so you can try everything immediately.
+It runs locally. There are no accounts and no database. Keys go in one of two places: `.env.local` on the machine running the app (read by the server, never sent to the browser), or the Settings page, which stores them in your browser's local storage only. Two offline simulated routers work with zero keys, so you can try everything immediately.
 
 ## Quickstart
 
@@ -74,7 +74,7 @@ Formulas, assumptions and references are in [`docs/METHODOLOGY.md`](docs/METHODO
 
 ## Security
 
-**Keys saved in Settings** live in the browser's localStorage (`tejrouter:browser-keys:v1`). Any call that uses one goes straight from the browser to the router: Compare, the router test and model lists call it with the same client the server uses ([`lib/providers/openai.ts`](lib/providers/openai.ts)), and a benchmark that includes such a router runs in the tab ([`lib/client/local-bench.ts`](lib/client/local-bench.ts)), grading code tasks in a Web Worker with networking removed. Only the finished results, which carry no keys, are posted to `/api/runs`. The router must accept requests from web pages (CORS); OpenRouter does, and when one does not, the error says so and `.env.local` is the fallback.
+**Keys saved in Settings** live in the browser's localStorage (`tejrouter:browser-keys:v1`). Any call that uses one goes straight from the browser to the router: Compare, the router test and model lists call it with the same client the server uses ([`lib/providers/openai.ts`](lib/providers/openai.ts)), and a benchmark that includes such a router runs in the tab ([`lib/client/local-bench.ts`](lib/client/local-bench.ts)), grading code tasks in a Web Worker with networking removed. Only the finished results, which carry no keys, are posted to `/api/runs`. When a router refuses requests from web pages (CORS), the call is retried through `/api/relay` ([`app/api/relay/route.ts`](app/api/relay/route.ts)), which forwards it to the router and stores and logs nothing; later calls to that router in the same tab use the relay from the start. The relay only forwards `/chat/completions` and `/models` calls from this app's own pages, and in production only to public HTTPS hosts. Set `TEJROUTER_PASSWORD` on a public deployment so it is not an open relay.
 
 The API routes spend credits on your `.env.local` keys. For local use nothing extra is needed. If the app is reachable by anyone else, set `TEJROUTER_PASSWORD` and every page and API call requires HTTP Basic auth (see [`proxy.ts`](proxy.ts)). Keys are only read on the server; the browser sees which variable supplied a key and its last four characters.
 

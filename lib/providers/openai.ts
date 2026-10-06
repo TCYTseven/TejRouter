@@ -5,7 +5,7 @@ import { simulateChat } from "./simulator";
 /**
  * The OpenAI-compatible chat client. It has no server-only imports, so the same code
  * runs on the server (keys from .env.local) and in the browser (keys saved in
- * Settings, which call the router directly and never pass through TejRouter's server).
+ * Settings, which call the router directly, or through /api/relay when it blocks CORS).
  */
 
 const ROUTING_HEADER = /^(x-|openrouter|cf-ray$|server$|via$)|model|provider|route|cost|ratelimit/i;
@@ -17,6 +17,28 @@ function pickRoutingHeaders(h: Headers): Record<string, string> {
     if (ROUTING_HEADER.test(key) && !SECRET_HEADER.test(key)) out[key] = value.slice(0, 200);
   });
   return out;
+}
+
+/**
+ * Routers disagree on shapes: some send `provider` or `model` as an object
+ * ({ name, slug, ... }) instead of a string. Everything shown in the UI must be text.
+ */
+export function asText(v: unknown): string | null {
+  if (v == null || v === "") return null;
+  if (typeof v === "string") return v;
+  if (typeof v === "number" || typeof v === "boolean") return String(v);
+  if (typeof v === "object") {
+    for (const k of ["name", "slug", "id", "model", "message"]) {
+      const inner = asText((v as Record<string, unknown>)[k]);
+      if (inner) return inner;
+    }
+    try {
+      return JSON.stringify(v).slice(0, 200);
+    } catch {
+      return null;
+    }
+  }
+  return null;
 }
 
 function emptyUsage(): Usage {
@@ -83,6 +105,8 @@ export interface RouterTarget {
   apiKey: string | null;
   baseUrl: string;
   defaultModel: string;
+  /** Transport for router requests; defaults to the global fetch. */
+  fetch?: typeof fetch;
 }
 
 /**
@@ -122,7 +146,7 @@ export async function callChatWith(
 
   let res: Response;
   try {
-    res = await fetch(`${resolved.baseUrl}/chat/completions`, {
+    res = await (resolved.fetch ?? fetch)(`${resolved.baseUrl}/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -155,12 +179,13 @@ export async function callChatWith(
   let firstTokenAt: number | null = null;
 
   const handle = (json: any) => {
-    if (json.error) throw new Error(typeof json.error === "string" ? json.error : json.error.message ?? "stream error");
-    id ||= json.id ?? "";
-    if (json.model) servedModel = json.model;
-    if (json.provider) servedProvider = json.provider;
+    if (json.error) throw new Error(asText(json.error) ?? "stream error");
+    id ||= typeof json.id === "string" ? json.id : "";
+    servedModel = asText(json.model) ?? servedModel;
+    servedProvider = asText(json.provider) ?? servedProvider;
     const choice = json.choices?.[0];
-    const delta: string | undefined = choice?.delta?.content ?? choice?.message?.content;
+    const content = choice?.delta?.content ?? choice?.message?.content;
+    const delta: string | undefined = typeof content === "string" ? content : undefined;
     if (delta) {
       if (firstTokenAt == null) {
         firstTokenAt = Date.now();
@@ -169,7 +194,7 @@ export async function callChatWith(
       text += delta;
       opts.onDelta?.(delta);
     }
-    if (choice?.finish_reason) finishReason = choice.finish_reason;
+    if (choice?.finish_reason) finishReason = asText(choice.finish_reason);
     if (json.usage) {
       const r = readUsage(json.usage);
       usage = r.usage;
@@ -244,15 +269,15 @@ export async function listModelsWith(r: RouterTarget): Promise<{ models: string[
   if (r.spec.simulated) return { models: r.spec.suggestedModels, error: null };
   if (!r.apiKey || !r.baseUrl) return { models: r.spec.suggestedModels, error: "Not configured" };
   try {
-    const res = await fetch(`${r.baseUrl}/models`, {
+    const res = await (r.fetch ?? fetch)(`${r.baseUrl}/models`, {
       headers: { Authorization: `Bearer ${r.apiKey}`, ...r.spec.headers },
       signal: AbortSignal.timeout(15_000),
     });
     if (!res.ok) return { models: r.spec.suggestedModels, error: `HTTP ${res.status}` };
     const json: any = await res.json();
     const ids: string[] = (json.data ?? json.models ?? [])
-      .map((m: any) => (typeof m === "string" ? m : m.id ?? m.slug ?? m.name))
-      .filter(Boolean);
+      .map((m: any) => asText(typeof m === "string" ? m : m?.id ?? m?.slug ?? m?.name))
+      .filter((m: string | null): m is string => Boolean(m));
     const merged = Array.from(new Set([...(r.spec.autoModel ? [r.spec.autoModel] : []), ...ids]));
     return { models: merged.length ? merged : r.spec.suggestedModels, error: null };
   } catch (e) {
