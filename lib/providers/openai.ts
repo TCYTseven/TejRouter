@@ -88,6 +88,52 @@ export function chatFailure(
   };
 }
 
+/** Chat Completions request body. */
+function chatBody(model: string, req: ChatRequest, providerId: string): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    model,
+    messages: req.messages,
+    stream: true,
+    stream_options: { include_usage: true },
+  };
+  if (req.temperature != null) body.temperature = req.temperature;
+  if (req.maxTokens != null) body.max_tokens = req.maxTokens;
+  if (req.seed != null) body.seed = req.seed;
+  if (providerId === "openrouter") body.usage = { include: true };
+  return body;
+}
+
+/** The Responses API refuses max_output_tokens below 16. */
+export const MIN_RESPONSES_OUTPUT_TOKENS = 16;
+
+/**
+ * Responses API request body: system messages become `instructions`, the rest `input`.
+ * It has no `seed`, and it takes `max_output_tokens` instead of `max_tokens`.
+ */
+export function responsesBody(model: string, req: Pick<ChatRequest, "messages" | "temperature" | "maxTokens">): Record<string, unknown> {
+  const system = req.messages.filter((m) => m.role === "system").map((m) => m.content);
+  const input = req.messages.filter((m) => m.role !== "system").map((m) => ({ role: m.role, content: m.content }));
+  const body: Record<string, unknown> = { model, input, stream: true };
+  if (system.length) body.instructions = system.join("\n\n");
+  if (req.temperature != null) body.temperature = req.temperature;
+  if (req.maxTokens != null) body.max_output_tokens = Math.max(MIN_RESPONSES_OUTPUT_TOKENS, req.maxTokens);
+  return body;
+}
+
+/** Text of a non-streamed Responses API object. */
+function responseText(r: any): string {
+  if (typeof r.output_text === "string") return r.output_text;
+  const parts: string[] = [];
+  for (const item of Array.isArray(r.output) ? r.output : []) {
+    if (item?.type !== "message" || !Array.isArray(item.content)) continue;
+    for (const c of item.content) {
+      if ((c?.type === "output_text" || c?.type === "text") && typeof c.text === "string") parts.push(c.text);
+      else if (c?.type === "refusal" && typeof c.refusal === "string") parts.push(c.refusal);
+    }
+  }
+  return parts.join("");
+}
+
 export interface CallOptions {
   signal?: AbortSignal;
   onDelta?: (text: string) => void;
@@ -133,20 +179,11 @@ export async function callChatWith(
   const timeout = AbortSignal.timeout(opts.timeoutMs ?? 120_000);
   const signal = opts.signal ? AbortSignal.any([opts.signal, timeout]) : timeout;
 
-  const body: Record<string, unknown> = {
-    model: requestedModel,
-    messages: req.messages,
-    stream: true,
-    stream_options: { include_usage: true },
-  };
-  if (req.temperature != null) body.temperature = req.temperature;
-  if (req.maxTokens != null) body.max_tokens = req.maxTokens;
-  if (req.seed != null) body.seed = req.seed;
-  if (resolved.spec.id === "openrouter") body.usage = { include: true };
-
-  let res: Response;
-  try {
-    res = await (resolved.fetch ?? fetch)(`${resolved.baseUrl}/chat/completions`, {
+  const responsesApi = resolved.spec.api === "responses";
+  const body = responsesApi ? responsesBody(requestedModel, req) : chatBody(requestedModel, req, resolved.spec.id);
+  const url = `${resolved.baseUrl}/${responsesApi ? "responses" : "chat/completions"}`;
+  const send = (b: Record<string, unknown>) =>
+    (resolved.fetch ?? fetch)(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -154,9 +191,24 @@ export async function callChatWith(
         Authorization: `Bearer ${resolved.apiKey}`,
         ...resolved.spec.headers,
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(b),
       signal,
     });
+
+  let res: Response;
+  try {
+    res = await send(body);
+    // Reasoning models behind a Responses gateway refuse sampling parameters with a 400.
+    // Retry once without them rather than failing the call.
+    if (responsesApi && res.status === 400 && body.temperature != null) {
+      const detail = await res.clone().text().catch(() => "");
+      if (/temperature|unsupported|not supported/i.test(detail)) {
+        await res.body?.cancel().catch(() => {});
+        const { temperature: _t, ...rest } = body;
+        void _t;
+        res = await send(rest);
+      }
+    }
   } catch (e) {
     const msg = e instanceof Error ? (e.name === "TimeoutError" ? "Timed out" : e.message) : String(e);
     return chatFailure(base, `Network error: ${opts.describeNetworkError ? opts.describeNetworkError(msg) : msg}`, null);
@@ -178,29 +230,69 @@ export async function callChatWith(
   let ttftMs: number | null = null;
   let firstTokenAt: number | null = null;
 
-  const handle = (json: any) => {
+  const onText = (delta: string) => {
+    if (!delta) return;
+    if (firstTokenAt == null) {
+      firstTokenAt = Date.now();
+      ttftMs = firstTokenAt - startedAt;
+    }
+    text += delta;
+    opts.onDelta?.(delta);
+  };
+  const takeUsage = (u: any) => {
+    if (!u) return;
+    const r = readUsage(u);
+    usage = r.usage;
+    reportedCost = r.cost ?? reportedCost;
+  };
+
+  const handleChat = (json: any) => {
     if (json.error) throw new Error(asText(json.error) ?? "stream error");
     id ||= typeof json.id === "string" ? json.id : "";
     servedModel = asText(json.model) ?? servedModel;
     servedProvider = asText(json.provider) ?? servedProvider;
     const choice = json.choices?.[0];
     const content = choice?.delta?.content ?? choice?.message?.content;
-    const delta: string | undefined = typeof content === "string" ? content : undefined;
-    if (delta) {
-      if (firstTokenAt == null) {
-        firstTokenAt = Date.now();
-        ttftMs = firstTokenAt - startedAt;
-      }
-      text += delta;
-      opts.onDelta?.(delta);
-    }
+    if (typeof content === "string") onText(content);
     if (choice?.finish_reason) finishReason = asText(choice.finish_reason);
-    if (json.usage) {
-      const r = readUsage(json.usage);
-      usage = r.usage;
-      reportedCost = r.cost ?? reportedCost;
+    if (json.usage) takeUsage(json.usage);
+  };
+
+  // Responses API: SSE events ({ type: "response.output_text.delta", delta }, ...) or, without
+  // streaming, one response object. The final response names the model that served it.
+  const takeResponse = (r: any) => {
+    if (!r || typeof r !== "object") return;
+    id ||= typeof r.id === "string" ? r.id : "";
+    servedModel = asText(r.model) ?? servedModel;
+    servedProvider = asText(r.provider) ?? servedProvider;
+    if (r.usage) takeUsage(r.usage);
+    if (r.status === "failed") throw new Error(asText(r.error) ?? "the router reported a failed response");
+    if (r.status === "completed") finishReason = "stop";
+    if (r.status === "incomplete") {
+      const why = asText(r.incomplete_details?.reason) ?? "incomplete";
+      finishReason = why === "max_output_tokens" ? "length" : why;
     }
   };
+  const handleResponses = (json: any) => {
+    const type: string = typeof json.type === "string" ? json.type : "";
+    servedProvider = asText(json.provider) ?? servedProvider;
+    if (type === "error") throw new Error(asText(json.error) ?? asText(json.message) ?? "stream error");
+    if (type === "response.output_text.delta" || type === "response.refusal.delta") {
+      if (typeof json.delta === "string") onText(json.delta);
+      return;
+    }
+    if (type.startsWith("response.")) {
+      if (json.response) takeResponse(json.response);
+      return;
+    }
+    if (json.error && !json.output) throw new Error(asText(json.error) ?? "stream error");
+    // A whole response object (the router ignored stream: true).
+    if (json.object === "response" || Array.isArray(json.output)) {
+      if (!text) onText(responseText(json));
+      takeResponse(json);
+    }
+  };
+  const handle = responsesApi ? handleResponses : handleChat;
 
   try {
     const contentType = res.headers.get("content-type") ?? "";

@@ -21,7 +21,8 @@ export const PROVIDERS: ProviderSpec[] = [
     docsUrl: "https://github.com/ramp-public/ramp-cli",
     color: "#3987e5",
     headers: { "X-Gateway-Client": "tejrouter" },
-    notes: "Model list is discovered from /v1/models when the key is set.",
+    api: "responses",
+    notes: "Speaks the Responses API (POST /v1/responses); it has no /chat/completions. Model ids are per account, discovered from /v1/models when the key is set.",
   },
   {
     id: "enclave",
