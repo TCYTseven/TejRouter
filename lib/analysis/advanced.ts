@@ -2,6 +2,7 @@ import type { BenchRun, BenchSample, BenchTask, ConstraintCheck } from "@/lib/be
 import { checkConstraint, describeConstraint, extractAnswerBlock, extractCode, extractJson } from "@/lib/bench/grade-core";
 import { getTask } from "@/lib/bench/suites";
 import { lookupPrice } from "@/lib/pricing";
+import { getProviderSpec } from "@/lib/providers/registry";
 import { bootstrapMedian, deriveSeed, describe as describeStats, jsDivergenceRecords, mcnemar, median, spearman, wilson } from "@/lib/stats";
 import { normalSf } from "@/lib/stats/special";
 import type { ArmKind, Estimate, RunReport, Summary } from "./types";
@@ -91,6 +92,8 @@ export interface LoadBucket {
 
 export interface LoadRow {
   armId: string;
+  /** Practice routers report made-up times, so in-flight counts mean nothing for them. */
+  simulated: boolean;
   peakInFlight: number;
   /** Spearman correlation of in-flight calls (to the same router) and latency, successful calls only. */
   spearman: number | null;
@@ -121,6 +124,8 @@ export interface FaithfulnessRow {
   /** Successful replies to tasks that carry a document. */
   n: number;
   wrong: number;
+  /** Wrong answers that decline ("unsure", "not in the document"): honest, not invented. */
+  declined: number;
   /** Wrong answers that appear nowhere in the document. */
   unsupported: number;
   unsupportedRate: Estimate;
@@ -361,6 +366,9 @@ const LANGUAGE_NAMES: Record<string, string> = {
   ar: "Arabic",
 };
 
+/** An answer that declines rather than asserts something. */
+const DECLINED = /^(unsure|unknown|not sure|i (do not|don't|cannot|can't) (know|tell|find)|none of the above|n\/?a|none|not (found|given|stated|mentioned|in the (document|text)))\b/i;
+
 function isGraceful(s: BenchSample): boolean {
   if (s.result.ok) return true;
   const st = s.result.httpStatus;
@@ -442,7 +450,7 @@ export function analyzeAdvanced(run: BenchRun, report: RunReport): AdvancedRepor
         dl.push(s.result.latencyMs - base);
         if (base > 0) ratios.push(s.result.latencyMs / base);
         if (s.result.ttftMs != null && cell.ttft.length) dt.push(s.result.ttftMs - median(cell.ttft));
-        models.add(m!);
+        models.add(s.result.servedModel!);
       }
       const boot = (xs: number[], label: string): Estimate => {
         if (!xs.length) return { value: null, lo: null, hi: null, method: "bootstrap-percentile" };
@@ -548,7 +556,8 @@ export function analyzeAdvanced(run: BenchRun, report: RunReport): AdvancedRepor
   }
   const throttledSample = (s: BenchSample) => s.result.httpStatus === 429 || (s.attemptLog ?? []).some((a) => a.httpStatus === 429);
   const load: LoadRow[] = armIds.map((id) => {
-    const ss = byArm.get(id)!;
+    const simulated = !!getProviderSpec(report.meta.arms.find((a) => a.id === id)?.providerId ?? "")?.simulated;
+    const ss = simulated ? [] : byArm.get(id)!;
     const ok = ss.filter((s) => s.result.ok);
     const xs = ok.map((s) => inFlight.get(s) ?? 1);
     const ys = ok.map((s) => s.result.latencyMs);
@@ -560,6 +569,7 @@ export function analyzeAdvanced(run: BenchRun, report: RunReport): AdvancedRepor
     }
     return {
       armId: id,
+      simulated,
       peakInFlight: Math.max(0, ...ss.map((s) => inFlight.get(s) ?? 1)),
       spearman: rho,
       pValue: p,
@@ -662,19 +672,23 @@ export function analyzeAdvanced(run: BenchRun, report: RunReport): AdvancedRepor
   // ---- unsupported answers on tasks that carry a document
   const faith: FaithfulnessRow[] = armIds.map((id) => {
     const ok = byArm.get(id)!.filter((s) => s.result.ok && docTasks.has(s.taskId));
-    let wrong = 0, unsupported = 0;
+    let wrong = 0, unsupported = 0, declined = 0;
     const examples: { taskId: string; answer: string }[] = [];
     for (const s of ok) {
       if (s.grade.correct) continue;
       wrong++;
       const ans = (s.grade.extracted ?? "").trim();
       if (!ans) continue;
+      if (DECLINED.test(ans)) {
+        declined++;
+        continue;
+      }
       if (!supportedBy(ans, promptText(task(s.taskId)))) {
         unsupported++;
         if (examples.length < 5) examples.push({ taskId: s.taskId, answer: ans.slice(0, 160) });
       }
     }
-    return { armId: id, n: ok.length, wrong, unsupported, unsupportedRate: rate(unsupported, ok.length, level), examples };
+    return { armId: id, n: ok.length, wrong, declined, unsupported, unsupportedRate: rate(unsupported, ok.length, level), examples };
   });
 
   // ---- cost spread
@@ -1008,9 +1022,13 @@ export function compareRuns(now: BenchRun, then: BenchRun): DriftReport {
   const summarize = (cells: Map<string, BenchSample[]>, tasks: string[]) => {
     const all = tasks.flatMap((t) => cells.get(t) ?? []);
     const models: Record<string, number> = {};
+    const raw: Record<string, number> = {};
     for (const s of all) {
       const m = normalizeModel(s.result.servedModel);
-      if (s.result.ok && m) models[m] = (models[m] ?? 0) + 1;
+      if (s.result.ok && m) {
+        models[m] = (models[m] ?? 0) + 1;
+        raw[s.result.servedModel!] = (raw[s.result.servedModel!] ?? 0) + 1;
+      }
     }
     const scores = tasks.map((t) => mean((cells.get(t) ?? []).map((s) => (s.result.ok ? Math.max(0, Math.min(1, Number(s.grade.score) || 0)) : 0))) ?? 0);
     return {
@@ -1020,7 +1038,7 @@ export function compareRuns(now: BenchRun, then: BenchRun): DriftReport {
         return l.filter((s) => s.result.ok && s.grade.correct).length * 2 > l.length;
       }),
       models,
-      top: Object.entries(models).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null,
+      top: Object.entries(raw).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null,
       lat: med(all.filter((s) => s.result.ok).map((s) => s.result.latencyMs)),
       cost: mean(all.map((s) => s.result.costUsd).filter((c): c is number => c != null && Number.isFinite(c))),
     };

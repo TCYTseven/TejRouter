@@ -168,6 +168,7 @@ describe("analyzeAdvanced", () => {
     expect(a.instructions.rows[0].byType.length).toBeGreaterThan(0);
     const f = a.faithfulness.rows[0];
     expect(f.unsupported).toBe(1);
+    expect(f.declined).toBe(0);
     expect(f.examples[0].answer).toBe("QZ-0000-NOPE");
   });
 
