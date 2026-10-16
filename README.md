@@ -38,7 +38,7 @@ Each router is one entry in [`lib/providers/registry.ts`](lib/providers/registry
 
 | Router | Key | Base URL | Default model |
 | --- | --- | --- | --- |
-| Ramp Router | `RAMP_ROUTER_API_KEY` (also `RAMP_ROUTER_KEY`, `RAMP_API_KEY`, `ROUTER_API_KEY`) | `https://api.router.com/v1` | discovered from `/v1/models`, or `RAMP_ROUTER_MODEL` |
+| Ramp Router | `RAMP_ROUTER_API_KEY` (also `RAMP_ROUTER_KEY`, `RAMP_API_KEY`, `ROUTER_API_KEY`) | `https://api.router.com/v1` (Responses API: it has no `/chat/completions`) | discovered from `/v1/models`, or `RAMP_ROUTER_MODEL` |
 | Enclave Cyberouter | `ENCLAVE_ROUTER_API_KEY` (also `ENCLAVE_API_KEY`, `CYBEROUTER_API_KEY`, `CYBER_ROUTER_API_KEY`) | `https://router.enclave.ai/v1` | `cyberouter/auto` |
 | OpenRouter | `OPENROUTER_API_KEY` | `https://openrouter.ai/api/v1` | `openrouter/auto` |
 | Requesty | `REQUESTY_API_KEY` | `https://router.requesty.ai/v1` | set `REQUESTY_MODEL` to a routing policy |
@@ -47,13 +47,13 @@ Each router is one entry in [`lib/providers/registry.ts`](lib/providers/registry
 | Custom | `CUSTOM_ROUTER_API_KEY` | `CUSTOM_ROUTER_BASE_URL` | `CUSTOM_ROUTER_MODEL` |
 | Practice: Budget, Practice: Smart | none | offline | `sim/auto` |
 
-Every base URL and model can be overridden with the `*_BASE_URL` and `*_MODEL` variables in [`.env.example`](.env.example). Adding a router is one registry entry; the playground, benchmarks and reports pick it up automatically.
+Every base URL and model can be overridden with the `*_BASE_URL` and `*_MODEL` variables in [`.env.example`](.env.example). Routers speak the OpenAI Chat Completions API unless their entry sets `api: "responses"`, in which case TejRouter calls `POST /responses` (the Responses API) and reads its streamed events; Ramp Router is one. Adding a router is one registry entry; the playground, benchmarks and reports pick it up automatically.
 
 ## Benchmarks
 
-221 auto-graded tasks in eight suites: `trivial`, `knowledge`, `math`, `reasoning`, `code`, `instruction`, `extraction` and `long-context`. Every task has a difficulty in [0, 1] so the report can show whether a router escalates hard prompts to stronger models and keeps easy ones cheap. Grading is deterministic, with no LLM judge: exact and numeric matching, multiple choice, regex, JSON field checks, IFEval-style constraints, and JavaScript solutions executed against tests in a sandboxed `node:vm`. Math answers are generated and computed in code; puzzle answers are verified by brute force in the test suite.
+221 auto-graded tasks in eight suites: `trivial`, `knowledge`, `math`, `reasoning`, `code`, `instruction`, `extraction` and `long-context`. Three more are off unless picked under Customize, and always run whole: `multilingual` (word problems in eight languages), `rephrase` (nine questions asked three ways each) and `edge` (empty and blank messages, noise, a 20,000-word prompt, prompt injection, harmless questions with alarming words). Every task has a difficulty in [0, 1] so the report can show whether a router escalates hard prompts to stronger models and keeps easy ones cheap. Grading is deterministic, with no LLM judge: exact and numeric matching, multiple choice, regex, JSON field checks, IFEval-style constraints, and JavaScript solutions executed against tests in a sandboxed `node:vm`. Math answers are generated and computed in code; puzzle answers are verified by brute force in the test suite.
 
-The runner shuffles jobs with a seed, caps per-router concurrency so no router is favoured by rate limits, retries 429 and 5xx responses with backoff, streams results as NDJSON and saves each run to `data/runs/` (gitignored).
+The runner shuffles jobs with a seed, caps per-router concurrency so no router is favoured by rate limits, retries 429 and 5xx responses with backoff (recording each retried attempt), streams results as NDJSON and saves each run to `data/runs/` (gitignored).
 
 **Arms.** An arm is a router plus an optional pinned model. Add a couple of pinned models (a cheap one and a strong one, e.g. through OpenRouter) as baselines and the report also computes an oracle router and each router's regret against the best single model.
 
@@ -69,12 +69,13 @@ Every number comes with an interval, and tasks (not samples) are the unit of ana
 - **Ratings**: Bradley-Terry Elo from per-task head-to-heads, with bootstrap intervals and win probabilities.
 - **Power and reliability**: minimum detectable effect, tasks needed for a 5-point difference, ICC and self-consistency across repetitions.
 - **TejScore**: a weighted 0–100 composite with adjustable weights. It ranks arms within one run only.
+- **Advanced analysis** (a switch beside the report tabs, off by default): tail latency (p90/p95/p99, timeouts), router overhead against a direct call to the model it picked, failures, retries and failover, behaviour under concurrent load, JSON and code format compliance, instruction following by rule, unsupported answers on document tasks, an AI judge with a rubric checked against the grader and your own grades, cost spread and output-token inflation, cost per correct answer by difficulty, slices by input length, language and task set, edge cases, routing determinism across repeats and rephrasings, and drift against an earlier run.
 
 Formulas, assumptions and references are in [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md).
 
 ## Security
 
-**Keys saved in Settings** live in the browser's localStorage (`tejrouter:browser-keys:v1`). Any call that uses one goes straight from the browser to the router: Compare, the router test and model lists call it with the same client the server uses ([`lib/providers/openai.ts`](lib/providers/openai.ts)), and a benchmark that includes such a router runs in the tab ([`lib/client/local-bench.ts`](lib/client/local-bench.ts)), grading code tasks in a Web Worker with networking removed. Only the finished results, which carry no keys, are posted to `/api/runs`. When a router refuses requests from web pages (CORS), the call is retried through `/api/relay` ([`app/api/relay/route.ts`](app/api/relay/route.ts)), which forwards it to the router and stores and logs nothing; later calls to that router in the same tab use the relay from the start. The relay only forwards `/chat/completions` and `/models` calls from this app's own pages, and in production only to public HTTPS hosts. Set `TEJROUTER_PASSWORD` on a public deployment so it is not an open relay.
+**Keys saved in Settings** live in the browser's localStorage (`tejrouter:browser-keys:v1`). Any call that uses one goes straight from the browser to the router: Compare, the router test and model lists call it with the same client the server uses ([`lib/providers/openai.ts`](lib/providers/openai.ts)), and a benchmark that includes such a router runs in the tab ([`lib/client/local-bench.ts`](lib/client/local-bench.ts)), grading code tasks in a Web Worker with networking removed. Only the finished results, which carry no keys, are posted to `/api/runs`. When a router refuses requests from web pages (CORS), the call is retried through `/api/relay` ([`app/api/relay/route.ts`](app/api/relay/route.ts)), which forwards it to the router and stores and logs nothing; later calls to that router in the same tab use the relay from the start. The relay only forwards `/chat/completions`, `/responses` and `/models` calls from this app's own pages, and in production only to public HTTPS hosts. Set `TEJROUTER_PASSWORD` on a public deployment so it is not an open relay.
 
 The API routes spend credits on your `.env.local` keys. For local use nothing extra is needed. If the app is reachable by anyone else, set `TEJROUTER_PASSWORD` and every page and API call requires HTTP Basic auth (see [`proxy.ts`](proxy.ts)). Keys are only read on the server; the browser sees which variable supplied a key and its last four characters.
 

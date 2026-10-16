@@ -34,9 +34,10 @@ Notation: formulas are plain text with LaTeX-like symbols. `x̄` is a sample mea
 24. [Power analysis](#24-power-analysis)
 25. [Consistency and reliability](#25-consistency-and-reliability)
 26. [Information theory](#26-information-theory)
-27. [Numerical methods and validation](#27-numerical-methods-and-validation)
-28. [Assumptions and limitations](#28-assumptions-and-limitations)
-29. [References](#29-references)
+27. [Advanced analysis](#27-advanced-analysis)
+28. [Numerical methods and validation](#28-numerical-methods-and-validation)
+29. [Assumptions and limitations](#29-assumptions-and-limitations)
+30. [References](#30-references)
 
 ---
 
@@ -785,7 +786,105 @@ Implemented in `lib/stats/info.ts`. All in bits.
 
 ---
 
-## 27. Numerical methods and validation
+## 27. Advanced analysis
+
+The report's **Advanced** tab is off until switched on (a toggle beside the report tabs, remembered per browser). It answers questions the main report leaves out: how slow the slow calls are, what fails and how, whether answers have the right shape, how predictable cost is, how routers do on particular slices of input, and whether a router's behaviour is stable. It is computed in the browser by `analyzeAdvanced(run, report)` in `lib/analysis/advanced.ts` from the saved run plus the built-in task definitions (graders, tags, prompt text), so it works on runs saved before it existed. Sections that need data a run lacks say what to add instead of showing zeros.
+
+Three opt-in task sets feed it. They are off unless picked under **Customize**, and always run whole (the per-set cap would split rephrasing groups and drop languages):
+
+| Task set | Id | Tasks | Used by |
+| --- | --- | --- | --- |
+| Other languages | `multilingual` | 23 arithmetic word problems in eight languages, tagged `lang:<code>` | 27.8 |
+| Rephrasings | `rephrase` | 9 questions × 3 phrasings, tagged `group:<id>`; one answer and one difficulty per group | 27.10 |
+| Edge cases | `edge` | 11 tasks tagged `edge:<kind>`: empty and blank messages, noise and broken markup, invisible characters, a ~20,000-word prompt, prompt injection, harmless questions with alarming words | 27.9 |
+
+### 27.1 Tail latency
+
+Per router, over successful calls: p50, p90, p95, p99 and maximum of total latency (Hyndman-Fan type 7 quantiles, as in §8), p95 of time to first token, and the **tail ratio** `p99 / p50`. **Timed out** counts final failures classified as timeouts (27.3) with a Wilson interval. **Slow or failed** is the share of all calls (failed ones included) slower than the run-wide p95 of successful latencies, or failed; it needs 20 successful calls in the run. Field: `tail`.
+
+### 27.2 Router overhead
+
+What the router adds over calling the model it chose directly. For a router answer to task `t` served by model `m`, find pinned-model arms whose served model normalizes to `m` (lowercase; provider prefixes such as `openai/` and `openai:` and date or `-latest` suffixes removed) and that answered `t` successfully. The direct latency is the median of those answers' latencies, and
+
+```
+overhead = router latency − median direct latency          (likewise for time to first token)
+```
+
+The report gives the median overhead over all such pairs with a percentile bootstrap interval (shown with 5 or more pairs), the median ratio `router / direct`, the number of pairs and the share of the router's answers that could be paired. First-token overhead is the cleaner estimate: total latency also depends on answer length, which varies between calls. Requires at least one pinned-model arm serving a model the router picked. Field: `overhead`.
+
+### 27.3 Failures, retries and fallbacks
+
+The runner retries 429, 408, 425, 5xx and transport errors up to three times with backoff, and records every failed attempt it retried in `BenchSample.attemptLog` (`{ httpStatus, error, latencyMs }`). Each failure is classified:
+
+| Kind | Rule |
+| --- | --- |
+| Timed out | HTTP 408 or 504, or the error says "timed out"/"timeout" |
+| Rate limited | HTTP 429 |
+| Server error | HTTP 5xx |
+| Refused | other HTTP 4xx |
+| Network | "Network error" with no status (includes CORS refusals) |
+| Broke mid-answer | "Stream error" |
+
+Per router: failure rate (Wilson), answered on the first try, retried, **recovered** (`retried calls that ended ok / retried calls`), final failures by kind, retried failures by kind (when recorded), and **empty replies** (calls that succeeded with only whitespace). For arms pinned to one model, **answered by another model** counts successful replies whose served model differs from the one asked for: that is how a gateway's failover shows from the outside, with how many of those were correct. Field: `failures`.
+
+### 27.4 Under load
+
+For each call, **in flight** is the number of calls to the same router (provider) whose interval `[startedAt, startedAt + latency)` contains this call's start, itself included. Calls are bucketed (1, 2–3, 4–7, 8–15, 16+) and each bucket shows the median and p95 latency, failure rate and the share of calls that met a 429 on any attempt. The Spearman correlation between in-flight count and latency (successful calls, n ≥ 10) is tested with the normal approximation `z = ρ√(n−1)`. Practice routers are excluded: they report synthetic latencies, so their intervals do not reflect real concurrency. To stress a router, raise **calls at once** when starting a run. Field: `load`.
+
+### 27.5 Format compliance, instruction following, unsupported answers
+
+Successful calls only.
+
+- **Format compliance.** On tasks graded `json`: share of replies from which a JSON object can be extracted (the grader's `extractJson`, Wilson interval), share containing every required key, and share fully correct. On `code` tasks: share with a fenced block, share whose extracted code defines the function, share passing the tests.
+- **Instruction following.** On `constraints` tasks, every check is re-run on the better of the whole reply and its `Answer:` block (as the grader does). Reported: share of replies meeting every check (Wilson), checks met over checks run, and the pass rate per kind of rule.
+- **Unsupported answers.** On tasks that carry a document (`long-context`, `extraction`), a wrong answer is **unsupported** when its extracted text (each string and number leaf, for JSON) appears nowhere in the prompt after lowercasing and collapsing whitespace. Answers that decline ("unsure", "none of the above", "not in the document") are counted separately. This is a proxy for hallucination: it catches invented values, not wrong reasoning over real ones.
+
+Fields: `format`, `instructions`, `faithfulness`.
+
+### 27.6 AI judge, checked against the grader and a person
+
+A judge model, run from the browser through any connected router, scores a fixed sample of answers 1–5 against the reference answer with this rubric (`RUBRIC` in `lib/analysis/judge.ts`):
+
+| Score | Meaning |
+| --- | --- |
+| 5 | Correct and complete; follows every instruction, including the answer format |
+| 4 | Correct, with a small problem |
+| 3 | Partly correct |
+| 2 | Mostly wrong, but on topic |
+| 1 | Wrong, empty, off topic, or refuses a harmless request |
+
+The prompt and response are passed as delimited data with an instruction to treat them as data. The sample (`pickJudgeSample`) takes the same number of successful first-repetition answers from every router, round-robin across task sets, from a seeded shuffle, so it is the same each time. A score of 4 or 5 is a **pass**. The judge is checked twice:
+
+- against the automatic grader on every judged answer: share with the same pass/fail and Cohen's κ `= (p_o − p_e)/(1 − p_e)`;
+- against the user's own 1–5 grades on up to 24 of the answers (the router and the judge's score are hidden until the user grades): same pass/fail and κ, exact agreement, agreement within one point, and Spearman's ρ.
+
+As a rule of thumb, κ above 0.6 is substantial agreement and below 0.4 means the judge should not be trusted for these tasks. Judgements and the user's grades are kept in the browser's local storage, keyed by run.
+
+### 27.7 Cost predictability
+
+- **Spread per request**: mean, standard deviation, coefficient of variation `CV = s / x̄`, median, p90, p99, maximum and `p90 / p50` of per-call cost, over calls with a known cost.
+- **Output tokens**: mean and median completion tokens, mean reasoning tokens, and **inflation**: for each task answered by at least two routers, the ratio of this router's mean completion tokens to the median across routers; inflation is the geometric mean of those ratios (1.0× = typical). **Output share of cost** is `Σ out·p_out / Σ (out·p_out + in·p_in)` at list prices for served models in the price table.
+- **Cost per correct answer by difficulty**: in each difficulty band of §12, `Σ cost / Σ correct` over calls with a known cost.
+
+Fields: `costSpread`, `tokens`, `costByDifficulty`.
+
+### 27.8 Slices: input length, language, task set
+
+For each slice and router: answers, tasks, accuracy (mean score, failed calls scoring 0), correct rate with Wilson interval, mean cost, median latency and the most-used served model. Input length uses the prompt tokens the router reported, or prompt characters ÷ 4 when it reported none, in bands under 500, 500–2k, 2k–8k, 8k–32k and 32k+. Language comes from `lang:` tags (untagged tasks are English); the language table appears only when a run has more than one. Fields: `inputLength`, `languages`, `suites`.
+
+### 27.9 Edge cases
+
+On the `edge` task set, a call is **graceful** when it succeeded, or failed with a 4xx other than 408 and 429 (a clean refusal). Timeouts, 5xx, 429 and transport failures are not graceful. **Correct** additionally means the expected answer: for prompt injection, the model ignored the injected instruction (for the secret-word task, it refused and did not leak the word); for harmless questions with alarming words, it answered rather than refusing. Note that failed edge calls count as wrong in the main report's accuracy, so include this set in a run meant to compare accuracy only knowingly. Field: `edge`.
+
+### 27.10 Stability: repetitions, rephrasings, drift
+
+- **Repeat runs**: over tasks a router answered successfully at least twice, the share where every repetition used the same (normalized) model, and the share where every repetition gave the same extracted answer. §25 has the full reliability analysis.
+- **Rephrasings**: over groups of the `rephrase` set with at least two phrasings answered (first repetition of each), the share where every phrasing went to the same model and the share where every phrasing got the same result (all right or all wrong).
+- **Drift between runs** (`compareRuns(newer, older)`): over routers (same arm id) and tasks present in both runs, the change in accuracy (task-mean score), McNemar's exact test on per-task majority correctness (§17.5), the Jensen-Shannon divergence in bits between the two served-model mixes (§26), the most-used model in each run, and median latency and mean cost then and now.
+
+---
+
+## 28. Numerical methods and validation
 
 All special functions are implemented from first principles in `lib/stats/special.ts`, with no dependencies:
 
@@ -816,7 +915,7 @@ Model-level checks: Bradley-Terry satisfies its likelihood equations and recover
 
 ---
 
-## 28. Assumptions and limitations
+## 29. Assumptions and limitations
 
 1. **Task sampling.** Inference generalizes to tasks like those in the suite, not to all possible prompts. Suite composition dominates every result; report which suites were run.
 2. **Independence across tasks.** Tasks are assumed independent given the arm. Near-duplicate tasks violate this and make intervals too narrow.
@@ -831,7 +930,7 @@ Model-level checks: Bradley-Terry satisfies its likelihood equations and recover
 
 ---
 
-## 29. References
+## 30. References
 
 - Agresti, A., & Coull, B. A. (1998). Approximate is better than "exact" for interval estimation of binomial proportions. *The American Statistician*, 52(2).
 - Benjamini, Y., & Hochberg, Y. (1995). Controlling the false discovery rate. *JRSS B*, 57(1).
