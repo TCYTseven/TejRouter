@@ -81,7 +81,8 @@ export function planRun(input: unknown): RunPlan {
   if (c.name != null && typeof c.name !== "string") throw new BenchConfigError("name must be a string.");
 
   const seed = c.seed ?? Math.floor(Math.random() * 2 ** 31);
-  const tasks = suites.flatMap((s) => selectTasks(s.tasks, c.maxTasksPerSuite, seed));
+  // Opt-in task sets always run whole: a cap would split rephrasing groups and drop languages.
+  const tasks = suites.flatMap((s) => (s.optional ? s.tasks : selectTasks(s.tasks, c.maxTasksPerSuite, seed)));
   const totalJobs = tasks.length * arms.length * repetitions;
   if (totalJobs > MAX_JOBS) {
     throw new BenchConfigError(

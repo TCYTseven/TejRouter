@@ -106,7 +106,7 @@ export function TaskOptions({
                       <span className="flex items-baseline justify-between gap-3">
                         <span className="text-[15px] text-fg">
                           {s.name}
-                          {s.optional ? <span className="ml-2 text-[13px] text-fg-muted">Off unless picked</span> : null}
+                          {s.optional ? <span className="ml-2 text-[13px] text-fg-muted">Off unless picked · always runs whole</span> : null}
                         </span>
                         <span className="num shrink-0 text-[13px] text-fg-muted">{s.taskCount} tasks</span>
                       </span>

@@ -151,7 +151,9 @@ export interface SuiteTokenPrior {
 
 export const DEFAULT_TOKEN_PRIOR: SuiteTokenPrior = { promptTokens: 250, completionTokens: 120 };
 
-export function tasksPerSuite(suite: Pick<SuiteInfo, "taskCount">, maxTasksPerSuite?: number | null): number {
+/** Opt-in task sets always run whole: a cap would split rephrasing groups and drop languages. */
+export function tasksPerSuite(suite: Pick<SuiteInfo, "taskCount" | "optional">, maxTasksPerSuite?: number | null): number {
+  if (suite.optional) return suite.taskCount;
   return maxTasksPerSuite && maxTasksPerSuite > 0 ? Math.min(suite.taskCount, maxTasksPerSuite) : suite.taskCount;
 }
 

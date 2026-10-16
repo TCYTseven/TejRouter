@@ -289,6 +289,11 @@ describe("retries", () => {
 });
 
 describe("config validation", () => {
+  it("runs opt-in task sets whole, whatever the per-set cap", () => {
+    const plan = planRun({ suiteIds: ["trivial", "rephrase"], arms: [{ providerId: "sim-greedy" }], maxTasksPerSuite: 4, seed: 1 });
+    expect(plan.tasks.filter((t) => t.suiteId === "trivial")).toHaveLength(4);
+    expect(plan.tasks.filter((t) => t.suiteId === "rephrase")).toHaveLength(27);
+  });
   it("rejects runs above the job cap with a clear error", () => {
     expect(() =>
       planRun({
