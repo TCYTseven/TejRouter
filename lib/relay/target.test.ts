@@ -6,6 +6,7 @@ describe("relay target", () => {
   it("allows public https chat and model calls", () => {
     expect(checkTargetUrl("https://api.router.com/v1/chat/completions", false).ok).toBe(true);
     expect(checkTargetUrl("https://openrouter.ai/api/v1/models", false).ok).toBe(true);
+    expect(checkTargetUrl("https://api.router.com/v1/responses", false).ok).toBe(true);
   });
 
   it("refuses everything else in production", () => {

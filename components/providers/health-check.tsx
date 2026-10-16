@@ -54,7 +54,7 @@ export function HealthResult({ state }: { state: HealthState }) {
       </span>
     ) : (
       <span className="text-danger">
-        Not working{r.httpStatus ? ` (HTTP ${r.httpStatus})` : ""}: {r.error ?? "no answer came back"}
+        Not working{r.httpStatus && !/^HTTP \d/.test(r.error ?? "") ? ` (HTTP ${r.httpStatus})` : ""}: {r.error ?? "no answer came back"}
       </span>
     );
   }

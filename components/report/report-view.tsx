@@ -7,7 +7,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton, SkeletonText } from "@/components/ui/skeleton";
 import { TabPanel, Tabs } from "@/components/ui/tabs";
 import { vizStyles } from "@/components/charts";
+import { Toggle } from "@/components/ui/toggle";
 import { cn } from "@/lib/client/cn";
+import { useStoredState } from "@/lib/client/storage";
+import { AdvancedTab } from "./advanced-tab";
 import { buildArms } from "./arms";
 import { OverviewTab } from "./overview-tab";
 import { ReportHeader } from "./report-header";
@@ -25,9 +28,14 @@ const TABS = [
   { value: "task-types", label: "By task type" },
   { value: "answers", label: "Every answer" },
   { value: "statistics", label: "Statistics" },
+  { value: "advanced", label: "Advanced" },
 ] as const;
 type Tab = (typeof TABS)[number]["value"];
 const isTab = (v: string | null): v is Tab => TABS.some((t) => t.value === v);
+
+/** The Advanced tab is hidden until switched on (remembered in this browser). */
+const ADVANCED_KEY = "tejrouter:report-advanced:v1";
+const isBool = (v: unknown): v is boolean => typeof v === "boolean";
 
 /** Client root of /runs/[id]: loads the run, analyzes it off the main thread, then answers "which router?" first. */
 export function RunReportView({ id, name }: { id: string; name: string }) {
@@ -93,6 +101,9 @@ function Ready({
   const report = result.report;
   const ctx = useMemo(() => makeCtx(report, run, buildArms(report)), [report, run]);
   const [tab, setTab] = useTabParam();
+  const [advancedOn, setAdvancedOn] = useStoredState(ADVANCED_KEY, false, isBool);
+  const advanced = advancedOn || tab === "advanced";
+  const tabs = TABS.filter((t) => t.value !== "advanced" || advanced);
   const idBase = "report";
   return (
     <ReportProvider value={ctx}>
@@ -101,14 +112,27 @@ function Ready({
         <div className={cn("flex flex-col gap-8 transition-opacity duration-200", analyzing && "pointer-events-none opacity-60")} aria-busy={analyzing || undefined}>
           <Verdict />
           <div>
-            <Tabs idBase={idBase} label="Report views" items={TABS.map((t) => ({ value: t.value, label: t.label }))} value={tab} onChange={setTab} className="mb-6" />
-            {TABS.map((t) => (
+            <div className="mb-6 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+              <Tabs idBase={idBase} label="Report views" items={tabs.map((t) => ({ value: t.value, label: t.label }))} value={tab} onChange={setTab} />
+              <Toggle
+                size="sm"
+                checked={advanced}
+                label={<span className="text-sm text-fg-muted">Advanced analysis</span>}
+                onChange={(on) => {
+                  setAdvancedOn(on);
+                  if (on) setTab("advanced");
+                  else if (tab === "advanced") setTab("overview");
+                }}
+              />
+            </div>
+            {tabs.map((t) => (
               <TabPanel key={t.value} idBase={idBase} value={t.value} active={tab === t.value}>
                 {t.value === "overview" ? <OverviewTab /> : null}
                 {t.value === "routing" ? <RoutingTab /> : null}
                 {t.value === "task-types" ? <TaskTypeTab /> : null}
                 {t.value === "answers" ? <SamplesTab /> : null}
                 {t.value === "statistics" ? <StatisticsTab result={result} settings={settings} analyzing={analyzing} onReanalyze={reanalyze} /> : null}
+                {t.value === "advanced" && tab === "advanced" ? <AdvancedTab /> : null}
               </TabPanel>
             ))}
           </div>

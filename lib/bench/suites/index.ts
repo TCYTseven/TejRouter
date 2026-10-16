@@ -1,11 +1,14 @@
 import type { BenchSuite, SuiteInfo } from "../types";
 import { codeSuite } from "./code";
+import { edgeSuite } from "./edge";
 import { extractionSuite } from "./extraction";
 import { instructionSuite } from "./instruction";
 import { knowledgeSuite } from "./knowledge";
 import { longContextSuite } from "./long-context";
 import { mathSuite } from "./math";
+import { multilingualSuite } from "./multilingual";
 import { reasoningSuite } from "./reasoning";
+import { rephraseSuite } from "./rephrase";
 import { trivialSuite } from "./trivial";
 
 /** Every built-in suite, roughly ordered from easiest to hardest to route well. */
@@ -18,6 +21,11 @@ export const SUITES: BenchSuite[] = [
   instructionSuite,
   extractionSuite,
   longContextSuite,
+  // Off unless picked: they answer the advanced report's questions about languages,
+  // stability under rephrasing, and edge cases.
+  multilingualSuite,
+  rephraseSuite,
+  edgeSuite,
 ];
 
 export function getSuite(id: string): BenchSuite | undefined {
@@ -56,6 +64,7 @@ export function suiteInfo(suite: BenchSuite): SuiteInfo {
     name: suite.name,
     description: suite.description,
     taskCount: suite.tasks.length,
+    ...(suite.optional ? { optional: true } : {}),
     categories: [...cats.entries()].map(([name, count]) => ({ name, count })),
     difficultyHistogram: hist,
     meanDifficulty: suite.tasks.length ? Math.round((sum / suite.tasks.length) * 1000) / 1000 : 0,

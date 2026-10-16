@@ -37,6 +37,12 @@ export interface ProviderSpec {
   simulated?: boolean;
   /** Free-form caveats, e.g. "routing model id unverified". */
   notes?: string;
+  /**
+   * Which OpenAI-style API the router serves. "chat" (default) is POST /chat/completions;
+   * "responses" is POST /responses (the Responses API), for routers with no Chat
+   * Completions endpoint, such as Ramp Router.
+   */
+  api?: "chat" | "responses";
 }
 
 /** Spec plus runtime status. Safe to send to the browser. */

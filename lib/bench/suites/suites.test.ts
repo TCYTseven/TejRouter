@@ -9,10 +9,11 @@ import { CODE_TASKS } from "./code";
 const ALL = SUITES.flatMap((s) => s.tasks);
 
 describe("suite catalogue", () => {
-  it("has the eight suites and 150+ tasks", () => {
-    expect(SUITES.map((s) => s.id).sort()).toEqual(
+  it("has the eight core suites, three optional ones and 150+ tasks", () => {
+    expect(SUITES.filter((s) => !s.optional).map((s) => s.id).sort()).toEqual(
       ["code", "extraction", "instruction", "knowledge", "long-context", "math", "reasoning", "trivial"].sort(),
     );
+    expect(SUITES.filter((s) => s.optional).map((s) => s.id).sort()).toEqual(["edge", "multilingual", "rephrase"]);
     expect(ALL.length).toBeGreaterThanOrEqual(150);
   });
 
@@ -276,6 +277,34 @@ describe("code references pass and trivial stubs fail", () => {
     expect(grade(task, "```javascript\n" + t.ref + "\n```").score).toBe(1);
     const stub = `function ${t.fn}() { return null; }`;
     expect(grade(task, "```js\n" + stub + "\n```").correct).toBe(false);
+  });
+});
+
+describe("optional suites", () => {
+  it("rephrasings come in groups of three with one answer and one difficulty", () => {
+    const groups = new Map<string, { expected: Set<string>; difficulty: Set<number>; n: number }>();
+    for (const t of getSuite("rephrase")!.tasks) {
+      const g = t.tags?.find((x) => x.startsWith("group:"));
+      expect(g, t.id).toBeTruthy();
+      const e = groups.get(g!) ?? { expected: new Set(), difficulty: new Set(), n: 0 };
+      e.expected.add(t.expected);
+      e.difficulty.add(t.difficulty);
+      e.n++;
+      groups.set(g!, e);
+    }
+    for (const [g, e] of groups) {
+      expect(e.n, g).toBe(3);
+      expect(e.expected.size, g).toBe(1);
+      expect(e.difficulty.size, g).toBe(1);
+    }
+  });
+  it("tags every other-language task with its language and every edge case with its kind", () => {
+    for (const t of getSuite("multilingual")!.tasks) expect(t.tags?.some((x) => /^lang:[a-z]{2}$/.test(x)), t.id).toBe(true);
+    for (const t of getSuite("edge")!.tasks) expect(t.tags?.some((x) => x.startsWith("edge:")), t.id).toBe(true);
+  });
+  it("the very long edge case is long", () => {
+    const t = getSuite("edge")!.tasks.find((x) => x.id === "edge/very-long")!;
+    expect(t.messages[0].content.split(/\s+/).length).toBeGreaterThan(19_000);
   });
 });
 

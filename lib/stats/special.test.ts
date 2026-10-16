@@ -29,7 +29,7 @@ import {
  *    non-integer incomplete beta and Student-t CDFs.
  *  - Closed forms: t(1) = Cauchy, t(2), χ²(2), χ²(even k), I_x(½,½) = (2/π)asin√x.
  *  - Standard table values (t₀.₉₇₅,₁₀ = 2.228138852, χ²₀.₉₅,₁ = 3.841458821, ...).
- * The procedure is described in docs/METHODOLOGY.md, section 27 (Numerical methods and validation).
+ * The procedure is described in docs/METHODOLOGY.md, section 28 (Numerical methods and validation).
  */
 
 describe("logGamma", () => {

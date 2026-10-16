@@ -83,7 +83,7 @@ export const PRESETS: Preset[] = [
 
 export function resolveSuiteIds(c: LauncherConfig, suites: SuiteInfo[]): string[] {
   const all = suites.map((s) => s.id);
-  if (c.suiteIds == null) return all;
+  if (c.suiteIds == null) return suites.filter((s) => !s.optional).map((s) => s.id);
   return all.filter((id) => c.suiteIds!.includes(id));
 }
 

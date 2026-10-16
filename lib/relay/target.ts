@@ -3,11 +3,11 @@ import { isIP } from "node:net";
 /**
  * Rules for the URLs /api/relay may forward to. The relay exists only so a router that
  * refuses requests from web pages (CORS) can still be called with a key saved in
- * Settings, so it forwards nothing but OpenAI-compatible chat and model-list calls,
+ * Settings, so it forwards nothing but OpenAI-compatible chat (Chat Completions or Responses) and model-list calls,
  * and, in production, only to public HTTPS hosts.
  */
 
-const ALLOWED_PATH = /\/(chat\/completions|models)$/;
+const ALLOWED_PATH = /\/(chat\/completions|responses|models)$/;
 
 export type TargetCheck = { ok: true; url: URL } | { ok: false; error: string };
 
@@ -23,7 +23,7 @@ export function checkTargetUrl(raw: string | null, allowPrivate: boolean): Targe
     return { ok: false, error: "the router's base URL must use https" };
   }
   if (url.username || url.password) return { ok: false, error: "credentials in the URL are not allowed" };
-  if (!ALLOWED_PATH.test(url.pathname)) return { ok: false, error: "only /chat/completions and /models are relayed" };
+  if (!ALLOWED_PATH.test(url.pathname)) return { ok: false, error: "only /chat/completions, /responses and /models are relayed" };
   if (!allowPrivate) {
     const host = url.hostname.replace(/^\[|\]$/g, "");
     if (/^localhost$|\.localhost$|\.local$|\.internal$/i.test(host)) return { ok: false, error: "private hosts are not relayed" };
