@@ -43,6 +43,8 @@ export interface BenchSuite {
   name: string;
   description: string;
   tasks: BenchTask[];
+  /** Left out of a run unless picked by name (edge cases, rephrasings, other languages). */
+  optional?: boolean;
 }
 
 /** One thing being benchmarked: a router plus (optionally) a pinned model. */
@@ -91,6 +93,15 @@ export interface BenchSample {
   grade: GradeResult;
   /** Number of calls made for this sample (1 = no retries). */
   attempts?: number;
+  /** Every failed attempt before the last one, in order (missing on runs saved before it was recorded). */
+  attemptLog?: AttemptRecord[];
+}
+
+/** One failed call that the runner then retried. */
+export interface AttemptRecord {
+  httpStatus: number | null;
+  error: string;
+  latencyMs: number;
 }
 
 /** Task metadata without prompts, kept with each run. */
@@ -173,4 +184,5 @@ export interface SuiteInfo {
   difficultyHistogram: number[];
   meanDifficulty: number;
   examples: { id: string; category: string; difficulty: number; prompt: string; expected: string }[];
+  optional?: boolean;
 }

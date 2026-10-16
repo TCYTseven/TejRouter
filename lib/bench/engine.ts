@@ -4,7 +4,7 @@ import type { ChatRequest, ChatResult } from "@/lib/types";
 import { normalizeArms } from "./arms";
 import { getSuite } from "./suites";
 import { hash32, rng, shuffle } from "./suites/util";
-import type { BenchArm, BenchEvent, BenchRun, BenchRunConfig, BenchSample, BenchTask, GradeResult } from "./types";
+import type { AttemptRecord, BenchArm, BenchEvent, BenchRun, BenchRunConfig, BenchSample, BenchTask, GradeResult } from "./types";
 
 export const MAX_JOBS = 5000;
 export const MAX_ARMS = 16;
@@ -324,6 +324,7 @@ export async function runBenchWith(
     };
     let attempts = 0;
     let result: ChatResult;
+    const attemptLog: AttemptRecord[] = [];
     for (;;) {
       attempts++;
       try {
@@ -332,6 +333,7 @@ export async function runBenchWith(
         result = syntheticFailure(job, `Runner error: ${e instanceof Error ? e.message : String(e)}`);
       }
       if (result.ok || signal?.aborted || attempts > MAX_RETRIES || !isRetryable(result)) break;
+      attemptLog.push({ httpStatus: result.httpStatus, error: (result.error ?? "").slice(0, 300), latencyMs: result.latencyMs });
       await wait(backoffMs(attempts, result, retryBase), signal);
       if (signal?.aborted) break;
     }
@@ -359,6 +361,7 @@ export async function runBenchWith(
       result,
       grade: g,
       attempts,
+      ...(attemptLog.length ? { attemptLog } : {}),
     };
   };
 

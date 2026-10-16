@@ -84,7 +84,7 @@ export function TaskOptions({
             <legend className="mb-2 flex w-full items-center justify-between gap-2 text-sm font-medium text-fg">
               <span>Task sets</span>
               <span className="flex gap-1">
-                <Button size="xs" variant="ghost" onClick={() => onChange({ suiteIds: null })}>
+                <Button size="xs" variant="ghost" onClick={() => onChange({ suiteIds: suites.map((s) => s.id) })}>
                   All
                 </Button>
                 <Button size="xs" variant="ghost" onClick={() => onChange({ suiteIds: [] })}>
@@ -104,7 +104,10 @@ export function TaskOptions({
                     />
                     <span className="min-w-0 flex-1">
                       <span className="flex items-baseline justify-between gap-3">
-                        <span className="text-[15px] text-fg">{s.name}</span>
+                        <span className="text-[15px] text-fg">
+                          {s.name}
+                          {s.optional ? <span className="ml-2 text-[13px] text-fg-muted">Off unless picked</span> : null}
+                        </span>
                         <span className="num shrink-0 text-[13px] text-fg-muted">{s.taskCount} tasks</span>
                       </span>
                       <span className="block truncate text-sm text-fg-muted" title={s.description}>

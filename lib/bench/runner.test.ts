@@ -231,6 +231,7 @@ describe("retries", () => {
     const { run } = await collect(one(), undefined, { call, sleep: async (ms) => void waits.push(ms) });
     expect(run.samples[0].attempts).toBe(3);
     expect(run.samples[0].result.ok).toBe(true);
+    expect(run.samples[0].attemptLog?.map((a) => a.httpStatus)).toEqual([429, 429]);
     expect(waits).toHaveLength(2);
     for (const w of waits) expect(w).toBeGreaterThanOrEqual(2000);
   });
@@ -257,6 +258,7 @@ describe("retries", () => {
     const { run } = await collect(one(), undefined, { call: call401, sleep: noSleep });
     expect(n).toBe(1);
     expect(run.samples[0].attempts).toBe(1);
+    expect(run.samples[0].attemptLog).toBeUndefined();
 
     const throwing: RunOptions["call"] = async () => {
       throw new Error("kaboom");
@@ -448,7 +450,8 @@ describe("API routes", () => {
     expect((await runById.DELETE(new Request("http://x"), ctx(runId))).status).toBe(404);
 
     const s = await (await suites.GET()).json();
-    expect(s.suites).toHaveLength(8);
+    expect(s.suites).toHaveLength(11);
+    expect(s.suites.filter((x: { optional?: boolean }) => x.optional)).toHaveLength(3);
     expect(s.suites[0]).toHaveProperty("difficultyHistogram");
     delete process.env.TEJROUTER_RUNS_DIR;
   });
