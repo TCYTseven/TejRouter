@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/button";
-import { IconGithub } from "@/components/ui/icons";
+import { StarOnGithub } from "@/components/ui/star-on-github";
 import { REPO_URL, Wordmark } from "@/components/shell/logo";
 
 export function LandingNav() {
@@ -17,15 +17,7 @@ export function LandingNav() {
           >
             How it works
           </Link>
-          <a
-            href={REPO_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="TejRouter on GitHub (opens in a new tab)"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg"
-          >
-            <IconGithub size={18} />
-          </a>
+          <StarOnGithub href={REPO_URL} />
           <ButtonLink href="/playground" variant="primary" size="sm" className="ml-1.5">
             Open app
           </ButtonLink>

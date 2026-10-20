@@ -1,0 +1,38 @@
+name: Bug report
+description: Something in TejRouter is broken or gives a wrong number.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected and what you saw instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open /benchmarks
+        2. Add Practice: Budget and Practice: Smart
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: routers
+    attributes:
+      label: Routers involved
+      placeholder: OpenRouter, Practice: Smart
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: OS, browser, Node version, and the commit or version you ran.
+      placeholder: macOS 15, Chrome 141, Node 22, main@8e13ec6
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Remove any API keys before pasting.
+      render: shell

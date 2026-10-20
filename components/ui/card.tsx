@@ -36,7 +36,7 @@ export function CardHeader({
   actions?: ReactNode;
   className?: string;
   titleAs?: "h2" | "h3" | "h4";
-  /** Ignored: headings carry no icons (docs/DESIGN.md). */
+  /** Ignored: headings carry no icons (CONTRIBUTING.md, "Design rules"). */
   icon?: ReactNode;
 }) {
   return (

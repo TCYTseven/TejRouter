@@ -10,7 +10,7 @@ export interface NavItem {
   key: string;
 }
 
-/** Primary app navigation (docs/DESIGN.md). Methodology lives in the sidebar footer. */
+/** Primary app navigation (CONTRIBUTING.md, "Design rules"). Methodology lives in the sidebar footer. */
 export const NAV_ITEMS: NavItem[] = [
   { href: "/playground", label: "Compare", description: "Send one prompt to several routers", icon: IconTerminal, key: "c" },
   { href: "/benchmarks", label: "Benchmark", description: "Score routers on graded tasks", icon: IconFlask, key: "b" },
