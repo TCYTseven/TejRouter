@@ -82,7 +82,7 @@ function KeyRow({ provider: p, saved }: { provider: ProviderSpec; saved: Browser
         aria-controls={panelId}
         className="flex w-full items-start gap-3 rounded-xl px-5 py-4 text-left max-sm:px-4"
       >
-        <ProviderDot provider={p} size={10} className="mt-[7px]" />
+        <ProviderDot provider={p} size={10} className="mt-1" />
         <span className="min-w-0 flex-1">
           <span className="block text-[15px] font-semibold text-fg">{p.name}</span>
           <span className={cn("block text-sm", saved ? "text-fg" : "text-fg-muted")}>{status}</span>

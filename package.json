@@ -5,13 +5,13 @@
   "description": "Benchmark LLM routers side by side: which model each router picked, latency, cost, accuracy and whether the differences are real.",
   "license": "MIT",
   "author": "Tejas Chakrapani",
-  "homepage": "https://github.com/TCYTseven/tejrouter#readme",
+  "homepage": "https://github.com/TCYTseven/TejRouter#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/TCYTseven/tejrouter.git"
+    "url": "git+https://github.com/TCYTseven/TejRouter.git"
   },
   "bugs": {
-    "url": "https://github.com/TCYTseven/tejrouter/issues"
+    "url": "https://github.com/TCYTseven/TejRouter/issues"
   },
   "keywords": [
     "llm",

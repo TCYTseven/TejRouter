@@ -1,6 +1,6 @@
 import { cn } from "@/lib/client/cn";
 
-export const REPO_URL = "https://github.com/TCYTseven/tejrouter";
+export const REPO_URL = "https://github.com/TCYTseven/TejRouter";
 
 /** The TejRouter mark: one prompt fanning out to three routes, the chosen one emphasized. */
 export function LogoMark({ size = 24, className }: { size?: number; className?: string; animated?: boolean }) {
