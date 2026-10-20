@@ -1,5 +1,8 @@
 import type { ChatMessage, ChatResult, ProviderId } from "@/lib/types";
 
+/** The Hard preset keeps tasks at least this difficult. */
+export const HARD_MIN_DIFFICULTY = 0.6;
+
 /** How a response is scored. Every grader returns a score in [0, 1]. */
 export type GraderSpec =
   | { kind: "exact"; caseSensitive?: boolean }
@@ -68,6 +71,8 @@ export interface BenchRunConfig {
   seed?: number;
   /** Optional cap on tasks per suite, sampled deterministically by seed. */
   maxTasksPerSuite?: number;
+  /** Keep only tasks at least this difficult (opt-in task sets still run whole). */
+  minDifficulty?: number;
   /** Optional human-readable run name. */
   name?: string;
 }
@@ -183,6 +188,8 @@ export interface SuiteInfo {
   /** Task counts per difficulty bucket: [0,0.2), [0.2,0.4), [0.4,0.6), [0.6,0.8), [0.8,1]. */
   difficultyHistogram: number[];
   meanDifficulty: number;
+  /** Tasks with difficulty >= HARD_MIN_DIFFICULTY, the ones the Hard preset runs. */
+  hardTaskCount?: number;
   examples: { id: string; category: string; difficulty: number; prompt: string; expected: string }[];
   optional?: boolean;
 }

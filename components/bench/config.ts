@@ -1,4 +1,4 @@
-import type { BenchRunConfig, SuiteInfo } from "@/lib/bench/types";
+import { HARD_MIN_DIFFICULTY, type BenchRunConfig, type SuiteInfo } from "@/lib/bench/types";
 import type { ProviderStatus } from "@/lib/types";
 import { armId, normalizeArms } from "@/lib/bench/arms";
 
@@ -24,6 +24,8 @@ export interface LauncherConfig {
   seed: number | null;
   /** null = all tasks. */
   maxTasksPerSuite: number | null;
+  /** null (or missing, in configs saved before it existed) = every difficulty. */
+  minDifficulty?: number | null;
   name: string;
 }
 
@@ -36,6 +38,7 @@ export const DEFAULT_CONFIG: LauncherConfig = {
   maxTokens: 1024,
   seed: null,
   maxTasksPerSuite: 10,
+  minDifficulty: null,
   name: "",
 };
 
@@ -68,18 +71,31 @@ export function draftArmId(a: Pick<ArmDraft, "providerId" | "model">): string {
 }
 
 export interface Preset {
-  id: "quick" | "standard" | "thorough";
+  id: "quick" | "standard" | "thorough" | "hard";
   label: string;
   maxTasksPerSuite: number | null;
   repetitions: number;
+  /** null = every difficulty. */
+  minDifficulty: number | null;
 }
 
 /** Task presets. Suite selection is independent (set under "Customize"). */
 export const PRESETS: Preset[] = [
-  { id: "quick", label: "Quick", maxTasksPerSuite: 10, repetitions: 1 },
-  { id: "standard", label: "Standard", maxTasksPerSuite: null, repetitions: 1 },
-  { id: "thorough", label: "Thorough", maxTasksPerSuite: null, repetitions: 3 },
+  { id: "quick", label: "Quick", maxTasksPerSuite: 10, repetitions: 1, minDifficulty: null },
+  { id: "standard", label: "Standard", maxTasksPerSuite: null, repetitions: 1, minDifficulty: null },
+  { id: "thorough", label: "Thorough", maxTasksPerSuite: null, repetitions: 3, minDifficulty: null },
+  // Only the hardest tasks of each set, where routers actually differ.
+  { id: "hard", label: "Hard", maxTasksPerSuite: null, repetitions: 1, minDifficulty: HARD_MIN_DIFFICULTY },
 ];
+
+/** Does this config match the preset's settings? */
+export function matchesPreset(p: Preset, c: Pick<LauncherConfig, "maxTasksPerSuite" | "repetitions" | "minDifficulty">): boolean {
+  return (
+    (p.maxTasksPerSuite ?? null) === (c.maxTasksPerSuite ?? null) &&
+    p.repetitions === c.repetitions &&
+    (p.minDifficulty ?? null) === (c.minDifficulty ?? null)
+  );
+}
 
 export function resolveSuiteIds(c: LauncherConfig, suites: SuiteInfo[]): string[] {
   const all = suites.map((s) => s.id);
@@ -88,8 +104,7 @@ export function resolveSuiteIds(c: LauncherConfig, suites: SuiteInfo[]): string[
 }
 
 export function activePreset(c: LauncherConfig): Preset["id"] | null {
-  const p = PRESETS.find((p) => (p.maxTasksPerSuite ?? null) === (c.maxTasksPerSuite ?? null) && p.repetitions === c.repetitions);
-  return p?.id ?? null;
+  return PRESETS.find((p) => matchesPreset(p, c))?.id ?? null;
 }
 
 /** Build the POST /api/bench body. Duplicate arms are dropped (the server would drop them too). */
@@ -110,6 +125,7 @@ export function toRunConfig(c: LauncherConfig, suites: SuiteInfo[], arms: ArmDra
     ...(c.maxTokens ? { maxTokens: c.maxTokens } : {}),
     ...(c.seed != null ? { seed: c.seed } : {}),
     ...(c.maxTasksPerSuite ? { maxTasksPerSuite: c.maxTasksPerSuite } : {}),
+    ...(c.minDifficulty ? { minDifficulty: c.minDifficulty } : {}),
     name: c.name.trim() || defaultRunName(c, uniq),
   };
 }
@@ -123,6 +139,6 @@ export function armName(arm: { label: string; model?: string }): string {
 function defaultRunName(c: LauncherConfig, arms: ArmDraft[]): string {
   const names = normalizeArms(arms.map((a) => ({ providerId: a.providerId, ...(a.model.trim() ? { model: a.model.trim() } : {}) }))).map(armName);
   const who = names.length <= 3 ? names.join(" vs ") : `${names.length} routers`;
-  const preset = PRESETS.find((p) => (p.maxTasksPerSuite ?? null) === (c.maxTasksPerSuite ?? null) && p.repetitions === c.repetitions);
+  const preset = PRESETS.find((p) => matchesPreset(p, c));
   return preset ? `${who}, ${preset.label.toLowerCase()}` : who;
 }

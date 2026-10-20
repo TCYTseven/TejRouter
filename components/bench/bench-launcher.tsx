@@ -69,7 +69,7 @@ export function BenchLauncher({
     () => computeEstimate(config, suiteIds, suites, uniqueArms, providerMap, tokenPriors),
     [config, suiteIds, suites, uniqueArms, providerMap, tokenPriors],
   );
-  const presetHint = (p: { maxTasksPerSuite: number | null; repetitions: number }) =>
+  const presetHint = (p: { maxTasksPerSuite: number | null; repetitions: number; minDifficulty: number | null }) =>
     aboutDuration(computeEstimate({ ...config, ...p }, suiteIds, suites, uniqueArms, providerMap, tokenPriors).wallMs);
 
   const { state, start, stop, reset } = useBenchRun();

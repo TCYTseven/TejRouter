@@ -1,14 +1,14 @@
 "use client";
 
 import { useId } from "react";
-import type { SuiteInfo } from "@/lib/bench/types";
+import { HARD_MIN_DIFFICULTY, type SuiteInfo } from "@/lib/bench/types";
 import { Button } from "@/components/ui/button";
 import { Disclosure } from "@/components/ui/disclosure";
 import { Field, Input } from "@/components/ui/field";
 import { cn } from "@/lib/client/cn";
 import { formatNumber } from "@/lib/client/format";
 import { MAX_CONCURRENCY, MAX_REPETITIONS, tasksPerSuite } from "@/lib/client/bench";
-import { PRESETS, type LauncherConfig, type Preset } from "./config";
+import { PRESETS, matchesPreset, type LauncherConfig, type Preset } from "./config";
 
 function firstSentence(s: string): string {
   const m = /^(.+?[.!?])(\s|$)/.exec(s);
@@ -36,12 +36,19 @@ export function TaskOptions({
 }) {
   const id = useId();
   const chosen = suites.filter((s) => selected.includes(s.id));
-  const count = (cap: number | null) => chosen.reduce((n, s) => n + tasksPerSuite(s, cap), 0);
-  const active = PRESETS.find((p) => (p.maxTasksPerSuite ?? null) === (config.maxTasksPerSuite ?? null) && p.repetitions === config.repetitions);
+  const count = (p: Pick<Preset, "maxTasksPerSuite" | "minDifficulty">) =>
+    chosen.reduce((n, s) => n + tasksPerSuite(s, p.maxTasksPerSuite, Boolean(p.minDifficulty)), 0);
+  const active = PRESETS.find((p) => matchesPreset(p, config));
   const describe = (p: Preset) => {
-    const n = formatNumber(count(p.maxTasksPerSuite));
+    const n = formatNumber(count(p));
     const what =
-      p.id === "quick" ? `About ${n} tasks` : p.repetitions > 1 ? `All ${n} tasks, ${p.repetitions} times each` : `All ${n} tasks`;
+      p.id === "quick"
+        ? `About ${n} tasks`
+        : p.id === "hard"
+          ? `The ${n} hardest tasks`
+          : p.repetitions > 1
+            ? `All ${n} tasks, ${p.repetitions} times each`
+            : `All ${n} tasks`;
     return `${what}, ${presetHint(p)}`;
   };
   const toggle = (sid: string) =>
@@ -51,7 +58,7 @@ export function TaskOptions({
 
   return (
     <div className="flex flex-col gap-5">
-      <div role="radiogroup" aria-label="How many tasks" className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+      <div role="radiogroup" aria-label="How many tasks" className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {PRESETS.map((p) => {
           const on = active?.id === p.id;
           return (
@@ -66,7 +73,7 @@ export function TaskOptions({
                 type="radio"
                 name={`${id}-preset`}
                 checked={on}
-                onChange={() => onChange({ maxTasksPerSuite: p.maxTasksPerSuite, repetitions: p.repetitions })}
+                onChange={() => onChange({ maxTasksPerSuite: p.maxTasksPerSuite, repetitions: p.repetitions, minDifficulty: p.minDifficulty })}
                 className="mt-1 h-4 w-4 shrink-0 cursor-pointer accent-[var(--fg)]"
               />
               <span className="min-w-0">
@@ -143,6 +150,20 @@ export function TaskOptions({
                 aria-describedby={`${id}-cap-hint`}
               />
             </Field>
+            <label className="flex cursor-pointer items-start gap-3 sm:col-span-2">
+              <input
+                type="checkbox"
+                checked={Boolean(config.minDifficulty)}
+                onChange={(e) => onChange({ minDifficulty: e.target.checked ? HARD_MIN_DIFFICULTY : null })}
+                className="mt-1 h-4 w-4 shrink-0 cursor-pointer accent-[var(--fg)]"
+              />
+              <span className="min-w-0">
+                <span className="block text-[15px] text-fg">Hardest tasks only</span>
+                <span className="block text-sm text-fg-muted">
+                  Keeps tasks rated {HARD_MIN_DIFFICULTY} or harder in each set. Easy tasks every router gets right hide the differences.
+                </span>
+              </span>
+            </label>
             <Field label="Calls at once" htmlFor={`${id}-conc`} hint="Lower this if a router rate-limits you.">
               <Input
                 id={`${id}-conc`}

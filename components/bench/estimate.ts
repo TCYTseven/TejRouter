@@ -40,10 +40,11 @@ export function computeEstimate(
   priors: Record<string, SuiteTokenPrior>,
 ): Estimate {
   const maxTasksPerSuite = config.maxTasksPerSuite ?? undefined;
-  const est = estimateJobs(suites, { suiteIds, repetitions: config.repetitions, maxTasksPerSuite, armCount: arms.length });
+  const minDifficulty = config.minDifficulty ?? undefined;
+  const est = estimateJobs(suites, { suiteIds, repetitions: config.repetitions, maxTasksPerSuite, minDifficulty, armCount: arms.length });
   const tokens = estimateTokensPerArm(
     suites,
-    { suiteIds, repetitions: config.repetitions, maxTasksPerSuite, maxTokens: config.maxTokens ?? undefined },
+    { suiteIds, repetitions: config.repetitions, maxTasksPerSuite, minDifficulty, maxTokens: config.maxTokens ?? undefined },
     priors,
   );
   const costs = arms.map((a) => estimateArmCost(a.model, providers[a.providerId], tokens)).filter((c) => c.lowUsd != null);
@@ -59,6 +60,7 @@ export function computeEstimate(
   let note: Estimate["note"] = null;
   if (!arms.length) note = { text: "Add at least one router to start.", blocking: true };
   else if (!suiteIds.length) note = { text: "Choose at least one task set under Customize.", blocking: true };
+  else if (est.tasks === 0) note = { text: "None of the chosen task sets has hard tasks. Add the Hard task set under Customize.", blocking: true };
   else if (arms.length > MAX_ARMS) note = { text: `A benchmark can include at most ${MAX_ARMS} routers.`, blocking: true };
   else if (est.jobs > MAX_JOBS)
     note = {

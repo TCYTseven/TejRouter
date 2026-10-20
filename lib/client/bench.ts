@@ -180,9 +180,14 @@ export interface SuiteTokenPrior {
 export const DEFAULT_TOKEN_PRIOR: SuiteTokenPrior = { promptTokens: 250, completionTokens: 120 };
 
 /** Opt-in task sets always run whole: a cap would split rephrasing groups and drop languages. */
-export function tasksPerSuite(suite: Pick<SuiteInfo, "taskCount" | "optional">, maxTasksPerSuite?: number | null): number {
+export function tasksPerSuite(
+  suite: Pick<SuiteInfo, "taskCount" | "optional" | "hardTaskCount">,
+  maxTasksPerSuite?: number | null,
+  hardOnly?: boolean,
+): number {
   if (suite.optional) return suite.taskCount;
-  return maxTasksPerSuite && maxTasksPerSuite > 0 ? Math.min(suite.taskCount, maxTasksPerSuite) : suite.taskCount;
+  const available = hardOnly ? (suite.hardTaskCount ?? suite.taskCount) : suite.taskCount;
+  return maxTasksPerSuite && maxTasksPerSuite > 0 ? Math.min(available, maxTasksPerSuite) : available;
 }
 
 export interface JobEstimate {
@@ -197,10 +202,10 @@ export interface JobEstimate {
 
 export function estimateJobs(
   suites: SuiteInfo[],
-  config: Pick<BenchRunConfig, "suiteIds" | "repetitions" | "maxTasksPerSuite"> & { armCount: number },
+  config: Pick<BenchRunConfig, "suiteIds" | "repetitions" | "maxTasksPerSuite" | "minDifficulty"> & { armCount: number },
 ): JobEstimate {
   const chosen = suites.filter((s) => config.suiteIds.includes(s.id));
-  const tasks = chosen.reduce((n, s) => n + tasksPerSuite(s, config.maxTasksPerSuite), 0);
+  const tasks = chosen.reduce((n, s) => n + tasksPerSuite(s, config.maxTasksPerSuite, Boolean(config.minDifficulty)), 0);
   const reps = Math.max(1, config.repetitions);
   return { tasks, arms: config.armCount, repetitions: reps, jobs: tasks * config.armCount * reps, perArm: tasks * reps };
 }
@@ -216,7 +221,7 @@ export interface TokenEstimate {
 
 export function estimateTokensPerArm(
   suites: SuiteInfo[],
-  config: Pick<BenchRunConfig, "suiteIds" | "repetitions" | "maxTasksPerSuite" | "maxTokens">,
+  config: Pick<BenchRunConfig, "suiteIds" | "repetitions" | "maxTasksPerSuite" | "maxTokens" | "minDifficulty">,
   priors: Record<string, SuiteTokenPrior> = {},
 ): TokenEstimate {
   let prompt = 0;
@@ -226,7 +231,7 @@ export function estimateTokensPerArm(
   const cap = config.maxTokens && config.maxTokens > 0 ? config.maxTokens : 1024;
   for (const s of suites) {
     if (!config.suiteIds.includes(s.id)) continue;
-    const n = tasksPerSuite(s, config.maxTasksPerSuite) * reps;
+    const n = tasksPerSuite(s, config.maxTasksPerSuite, Boolean(config.minDifficulty)) * reps;
     const p = priors[s.id] ?? DEFAULT_TOKEN_PRIOR;
     prompt += n * p.promptTokens;
     completion += n * Math.min(cap, p.completionTokens);
