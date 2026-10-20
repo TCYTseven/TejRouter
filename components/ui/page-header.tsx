@@ -27,7 +27,7 @@ export function PageHeader({
   breadcrumbs?: Crumb[];
   back?: Crumb;
   actions?: ReactNode;
-  /** Ignored: headings carry no icons (docs/DESIGN.md). */
+  /** Ignored: headings carry no icons (CONTRIBUTING.md, "Design rules"). */
   icon?: ReactNode;
   className?: string;
   children?: ReactNode;

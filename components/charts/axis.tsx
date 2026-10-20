@@ -1,6 +1,6 @@
 import type { Scale } from "./scale";
 
-/** Every chart label is 13px (docs/DESIGN.md). */
+/** Every chart label is 13px (CONTRIBUTING.md, "Design rules"). */
 export const CHART_FONT = 13;
 /** Rough advance width of one 13px digit/character, for collision checks. */
 export const CHAR_W = 7.3;

@@ -8,7 +8,7 @@ export function EmptyState({
   className,
   compact,
 }: {
-  /** Ignored: empty states carry no icon tiles (docs/DESIGN.md). */
+  /** Ignored: empty states carry no icon tiles (CONTRIBUTING.md, "Design rules"). */
   icon?: ReactNode;
   title: ReactNode;
   description?: ReactNode;

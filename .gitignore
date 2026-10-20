@@ -42,3 +42,7 @@ next-env.d.ts
 
 # benchmark runs (lib/bench/store.ts)
 /data/
+
+# written by AI coding tools; not part of the project
+/AGENTS.md
+/CLAUDE.md
