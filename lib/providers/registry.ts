@@ -58,7 +58,7 @@ export const PROVIDERS: ProviderSpec[] = [
     docsUrl: "https://openrouter.ai/docs",
     color: "#199e70",
     logo: "/routers/openrouter.png",
-    headers: { "HTTP-Referer": "https://github.com/TCYTseven/tejrouter", "X-Title": "TejRouter" },
+    headers: { "HTTP-Referer": "https://github.com/TCYTseven/TejRouter", "X-Title": "TejRouter" },
   },
   {
     id: "requesty",

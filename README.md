@@ -9,16 +9,10 @@
 Send the same prompts to every LLM router you use and see which model each one picked,<br />
 how fast it answered, what it cost, whether it was right, and whether the differences are real.
 
-[![CI](https://github.com/TCYTseven/tejrouter/actions/workflows/ci.yml/badge.svg)](https://github.com/TCYTseven/tejrouter/actions/workflows/ci.yml)
+[![CI](https://github.com/TCYTseven/TejRouter/actions/workflows/ci.yml/badge.svg)](https://github.com/TCYTseven/TejRouter/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/TCYTseven/tejrouter?style=flat&logo=github)](https://github.com/TCYTseven/tejrouter/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/TCYTseven/TejRouter?style=flat&logo=github)](https://github.com/TCYTseven/TejRouter/stargazers)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-<br />
-[![Next.js 16](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org)
-[![React 19](https://img.shields.io/badge/React-19-149eca?logo=react&logoColor=white)](https://react.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-4-38bdf8?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
-[![Tests: 567](https://img.shields.io/badge/tests-567_passing-success?logo=vitest&logoColor=white)](#development)
 
 [Quickstart](#quickstart) · [Routers](#routers) · [Benchmarks](#benchmarks) · [The report](#the-report) · [Methodology](docs/METHODOLOGY.md) · [Contributing](CONTRIBUTING.md)
 
@@ -43,8 +37,8 @@ LLM routers (Ramp Router, Enclave Cyberouter, OpenRouter, Requesty, FastLLM, Mar
 ## Quickstart
 
 ```bash
-git clone https://github.com/TCYTseven/tejrouter
-cd tejrouter
+git clone https://github.com/TCYTseven/TejRouter
+cd TejRouter
 npm install
 cp .env.example .env.local   # add whichever router keys you have (all optional)
 npm run dev                  # http://localhost:3000
@@ -137,7 +131,7 @@ Built with Next.js 16, React 19, Tailwind CSS 4 and Motion.
 
 ## Contributing
 
-Issues and pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) covers setup, adding a router or a task suite, the statistics rules and the design rules. Security problems go through [a private advisory](https://github.com/TCYTseven/tejrouter/security/advisories/new).
+Issues and pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) covers setup, adding a router or a task suite, the statistics rules and the design rules. Security problems go through [a private advisory](https://github.com/TCYTseven/TejRouter/security/advisories/new).
 
 If TejRouter helped you pick a router, a star helps other people find it.
 

@@ -19,7 +19,7 @@ export const SITE_TAGLINE = "find out which LLM router is actually better";
 export const SITE_DESCRIPTION =
   "TejRouter sends the same prompts to LLM routers like Ramp Router, Enclave Cyberouter, OpenRouter and Requesty, and shows which model each picked, how fast it answered, what it cost and whether it got the answer right.";
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "");
-export const REPO_URL = "https://github.com/TCYTseven/tejrouter";
+export const REPO_URL = "https://github.com/TCYTseven/TejRouter";
 
 export const SITE_KEYWORDS = [
   "LLM router",

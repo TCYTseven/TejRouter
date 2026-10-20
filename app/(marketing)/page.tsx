@@ -29,7 +29,7 @@ const STEPS = [
 ];
 
 const QUICKSTART = [
-  { cmd: `git clone ${REPO_URL} && cd tejrouter` },
+  { cmd: `git clone ${REPO_URL} && cd TejRouter` },
   { cmd: "npm install" },
   { cmd: "cp .env.example .env.local", note: "# optional: add router keys" },
   { cmd: "npm run dev" },

@@ -7,8 +7,8 @@ Thanks for helping out. TejRouter is a small codebase with a few firm rules, and
 You need Node 20.9 or newer (CI runs Node 22).
 
 ```bash
-git clone https://github.com/TCYTseven/tejrouter
-cd tejrouter
+git clone https://github.com/TCYTseven/TejRouter
+cd TejRouter
 npm install
 npm run dev        # http://localhost:3000
 ```
@@ -84,7 +84,7 @@ Use the primitives in `components/ui` rather than restyling them.
 
 ## Security
 
-Keys stay where they were put: `.env.local` keys are read only on the server, and keys saved in Settings stay in the browser and go straight to the router. If you find a way for a key to leak, report it privately through [GitHub security advisories](https://github.com/TCYTseven/tejrouter/security/advisories/new), not in a public issue.
+Keys stay where they were put: `.env.local` keys are read only on the server, and keys saved in Settings stay in the browser and go straight to the router. If you find a way for a key to leak, report it privately through [GitHub security advisories](https://github.com/TCYTseven/TejRouter/security/advisories/new), not in a public issue.
 
 ## License
 
