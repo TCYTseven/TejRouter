@@ -5,7 +5,7 @@ export async function GET() {
   return Response.json({ runs: await listRuns() }, { headers: { "Cache-Control": "no-store" } });
 }
 
-/** Import a BenchRun JSON. Responds 201 `{ run: RunSummary, persisted }`. */
+/** Import a BenchRun JSON. Responds 201 `{ run: RunSummary, stored: BenchRun, persisted }`. */
 export async function POST(request: Request) {
   let body: unknown;
   try {
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   try {
     const { run, save } = await importRun(body);
     return Response.json(
-      { run: summarizeRun(run), persisted: save.persisted, ...(save.error ? { warning: save.error } : {}) },
+      { run: summarizeRun(run), stored: run, persisted: save.persisted, ...(save.error ? { warning: save.error } : {}) },
       { status: 201 },
     );
   } catch (e) {

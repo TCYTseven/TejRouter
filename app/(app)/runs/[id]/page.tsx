@@ -12,7 +12,8 @@ export async function generateMetadata({ params }: PageProps<"/runs/[id]">): Pro
   const { id } = await params;
   const run = await getRun(id);
   if (!run) {
-    return { ...pageMetadata({ title: "Run not found", description: "This benchmark run does not exist.", path: `/runs/${id}` }), robots: { index: false } };
+    // The run may live only in the visitor's browser (lib/client/local-runs.ts).
+    return { ...pageMetadata({ title: "Report", description: "A benchmark run report.", path: `/runs/${id}` }), robots: { index: false } };
   }
   const arms = run.arms.map((a) => a.label).join(", ");
   return pageMetadata({
@@ -24,9 +25,11 @@ export async function generateMetadata({ params }: PageProps<"/runs/[id]">): Pro
 
 export default async function RunReportPage({ params }: PageProps<"/runs/[id]">) {
   const { id } = await params;
+  if (!isValidRunId(id)) notFound();
+  // The server may not have it (serverless instances keep runs in memory): the client view
+  // then reads this browser's copy, and says "Run not found" only when neither has it.
   const run = await getRun(id);
-  if (!run) notFound();
-  const name = run.name || run.id;
+  const name = run ? run.name || run.id : "Report";
   return (
     <Suspense fallback={<ReportSkeleton name={name} stage="Loading the run" />}>
       <RunReportView id={id} name={name} />
