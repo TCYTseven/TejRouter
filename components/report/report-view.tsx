@@ -45,7 +45,7 @@ export function RunReportView({ id, name }: { id: string; name: string }) {
     return (
       <EmptyState
         title="Run not found"
-        description="This run may have been deleted."
+        description="There is no saved benchmark with this id on the server or in this browser. It may have been deleted."
         action={
           <ButtonLink href="/runs" size="sm" variant="primary">
             All results

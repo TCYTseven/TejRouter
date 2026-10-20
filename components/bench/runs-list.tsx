@@ -9,6 +9,7 @@ import { ProviderDot } from "@/components/ui/provider";
 import { useToast } from "@/components/ui/toast";
 import { formatDateTime, formatNumber } from "@/lib/client/format";
 import { deleteRun, exportRun, importRun } from "@/lib/client/bench";
+import { listLocalRuns, mergeRunSummaries } from "@/lib/client/local-runs";
 import { armName } from "./config";
 
 /** "just now", "5 minutes ago", "2 hours ago", "3 days ago", then a date. */
@@ -51,6 +52,13 @@ export function RunsList({ initialRuns, now, simulatedIds }: { initialRuns: RunS
   const [importing, setImporting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // Runs kept in this browser: the server may not list them (serverless instances keep runs in memory).
+  useEffect(() => {
+    const local = listLocalRuns();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage is only readable after hydration
+    if (local.length) setRuns((rs) => mergeRunSummaries(rs, local));
+  }, []);
+
   const onImport = async (file: File | undefined) => {
     if (!file) return;
     setImporting(true);
@@ -59,8 +67,8 @@ export function RunsList({ initialRuns, now, simulatedIds }: { initialRuns: RunS
       setRuns((rs) => [res.run, ...rs.filter((r) => r.id !== res.run.id)].sort((a, b) => b.createdAt - a.createdAt));
       toast({
         title: `Imported “${res.run.name}”`,
-        description: res.warning ? `It could not be saved to disk: ${res.warning}` : undefined,
-        tone: res.persisted ? "success" : "info",
+        description: res.warning && !res.stored ? `It could not be saved to disk: ${res.warning}` : undefined,
+        tone: res.persisted || res.stored ? "success" : "info",
       });
     } catch (e) {
       toast({ title: "Import failed", description: e instanceof Error ? e.message : String(e), tone: "error" });

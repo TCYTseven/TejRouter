@@ -231,7 +231,7 @@ function Finished({ state, arms, onReset }: { state: LiveRunState; arms: ArmLive
   const aborted = !!state.end?.aborted;
   const persisted = state.end?.persisted;
   const saved = persisted === true || state.partialSave === "saved";
-  const unsaved = persisted === false || state.partialSave === "missing";
+  const unsaved = (persisted === false || state.partialSave === "missing") && !state.savedLocally;
 
   const download = async () => {
     const full = liveRunToBenchRun(state);
@@ -248,7 +248,7 @@ function Finished({ state, arms, onReset }: { state: LiveRunState; arms: ArmLive
   const lead = leaderSentence(arms);
   const status = aborted
     ? `Stopped after ${formatNumber(state.samples.length)} of ${formatNumber(state.totalJobs)} calls. ${
-        saved ? "The partial results are saved." : state.partialSave === "checking" ? "Saving the partial results…" : ""
+        saved || state.savedLocally ? "The partial results are saved." : state.partialSave === "checking" ? "Saving the partial results…" : ""
       }`
     : null;
 

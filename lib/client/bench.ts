@@ -2,6 +2,7 @@ import { asText } from "@/lib/providers/openai";
 import type { BenchArm, BenchEvent, BenchRun, BenchRunConfig, RunSummary, SuiteInfo } from "@/lib/bench/types";
 import type { ProviderStatus } from "@/lib/types";
 import { lookupPrice } from "@/lib/pricing";
+import { deleteLocalRun, listLocalRuns, loadLocalRun, mergeRunSummaries, saveLocalRun } from "./local-runs";
 import { readNdjson } from "./ndjson";
 
 /**
@@ -67,18 +68,39 @@ export async function fetchSuites(signal?: AbortSignal): Promise<SuiteInfo[]> {
   return body.suites ?? [];
 }
 
-/** Stored run summaries, newest first. */
+/** Stored run summaries (the server's and this browser's copies), newest first. */
 export async function fetchRuns(signal?: AbortSignal): Promise<RunSummary[]> {
   const res = await fetch("/api/runs", { signal, cache: "no-store" });
   if (!res.ok) throw new Error(await errorMessage(res, "GET /api/runs failed"));
   const body = (await res.json()) as { runs?: RunSummary[] };
-  return body.runs ?? [];
+  return mergeRunSummaries(body.runs ?? [], listLocalRuns());
 }
 
-export async function fetchRun(id: string, signal?: AbortSignal): Promise<BenchRun> {
-  const res = await fetch(`/api/runs/${encodeURIComponent(id)}`, { signal, cache: "no-store" });
-  if (!res.ok) throw new Error(await errorMessage(res, `GET /api/runs/${id} failed`));
-  const run = (await res.json()) as BenchRun;
+/**
+ * A stored run: the server's copy, else this browser's (see lib/client/local-runs.ts).
+ * `localFallback: false` asks the server only. A server copy is also kept in the browser.
+ */
+export async function fetchRun(id: string, signal?: AbortSignal, opts: { localFallback?: boolean } = {}): Promise<BenchRun> {
+  const localFallback = opts.localFallback ?? true;
+  let res: Response;
+  try {
+    res = await fetch(`/api/runs/${encodeURIComponent(id)}`, { signal, cache: "no-store" });
+  } catch (e) {
+    const local = localFallback && !signal?.aborted ? loadLocalRun(id) : null;
+    if (local) return normalizeRunText(local);
+    throw e;
+  }
+  if (!res.ok) {
+    const local = localFallback ? loadLocalRun(id) : null;
+    if (local) return normalizeRunText(local);
+    throw new Error(await errorMessage(res, `GET /api/runs/${id} failed`));
+  }
+  const run = normalizeRunText((await res.json()) as BenchRun);
+  saveLocalRun(run);
+  return run;
+}
+
+function normalizeRunText(run: BenchRun): BenchRun {
   // Runs saved before asText existed may hold an object where text belongs.
   for (const s of run.samples ?? []) {
     s.result.servedModel = asText(s.result.servedModel);
@@ -88,15 +110,19 @@ export async function fetchRun(id: string, signal?: AbortSignal): Promise<BenchR
   return run;
 }
 
+/** Deletes the server's copy and this browser's; succeeds when either existed. */
 export async function deleteRun(id: string): Promise<void> {
+  const hadLocal = deleteLocalRun(id);
   const res = await fetch(`/api/runs/${encodeURIComponent(id)}`, { method: "DELETE" });
-  if (!res.ok) throw new Error(await errorMessage(res, `Could not delete ${id}`));
+  if (!res.ok && !(hadLocal && res.status === 404)) throw new Error(await errorMessage(res, `Could not delete ${id}`));
 }
 
 export interface ImportResult {
   run: RunSummary;
   persisted: boolean;
   warning?: string;
+  /** The run as stored (fresh id, normalized arms); also kept in this browser. */
+  stored?: BenchRun;
 }
 
 /** Import a BenchRun: a File/Blob holding JSON, a JSON string, or a parsed object. */
@@ -112,7 +138,9 @@ export async function importRun(input: Blob | string | object): Promise<ImportRe
   }
   const res = await fetch("/api/runs", { method: "POST", headers: { "Content-Type": "application/json" }, body });
   if (!res.ok) throw new Error(await errorMessage(res, "Import failed"));
-  return (await res.json()) as ImportResult;
+  const result = (await res.json()) as ImportResult;
+  if (result.stored) saveLocalRun(result.stored);
+  return result;
 }
 
 /** Trigger a browser download of `data` as pretty JSON. */

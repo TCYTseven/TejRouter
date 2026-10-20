@@ -1,10 +1,12 @@
 import type { AnalyzeOptions, RunReport } from "@/lib/analysis/types";
 import type { BenchRun } from "@/lib/bench/types";
+import { loadLocalRun, saveLocalRun } from "./local-runs";
 
 /**
  * Browser-side loading and analysis for the run report (app/(app)/runs/[id]).
  *
- * - fetchBenchRun: GET /api/runs/[id] with a typed 404.
+ * - fetchBenchRun: GET /api/runs/[id], falling back to this browser's copy
+ *   (lib/client/local-runs.ts), with a typed 404 when neither has it.
  * - analyzeInBrowser: runs lib/analysis in a Web Worker (one shared worker, requests
  *   matched by id, stale requests superseded). If the worker cannot be created or
  *   crashes, falls back to the main thread with a lighter bootstrap (400 resamples)
@@ -19,7 +21,18 @@ export class RunNotFoundError extends Error {
 }
 
 export async function fetchBenchRun(id: string, signal?: AbortSignal): Promise<BenchRun> {
-  const res = await fetch(`/api/runs/${encodeURIComponent(id)}`, { signal, cache: "no-store" });
+  let res: Response;
+  try {
+    res = await fetch(`/api/runs/${encodeURIComponent(id)}`, { signal, cache: "no-store" });
+  } catch (e) {
+    const local = signal?.aborted ? null : loadLocalRun(id);
+    if (local) return local;
+    throw e;
+  }
+  if (!res.ok) {
+    const local = loadLocalRun(id);
+    if (local) return local;
+  }
   if (res.status === 404) throw new RunNotFoundError(id);
   if (!res.ok) {
     let msg = `Could not load run (HTTP ${res.status})`;
@@ -31,7 +44,9 @@ export async function fetchBenchRun(id: string, signal?: AbortSignal): Promise<B
     }
     throw new Error(msg);
   }
-  return (await res.json()) as BenchRun;
+  const run = (await res.json()) as BenchRun;
+  saveLocalRun(run);
+  return run;
 }
 
 export interface AnalysisResult {

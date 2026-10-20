@@ -4,12 +4,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { BenchEvent, BenchRun, BenchRunConfig, BenchSample } from "@/lib/bench/types";
 import { BenchStartError, fetchRun, startBench } from "@/lib/client/bench";
 import { runsInBrowser, startLocalBench } from "@/lib/client/local-bench";
+import { saveLocalRun } from "@/lib/client/local-runs";
 
 async function pollSaved(id: string, isCurrent: () => boolean): Promise<boolean> {
   for (let i = 0; i < 15 && isCurrent(); i++) {
     await new Promise((r) => window.setTimeout(r, i === 0 ? 400 : 1000));
     try {
-      await fetchRun(id);
+      await fetchRun(id, undefined, { localFallback: false });
       return true;
     } catch {
       /* not saved yet */
@@ -43,6 +44,8 @@ export interface LiveRunState {
    * saved partial run: "checking" -> "saved" | "missing". Null otherwise.
    */
   partialSave: "checking" | "saved" | "missing" | null;
+  /** A copy is kept in this browser's storage (lib/client/local-runs.ts), so the report opens anywhere. */
+  savedLocally: boolean;
 }
 
 const INITIAL: LiveRunState = {
@@ -59,7 +62,23 @@ const INITIAL: LiveRunState = {
   startError: null,
   stoppedByUser: false,
   partialSave: null,
+  savedLocally: false,
 };
+
+/** Keep the finished run in this browser; the server copy may live only in one instance's memory. */
+function keepLocally(s: LiveRunState): boolean {
+  const run = liveRunToBenchRun(s);
+  if (!run) return false;
+  const id = s.end?.runId || run.id;
+  return saveLocalRun({ ...run, id, samples: run.samples.map((x) => ({ ...x, runId: id })) });
+}
+
+/** Marks the local copy; a server that could not write to disk is then not a problem worth reporting. */
+function withLocalCopy(s: LiveRunState): LiveRunState {
+  const savedLocally = keepLocally(s);
+  if (!savedLocally) return s;
+  return { ...s, savedLocally, errors: s.errors.filter((e) => !e.startsWith("Run finished but could not be saved")) };
+}
 
 /**
  * Drives POST /api/bench, or the in-browser runner when the run uses a browser key. Sample events arrive in bursts (simulators finish hundreds per
@@ -136,7 +155,10 @@ export function useBenchRun() {
         await begin(config, { onEvent, signal: ctl.signal });
         flush();
         setState((s) => {
-          if (s.run) return { ...s, status: "done", endedAt: s.endedAt ?? Date.now() };
+          if (s.run) {
+            const done: LiveRunState = { ...s, status: "done", endedAt: s.endedAt ?? Date.now() };
+            return withLocalCopy(done);
+          }
           return { ...s, status: "failed", startError: s.errors[0] ?? "The run ended before it started." };
         });
       } catch (e) {
@@ -150,7 +172,7 @@ export function useBenchRun() {
           // Stopped before run-start arrived: back to the setup form (the stop toast explains it).
           if (!s.run) return aborted ? INITIAL : { ...s, status: "failed", startError: message };
           // Stream cut (user stop or network): the server keeps and saves the partial run.
-          return {
+          const done: LiveRunState = {
             ...s,
             status: "done",
             endedAt: s.endedAt ?? Date.now(),
@@ -161,9 +183,12 @@ export function useBenchRun() {
             errors: aborted ? s.errors : [...s.errors, `Stream interrupted: ${message}`],
             partialSave: sawEnd ? null : "checking",
           };
+          return withLocalCopy(done);
         });
         if (runId && !sawEnd) {
           const saved = await pollSaved(runId, () => ctl === ctlRef.current);
+          // The server's partial copy holds calls that finished after the stop: keep it here too.
+          if (saved) await fetchRun(runId, undefined, { localFallback: false }).catch(() => null);
           if (ctl === ctlRef.current) {
             setState((s) => (s.partialSave === "checking" ? { ...s, partialSave: saved ? "saved" : "missing" } : s));
           }
