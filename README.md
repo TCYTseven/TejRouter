@@ -31,7 +31,7 @@ LLM routers (Ramp Router, Enclave Cyberouter, OpenRouter, Requesty, FastLLM, Mar
 - **Runs locally.** No accounts and no database. Results are saved as files under `data/runs/`.
 - **Works with zero keys.** Two offline practice routers let you try every page immediately.
 - **Your keys stay put.** `.env.local` keys are read only on the server; keys saved in Settings stay in your browser.
-- **Deterministic grading.** 221 auto-graded tasks, no LLM judge in the main score.
+- **Deterministic grading.** 249 auto-graded tasks, no LLM judge in the main score.
 - **Real statistics.** Paired tests, bootstrap intervals, routing analysis and cost-quality frontiers, all documented in [METHODOLOGY.md](docs/METHODOLOGY.md).
 
 ## Quickstart
@@ -51,7 +51,7 @@ Then open `/onboarding` to connect your routers, or go straight to Compare.
 | Page | Route | What it does |
 | --- | --- | --- |
 | Compare | `/playground` | Send one prompt to several routers and read the answers side by side; vote for the best one |
-| Benchmark | `/benchmarks` | Pick routers and a task set (Quick, Standard, Thorough) and watch the run fill in |
+| Benchmark | `/benchmarks` | Pick routers and a task set (Quick, Standard, Thorough, or Hard for only the hardest tasks) and watch the run fill in |
 | Results | `/runs`, `/runs/[id]` | Saved runs, and a report that leads with a plain verdict, with routing, task-type and full statistics in tabs |
 | Leaderboard | `/arena` | Rankings from your blind votes on Compare |
 | Routers | `/providers` | Which routers are connected, how to add one, and a one-click test |
@@ -65,7 +65,7 @@ Each router is one entry in [`lib/providers/registry.ts`](lib/providers/registry
 
 | Router | Key | Base URL | Default model |
 | --- | --- | --- | --- |
-| Ramp Router | `RAMP_ROUTER_API_KEY` (also `RAMP_ROUTER_KEY`, `RAMP_API_KEY`, `ROUTER_API_KEY`) | `https://api.router.com/v1` (Responses API: it has no `/chat/completions`) | discovered from `/v1/models`, or `RAMP_ROUTER_MODEL` |
+| Ramp Router | `RAMP_ROUTER_API_KEY` (also `RAMP_ROUTER_KEY`, `RAMP_API_KEY`, `ROUTER_API_KEY`) | `https://api.router.com/v1` (Responses API: it has no `/chat/completions`) | `gpt-5.6-sol`, or `RAMP_ROUTER_MODEL`. That is one fixed model, so Ramp does not route; set `switchyard`, `auto-jev-routing` or a routing profile's slug to test its routing |
 | Enclave Cyberouter | `ENCLAVE_ROUTER_API_KEY` (also `ENCLAVE_API_KEY`, `CYBEROUTER_API_KEY`, `CYBER_ROUTER_API_KEY`) | `https://router.enclave.ai/v1` | `cyberouter/auto` |
 | OpenRouter | `OPENROUTER_API_KEY` | `https://openrouter.ai/api/v1` | `openrouter/auto` |
 | Requesty | `REQUESTY_API_KEY` | `https://router.requesty.ai/v1` | set `REQUESTY_MODEL` to a routing policy |
@@ -78,7 +78,7 @@ Every base URL and model can be overridden with the `*_BASE_URL` and `*_MODEL` v
 
 ## Benchmarks
 
-221 auto-graded tasks in eight suites: `trivial`, `knowledge`, `math`, `reasoning`, `code`, `instruction`, `extraction` and `long-context`. Three more are off unless picked under Customize, and always run whole: `multilingual` (word problems in eight languages), `rephrase` (nine questions asked three ways each) and `edge` (empty and blank messages, noise, a 20,000-word prompt, prompt injection, harmless questions with alarming words). Every task has a difficulty in [0, 1] so the report can show whether a router escalates hard prompts to stronger models and keeps easy ones cheap. Grading is deterministic, with no LLM judge: exact and numeric matching, multiple choice, regex, JSON field checks, IFEval-style constraints, and JavaScript solutions executed against tests in a sandboxed `node:vm`. Math answers are generated and computed in code; puzzle answers are verified by brute force in the test suite.
+249 auto-graded tasks in nine suites: `trivial`, `knowledge`, `math`, `reasoning`, `code`, `instruction`, `extraction`, `long-context` and `hard` (exact big-number and calendar arithmetic, long chains of state changes, logic grids where every clue matters, aggregation over a long log, tricky code and writing under many rules at once). The **Hard** preset runs only tasks rated 0.6 or harder in each set: easy tasks every router gets right hide the differences, and they give a router no reason to pick a stronger model. Three more are off unless picked under Customize, and always run whole: `multilingual` (word problems in eight languages), `rephrase` (nine questions asked three ways each) and `edge` (empty and blank messages, noise, a 20,000-word prompt, prompt injection, harmless questions with alarming words). Every task has a difficulty in [0, 1] so the report can show whether a router escalates hard prompts to stronger models and keeps easy ones cheap. Grading is deterministic, with no LLM judge: exact and numeric matching, multiple choice, regex, JSON field checks, IFEval-style constraints, and JavaScript solutions executed against tests in a sandboxed `node:vm`. Math answers are generated and computed in code; puzzle answers are verified by brute force in the test suite.
 
 The runner shuffles jobs with a seed, caps per-router concurrency so no router is favoured by rate limits, retries 429 and 5xx responses with backoff (recording each retried attempt), streams results as NDJSON and saves each run to `data/runs/` (gitignored).
 

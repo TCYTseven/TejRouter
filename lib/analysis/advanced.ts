@@ -505,7 +505,9 @@ export function analyzeAdvanced(run: BenchRun, report: RunReport): AdvancedRepor
     let substitutedCorrect: number | null = null;
     // Any arm that asked for one specific model (even one the main report treats as a
     // router because it was served several).
-    const pinned = armModel[id] && !/(^|[/:_-])auto$/i.test(armModel[id]!) ? normalizeModel(armModel[id]) : null;
+    const routing = getProviderSpec(id.split(":")[0])?.routingModels ?? [];
+    const pinned =
+      armModel[id] && !/(^|[/:_-])auto$/i.test(armModel[id]!) && !routing.includes(armModel[id]!) ? normalizeModel(armModel[id]) : null;
     if (pinned) {
       substituted = 0;
       substitutedCorrect = 0;
