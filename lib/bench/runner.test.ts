@@ -321,6 +321,22 @@ describe("config validation", () => {
   });
 });
 
+describe("minDifficulty (the Hard preset)", () => {
+  it("keeps only tasks at least that hard, and opt-in sets whole", () => {
+    const plan = planRun({ suiteIds: ["math", "hard", "rephrase"], arms: [{ providerId: "sim-greedy" }], minDifficulty: 0.6, seed: 1 });
+    const core = plan.tasks.filter((t) => t.suiteId !== "rephrase");
+    expect(core.length).toBeGreaterThan(20);
+    expect(core.every((t) => t.difficulty >= 0.6)).toBe(true);
+    expect(plan.tasks.filter((t) => t.suiteId === "rephrase").length).toBe(getSuite("rephrase")!.tasks.length);
+    expect(plan.config.minDifficulty).toBe(0.6);
+  });
+
+  it("refuses a run with no task that hard, and a bad value", () => {
+    expect(() => planRun({ suiteIds: ["trivial"], arms: [{ providerId: "sim-greedy" }], minDifficulty: 0.6 })).toThrow(BenchConfigError);
+    expect(() => planRun({ suiteIds: ["math"], arms: [{ providerId: "sim-greedy" }], minDifficulty: 2 })).toThrow(BenchConfigError);
+  });
+});
+
 describe("task selection", () => {
   it("subsamples deterministically across the difficulty range", () => {
     const tasks = getSuite("math")!.tasks;
@@ -455,7 +471,7 @@ describe("API routes", () => {
     expect((await runById.DELETE(new Request("http://x"), ctx(runId))).status).toBe(404);
 
     const s = await (await suites.GET()).json();
-    expect(s.suites).toHaveLength(11);
+    expect(s.suites).toHaveLength(12);
     expect(s.suites.filter((x: { optional?: boolean }) => x.optional)).toHaveLength(3);
     expect(s.suites[0]).toHaveProperty("difficultyHistogram");
     delete process.env.TEJROUTER_RUNS_DIR;
