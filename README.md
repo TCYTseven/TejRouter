@@ -22,11 +22,11 @@ how fast it answered, what it cost, whether it was right, and whether the differ
 
 [Quickstart](#quickstart) · [Routers](#routers) · [Benchmarks](#benchmarks) · [The report](#the-report) · [Methodology](docs/METHODOLOGY.md) · [Contributing](CONTRIBUTING.md)
 
-<a href=".github/assets/trailer.mp4">
-  <img src=".github/assets/trailer.gif" width="880" alt="TejRouter walkthrough: comparing two routers on one prompt, running a benchmark, and reading the report" />
+<a href="docs/tejrouter_trailer_v1.mp4">
+  <img src=".github/assets/trailer.gif" width="880" alt="TejRouter trailer: one prompt sent to every router, a 221-task benchmark, cost per answer, regret, and a plain verdict backed by statistics" />
 </a>
 
-<sub>Everything in the trailer runs on the two offline practice routers, with no API keys. <a href=".github/assets/trailer.mp4">Watch the full-quality MP4</a>.</sub>
+<sub><a href="docs/tejrouter_trailer_v1.mp4">Watch the full trailer with sound (MP4)</a></sub>
 
 </div>
 
