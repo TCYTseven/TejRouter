@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ProviderSpec } from "@/lib/types";
-import { callChatWith, responsesBody, type RouterTarget } from "./openai";
+import { callChatWith, responsesBody, routedModel, type RouterTarget } from "./openai";
 
 const spec: ProviderSpec = {
   id: "ramp",
@@ -127,5 +127,21 @@ describe("callChatWith on a Responses API router", () => {
     );
     expect(r.ok).toBe(false);
     expect(r.error).toContain("provider down");
+  });
+});
+
+describe("routedModel", () => {
+  const spec = { autoModel: "cyberouter/auto", routingModels: ["switchyard"] };
+  it("keeps the body's model when it names a real model", () => {
+    expect(routedModel("gpt-5.4-mini", "cyberouter/auto", spec, { "x-model": "other" })).toBe("gpt-5.4-mini");
+  });
+  it("reads a header when the body only echoes the routing alias", () => {
+    expect(routedModel("cyberouter/auto", "cyberouter/auto", spec, { "x-routed-model": "claude-haiku-4-5" })).toBe("claude-haiku-4-5");
+    expect(routedModel("switchyard", "switchyard", spec, { "x-model": "gpt-5.6-sol" })).toBe("gpt-5.6-sol");
+  });
+  it("falls back to the alias, or a header, when nothing better is known", () => {
+    expect(routedModel("cyberouter/auto", "cyberouter/auto", spec, {})).toBe("cyberouter/auto");
+    expect(routedModel(null, "x", spec, { "x-model": "m1" })).toBe("m1");
+    expect(routedModel(null, "x", spec, { "x-ratelimit-model-limit": "10" })).toBe(null);
   });
 });

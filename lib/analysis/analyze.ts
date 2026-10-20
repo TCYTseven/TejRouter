@@ -171,7 +171,7 @@ function classifyArm(arm: BenchArm, obs: Obs[], opts: AnalyzeOptions): { kind: A
   const model = arm.model?.trim();
   if (!model || model === "default") return { kind: "router", reason: "no pinned model: the router chooses" };
   const spec = getProviderSpec(arm.providerId);
-  if ((spec?.autoModel && model === spec.autoModel) || /(^|[/:_-])auto$/i.test(model)) {
+  if ((spec?.autoModel && model === spec.autoModel) || spec?.routingModels?.includes(model) || /(^|[/:_-])auto$/i.test(model)) {
     return { kind: "router", reason: `auto-routing model id "${model}"` };
   }
   const counts = new Map<string, number>();

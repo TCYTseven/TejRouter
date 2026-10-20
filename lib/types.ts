@@ -28,6 +28,8 @@ export interface ProviderSpec {
   autoModel: string | null;
   /** Fallback model list when /models discovery is unavailable. */
   suggestedModels: string[];
+  /** Model ids that make the router choose per prompt (besides autoModel), e.g. Ramp's routing aliases. */
+  routingModels?: string[];
   docsUrl: string;
   /** Hex color used for this provider in every chart. */
   color: string;

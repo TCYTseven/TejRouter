@@ -1,4 +1,6 @@
 import type { ArmStats, PairwiseStats, RoutingStats, RunReport } from "@/lib/analysis/types";
+import type { BenchRun } from "@/lib/bench/types";
+import { getProviderSpec } from "@/lib/providers/registry";
 import { pct } from "./format";
 
 /** Find the pairwise entry for (a, b) and orient it so diffs read as a − b. */
@@ -111,4 +113,26 @@ export function armNote(report: RunReport, armId: string): string {
   }
   if (a && fin(a.errorRate.value) && a.errorRate.value >= 0.01) parts.push(`${pct(a.errorRate.value, 0)} of calls failed`);
   return parts.join(". ");
+}
+
+const bareModel = (m: string) => m.trim().toLowerCase().replace(/^.*\//, "");
+
+/**
+ * Why a router served only one model, when the run shows it: it was sent that model's own
+ * id, so it never had a choice. Returns null when the router was free to choose.
+ */
+export function oneModelReason(run: Pick<BenchRun, "samples">, r: RoutingStats): string | null {
+  if (r.distinctModels !== 1 || !r.models[0]) return null;
+  const served = bareModel(r.models[0].model);
+  const asked = new Set(run.samples.filter((s) => s.armId === r.armId && s.result.requestedModel).map((s) => s.result.requestedModel));
+  if (asked.size !== 1) return null;
+  const requested = [...asked][0];
+  const spec = getProviderSpec(r.armId.split(":")[0]);
+  if (spec?.autoModel === requested || spec?.routingModels?.includes(requested)) return null;
+  const req = bareModel(requested);
+  if (!(served === req || served.startsWith(req) || req.startsWith(served))) return null;
+  const alternatives = [spec?.autoModel, ...(spec?.routingModels ?? [])].filter((m): m is string => !!m);
+  return `Every call asked for ${requested} by name, so the router had no choice to make. ${
+    alternatives.length ? `To test its routing, use ${alternatives.join(" or ")} as the model.` : "To test its routing, give it the model id that makes it choose (see Routers)."
+  }`;
 }

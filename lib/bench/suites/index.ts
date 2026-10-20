@@ -1,7 +1,8 @@
-import type { BenchSuite, SuiteInfo } from "../types";
+import { HARD_MIN_DIFFICULTY, type BenchSuite, type SuiteInfo } from "../types";
 import { codeSuite } from "./code";
 import { edgeSuite } from "./edge";
 import { extractionSuite } from "./extraction";
+import { hardSuite } from "./hard";
 import { instructionSuite } from "./instruction";
 import { knowledgeSuite } from "./knowledge";
 import { longContextSuite } from "./long-context";
@@ -21,6 +22,8 @@ export const SUITES: BenchSuite[] = [
   instructionSuite,
   extractionSuite,
   longContextSuite,
+  // Hardest tasks, so accuracy does not sit at 95%+ for every router.
+  hardSuite,
   // Off unless picked: they answer the advanced report's questions about languages,
   // stability under rephrasing, and edge cases.
   multilingualSuite,
@@ -68,6 +71,7 @@ export function suiteInfo(suite: BenchSuite): SuiteInfo {
     categories: [...cats.entries()].map(([name, count]) => ({ name, count })),
     difficultyHistogram: hist,
     meanDifficulty: suite.tasks.length ? Math.round((sum / suite.tasks.length) * 1000) / 1000 : 0,
+    hardTaskCount: suite.tasks.filter((t) => t.difficulty >= HARD_MIN_DIFFICULTY).length,
     examples: examples.map((t) => ({
       id: t.id,
       category: t.category,

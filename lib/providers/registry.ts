@@ -17,13 +17,15 @@ export const PROVIDERS: ProviderSpec[] = [
     keyEnvs: ["RAMP_ROUTER_API_KEY", "RAMP_ROUTER_KEY", "RAMP_API_KEY", "ROUTER_API_KEY"],
     modelEnv: "RAMP_ROUTER_MODEL",
     autoModel: null,
-    suggestedModels: ["gpt-5.6-sol"],
+    suggestedModels: ["gpt-5.6-sol", "switchyard", "auto-jev-routing"],
+    routingModels: ["switchyard", "auto-jev-routing"],
     docsUrl: "https://github.com/ramp-public/ramp-cli",
     color: "#3987e5",
     logo: "/routers/ramp.png",
     headers: { "X-Gateway-Client": "tejrouter" },
     api: "responses",
-    notes: "Speaks the Responses API (POST /v1/responses); it has no /chat/completions. Model ids are per account, discovered from /v1/models when the key is set.",
+    notes:
+      "Speaks the Responses API (POST /v1/responses); it has no /chat/completions. A plain model id such as gpt-5.6-sol is one fixed model, so Ramp does not route: every answer comes from that model. To test its routing, pick switchyard or auto-jev-routing (turn them on under Experimental models in `ramp router ui`) or a routing profile's slug, or set RAMP_ROUTER_MODEL to one.",
   },
   {
     id: "enclave",

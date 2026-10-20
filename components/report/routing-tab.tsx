@@ -6,7 +6,7 @@ import { ButtonLink } from "@/components/ui/button";
 import type { ModelShare, RoutingStats } from "@/lib/analysis/types";
 import { levelPct, pct, usd } from "./format";
 import { ArmLabel, METHOD, Panel, Term, useReportCtx } from "./section";
-import { easyHardMix, fin, pricierModel } from "./verdicts";
+import { easyHardMix, fin, oneModelReason, pricierModel } from "./verdicts";
 
 /** Run-wide model colors: ordinal by list price (cheap = first step), tail folded into "Other". */
 function useModelPalette(routing: RoutingStats[]) {
@@ -73,10 +73,15 @@ export function RoutingTab() {
   );
 }
 
-function adaptSentence(r: RoutingStats, report: ReturnType<typeof useReportCtx>["report"]): ReactNode {
+function adaptSentence(r: RoutingStats, ctx: Pick<ReturnType<typeof useReportCtx>, "report" | "run">): ReactNode {
+  const { report } = ctx;
   if (r.nWithModel === 0) return "Does not report which model answered, so its choices cannot be shown.";
   const big = pricierModel(r);
-  if (!big) return r.distinctModels <= 1 ? `Always picked ${r.models[0]?.model ?? "the same model"}.` : `Spreads tasks across ${r.distinctModels} models.`;
+  if (!big) {
+    if (r.distinctModels > 1) return `Spreads tasks across ${r.distinctModels} models.`;
+    const why = oneModelReason(ctx.run, r);
+    return `Always picked ${r.models[0]?.model ?? "the same model"}.${why ? ` ${why}` : ""}`;
+  }
   const { easy, hard } = easyHardMix(r, report);
   const e = easy.models.find((m) => m.model === big)?.share ?? 0;
   const h = hard.models.find((m) => m.model === big)?.share ?? 0;
@@ -86,7 +91,7 @@ function adaptSentence(r: RoutingStats, report: ReturnType<typeof useReportCtx>[
 }
 
 function ModelChoice({ routers }: { routers: RoutingStats[] }) {
-  const { report, arm } = useReportCtx();
+  const { report, arm, run } = useReportCtx();
   const pal = useModelPalette(report.routing);
   const fixed = report.routing.filter((r) => r.kind === "fixed");
   const observed = routers.filter((r) => r.nWithModel > 0);
@@ -123,7 +128,7 @@ function ModelChoice({ routers }: { routers: RoutingStats[] }) {
               <h3 className="text-[15px] font-semibold text-fg">
                 <ArmLabel arm={a} />
               </h3>
-              <p className="mt-1 text-[15px] text-fg-muted">{adaptSentence(r, report)}</p>
+              <p className="mt-1 text-[15px] text-fg-muted">{adaptSentence(r, { report, run })}</p>
               {r.nWithModel > 0 ? (
                 <StackedBarRows
                   className="mt-3"

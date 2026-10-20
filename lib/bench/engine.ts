@@ -78,11 +78,24 @@ export function planRun(input: unknown): RunPlan {
   if (c.maxTasksPerSuite != null && (!isInt(c.maxTasksPerSuite) || c.maxTasksPerSuite < 1)) {
     throw new BenchConfigError("maxTasksPerSuite must be a positive integer.");
   }
+  if (c.minDifficulty != null && (typeof c.minDifficulty !== "number" || c.minDifficulty < 0 || c.minDifficulty > 1)) {
+    throw new BenchConfigError("minDifficulty must be a number from 0 to 1.");
+  }
   if (c.name != null && typeof c.name !== "string") throw new BenchConfigError("name must be a string.");
 
   const seed = c.seed ?? Math.floor(Math.random() * 2 ** 31);
   // Opt-in task sets always run whole: a cap would split rephrasing groups and drop languages.
-  const tasks = suites.flatMap((s) => (s.optional ? s.tasks : selectTasks(s.tasks, c.maxTasksPerSuite, seed)));
+  const minDifficulty = c.minDifficulty ?? 0;
+  const tasks = suites.flatMap((s) =>
+    s.optional
+      ? s.tasks
+      : selectTasks(
+          s.tasks.filter((t) => t.difficulty >= minDifficulty),
+          c.maxTasksPerSuite,
+          seed,
+        ),
+  );
+  if (tasks.length === 0) throw new BenchConfigError("No task in the chosen task sets is that difficult. Add the Hard task set or lower minDifficulty.");
   const totalJobs = tasks.length * arms.length * repetitions;
   if (totalJobs > MAX_JOBS) {
     throw new BenchConfigError(
@@ -99,6 +112,7 @@ export function planRun(input: unknown): RunPlan {
     ...(c.temperature != null ? { temperature: c.temperature } : {}),
     ...(c.maxTokens != null ? { maxTokens: c.maxTokens } : {}),
     ...(c.maxTasksPerSuite != null ? { maxTasksPerSuite: c.maxTasksPerSuite } : {}),
+    ...(c.minDifficulty ? { minDifficulty: c.minDifficulty } : {}),
     ...(c.name?.trim() ? { name: c.name.trim().slice(0, 200) } : {}),
   };
   return { config, arms, tasks, totalJobs };

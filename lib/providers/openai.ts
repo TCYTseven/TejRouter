@@ -88,6 +88,29 @@ export function chatFailure(
   };
 }
 
+/**
+ * The model that actually answered. Some routers echo the routing alias they were sent
+ * ("cyberouter/auto", "switchyard") in the body and name the real model only in a header;
+ * reading the alias as the served model would make every answer look like one model.
+ */
+export function routedModel(
+  bodyModel: string | null,
+  requested: string,
+  spec: Pick<ProviderSpec, "autoModel" | "routingModels">,
+  headers: Record<string, string>,
+): string | null {
+  const isAlias = (m: string) =>
+    m === spec.autoModel || (spec.routingModels ?? []).includes(m) || /(^|[/:_-])auto$/i.test(m);
+  const fromHeader = (): string | null => {
+    for (const [k, v] of Object.entries(headers)) {
+      if (/model/i.test(k) && !/ratelimit|requested/i.test(k) && v && !isAlias(v)) return v;
+    }
+    return null;
+  };
+  if (bodyModel && !(bodyModel === requested && isAlias(bodyModel))) return bodyModel;
+  return fromHeader() ?? bodyModel ?? null;
+}
+
 /** Chat Completions request body. */
 function chatBody(model: string, req: ChatRequest, providerId: string): Record<string, unknown> {
   const body: Record<string, unknown> = {
@@ -339,7 +362,7 @@ export async function callChatWith(
   return {
     id: id || `res-${startedAt}`,
     ...base,
-    servedModel: servedModel ?? routingHeaders["x-model"] ?? null,
+    servedModel: routedModel(servedModel, requestedModel, resolved.spec, routingHeaders),
     servedProvider: servedProvider ?? routingHeaders["x-provider"] ?? null,
     ok: true,
     error: null,

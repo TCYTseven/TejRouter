@@ -5,13 +5,14 @@ import { COMPETITION } from "./math";
 import { HOUSES_PUZZLE, KNIGHTS_PUZZLES, ORDERING_PUZZLES, solveOrdering } from "./reasoning";
 import { INSTRUCTION_TASKS } from "./instruction";
 import { CODE_TASKS } from "./code";
+import { GRID_PUZZLES, HARD_CODE, solveGrid } from "./hard";
 
 const ALL = SUITES.flatMap((s) => s.tasks);
 
 describe("suite catalogue", () => {
-  it("has the eight core suites, three optional ones and 150+ tasks", () => {
+  it("has the nine core suites, three optional ones and 150+ tasks", () => {
     expect(SUITES.filter((s) => !s.optional).map((s) => s.id).sort()).toEqual(
-      ["code", "extraction", "instruction", "knowledge", "long-context", "math", "reasoning", "trivial"].sort(),
+      ["code", "extraction", "hard", "instruction", "knowledge", "long-context", "math", "reasoning", "trivial"].sort(),
     );
     expect(SUITES.filter((s) => s.optional).map((s) => s.id).sort()).toEqual(["edge", "multilingual", "rephrase"]);
     expect(ALL.length).toBeGreaterThanOrEqual(150);
@@ -31,11 +32,13 @@ describe("suite catalogue", () => {
       expect(t.difficulty).toBeGreaterThanOrEqual(0);
       expect(t.difficulty).toBeLessThanOrEqual(1);
     }
-    for (const s of SUITES.filter((x) => x.id !== "trivial")) {
+    // Trivial is all easy and Hard is all hard, on purpose.
+    for (const s of SUITES.filter((x) => x.id !== "trivial" && x.id !== "hard")) {
       const ds = s.tasks.map((t) => t.difficulty);
       expect(Math.max(...ds) - Math.min(...ds)).toBeGreaterThan(0.4);
     }
     expect(Math.max(...getSuite("trivial")!.tasks.map((t) => t.difficulty))).toBeLessThanOrEqual(0.1);
+    expect(Math.min(...getSuite("hard")!.tasks.map((t) => t.difficulty))).toBeGreaterThanOrEqual(0.7);
   });
 
   it("tells the model how to format the answer in every prompt", () => {
@@ -323,5 +326,33 @@ describe("long-context haystacks", () => {
     const d = (id: string) => lc.tasks.find((t) => t.id === `long-context/${id}`)!.difficulty;
     expect(d("needle-500w-d50")).toBeLessThan(d("needle-1500w-d50"));
     expect(d("needle-1500w-d50")).toBeLessThan(d("needle-6000w-d50-x2"));
+  });
+});
+
+describe("hard suite", () => {
+  it.each(GRID_PUZZLES.map((p) => [p.id, p] as const))("%s has exactly the stated solution", (_id, p) => {
+    expect(solveGrid(p)).toEqual([p.solution]);
+  }, 60_000);
+
+  it("needs every clue in each logic grid", () => {
+    for (const p of GRID_PUZZLES.filter((x) => x.houses * x.attrs.length <= 16)) {
+      for (let i = 0; i < p.clues.length; i++) {
+        const fewer = { ...p, clues: p.clues.filter((_, j) => j !== i) };
+        expect(solveGrid(fewer).length, `${p.id} clue ${i + 1}`).toBeGreaterThan(1);
+      }
+    }
+  });
+
+  it("is 25+ tasks, all at least as hard as the Hard preset's threshold", () => {
+    const hard = getSuite("hard")!;
+    expect(hard.tasks.length).toBeGreaterThanOrEqual(25);
+    expect(suiteInfo(hard).hardTaskCount).toBe(hard.tasks.length);
+  });
+
+  it.each(HARD_CODE.map((t) => [t.id, t] as const))("%s reference passes its tests and a stub fails", (_id, t) => {
+    const task = getSuite("hard")!.tasks.find((x) => x.id === `hard/${t.id}`)!;
+    const g = grade(task, "```javascript\n" + t.ref + "\n```");
+    expect(g.score, g.detail).toBe(1);
+    expect(grade(task, "```js\nfunction " + t.fn + "() { return null; }\n```").correct).toBe(false);
   });
 });
