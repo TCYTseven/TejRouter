@@ -1,8 +1,44 @@
+<div align="center">
+
+<img src=".github/assets/logo.svg" width="72" height="72" alt="TejRouter logo" />
+
 # TejRouter
 
-**The router that tests routers.** TejRouter sends the same prompts to every LLM router you use (Ramp Router, Enclave Cyberouter, OpenRouter, Requesty, FastLLM, Martian, or any OpenAI-compatible gateway) and measures what comes back: which model each router picked, how fast it answered, what it cost, whether the answer was right, and whether the differences are statistically real.
+**The router that tests routers.**
 
-It runs locally. There are no accounts and no database. Keys go in one of two places: `.env.local` on the machine running the app (read by the server, never sent to the browser), or the Settings page, which stores them in your browser's local storage only. Two offline simulated routers work with zero keys, so you can try everything immediately.
+Send the same prompts to every LLM router you use and see which model each one picked,<br />
+how fast it answered, what it cost, whether it was right, and whether the differences are real.
+
+[![CI](https://github.com/TCYTseven/tejrouter/actions/workflows/ci.yml/badge.svg)](https://github.com/TCYTseven/tejrouter/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/TCYTseven/tejrouter?style=flat&logo=github)](https://github.com/TCYTseven/tejrouter/stargazers)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+<br />
+[![Next.js 16](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org)
+[![React 19](https://img.shields.io/badge/React-19-149eca?logo=react&logoColor=white)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-4-38bdf8?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Tests: 567](https://img.shields.io/badge/tests-567_passing-success?logo=vitest&logoColor=white)](#development)
+
+[Quickstart](#quickstart) · [Routers](#routers) · [Benchmarks](#benchmarks) · [The report](#the-report) · [Methodology](docs/METHODOLOGY.md) · [Contributing](CONTRIBUTING.md)
+
+<a href=".github/assets/trailer.mp4">
+  <img src=".github/assets/trailer.gif" width="880" alt="TejRouter walkthrough: comparing two routers on one prompt, running a benchmark, and reading the report" />
+</a>
+
+<sub>Everything in the trailer runs on the two offline practice routers, with no API keys. <a href=".github/assets/trailer.mp4">Watch the full-quality MP4</a>.</sub>
+
+</div>
+
+## Why
+
+LLM routers (Ramp Router, Enclave Cyberouter, OpenRouter, Requesty, FastLLM, Martian, or any OpenAI-compatible gateway) all promise to send each prompt to the right model. TejRouter checks that promise on prompts with known answers and tells you, with confidence intervals, which router is more accurate, cheaper or faster, and whether it actually sends hard prompts to stronger models.
+
+- **Runs locally.** No accounts and no database. Results are saved as files under `data/runs/`.
+- **Works with zero keys.** Two offline practice routers let you try every page immediately.
+- **Your keys stay put.** `.env.local` keys are read only on the server; keys saved in Settings stay in your browser.
+- **Deterministic grading.** 221 auto-graded tasks, no LLM judge in the main score.
+- **Real statistics.** Paired tests, bootstrap intervals, routing analysis and cost-quality frontiers, all documented in [METHODOLOGY.md](docs/METHODOLOGY.md).
 
 ## Quickstart
 
@@ -20,7 +56,6 @@ Then open `/onboarding` to connect your routers, or go straight to Compare.
 
 | Page | Route | What it does |
 | --- | --- | --- |
-| Home | `/` | What TejRouter is, with an example result |
 | Compare | `/playground` | Send one prompt to several routers and read the answers side by side; vote for the best one |
 | Benchmark | `/benchmarks` | Pick routers and a task set (Quick, Standard, Thorough) and watch the run fill in |
 | Results | `/runs`, `/runs/[id]` | Saved runs, and a report that leads with a plain verdict, with routing, task-type and full statistics in tabs |
@@ -29,8 +64,6 @@ Then open `/onboarding` to connect your routers, or go straight to Compare.
 | Settings | `/settings` | API keys saved in this browser only |
 | How it works | `/methodology` | Every metric and formula, rendered from [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md) |
 | Connect a router | `/onboarding` | Three-step setup, no account |
-
-UI rules live in [`docs/DESIGN.md`](docs/DESIGN.md).
 
 ## Routers
 
@@ -83,23 +116,31 @@ The API routes spend credits on your `.env.local` keys. For local use nothing ex
 
 ```bash
 npm run dev        # dev server
-npm test           # vitest: stats, analysis, graders, suites, runner, simulators
+npm test           # vitest: stats, analysis, graders, suites, runner, practice routers
 npm run typecheck  # next typegen + tsc
 npm run lint
 npm run build
 ```
 
-Layout:
-
 ```
-lib/providers/   registry, server-side key resolution, streaming client, simulators
+lib/providers/   registry, server-side key resolution, streaming client, practice routers
 lib/bench/       task suites, graders, runner, run storage
 lib/stats/       dependency-free statistics (special functions, tests, bootstrap, ranking, information theory)
 lib/analysis/    analyzeRun() -> RunReport, TejScore, arena leaderboard
-app/api/         providers, chat (NDJSON), bench (NDJSON), runs
+app/api/         providers, chat (NDJSON), bench (NDJSON), runs, relay
 app/(marketing)/ landing page
-app/(app)/       dashboard, playground, benchmarks, runs, arena, providers, methodology, onboarding
+app/(app)/       playground, benchmarks, runs, arena, providers, settings, methodology, onboarding
 components/      ui primitives, charts, playground, report, shell
 ```
 
-Built with Next.js 16, React 19 and Tailwind CSS 4. No runtime dependencies beyond those.
+Built with Next.js 16, React 19, Tailwind CSS 4 and Motion.
+
+## Contributing
+
+Issues and pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) covers setup, adding a router or a task suite, the statistics rules and the design rules. Security problems go through [a private advisory](https://github.com/TCYTseven/tejrouter/security/advisories/new).
+
+If TejRouter helped you pick a router, a star helps other people find it.
+
+## License
+
+[MIT](LICENSE) © Tejas Chakrapani
