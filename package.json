@@ -2,6 +2,29 @@
   "name": "tejrouter",
   "version": "0.1.0",
   "private": true,
+  "description": "Benchmark LLM routers side by side: which model each router picked, latency, cost, accuracy and whether the differences are real.",
+  "license": "MIT",
+  "author": "Tejas Chakrapani",
+  "homepage": "https://github.com/TCYTseven/tejrouter#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TCYTseven/tejrouter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/TCYTseven/tejrouter/issues"
+  },
+  "keywords": [
+    "llm",
+    "llm-router",
+    "benchmark",
+    "openrouter",
+    "ai-gateway",
+    "evaluation",
+    "nextjs"
+  ],
+  "engines": {
+    "node": ">=20.9"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,6 +34,7 @@
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "motion": "^12.43.0",
     "next": "16.3.8",
     "react": "19.2.8",
     "react-dom": "19.2.8",
