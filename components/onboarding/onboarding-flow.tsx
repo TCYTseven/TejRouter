@@ -56,7 +56,7 @@ export function OnboardingFlow({ initial }: { initial: ProviderStatus[] }) {
                   onChange={() => toggle(p.id)}
                   className="mt-1 h-4 w-4 shrink-0 accent-[var(--fg)]"
                 />
-                <ProviderDot provider={p} size={10} className="mt-[7px]" />
+                <ProviderDot provider={p} size={10} className="mt-1" />
                 <span className="min-w-0 flex-1">
                   <span className="block text-[15px] font-semibold text-fg">{p.name}</span>
                   <span className="block text-sm text-fg-muted">{p.tagline}</span>

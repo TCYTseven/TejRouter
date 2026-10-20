@@ -31,6 +31,8 @@ export interface ProviderSpec {
   docsUrl: string;
   /** Hex color used for this provider in every chart. */
   color: string;
+  /** The router's own icon under /public, shown wherever the router itself is named. */
+  logo?: string;
   /** Extra static headers sent with every request. */
   headers?: Record<string, string>;
   /** Built-in simulator, runs without a network or a key. */

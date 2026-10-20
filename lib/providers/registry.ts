@@ -20,6 +20,7 @@ export const PROVIDERS: ProviderSpec[] = [
     suggestedModels: ["gpt-5.6-sol"],
     docsUrl: "https://github.com/ramp-public/ramp-cli",
     color: "#3987e5",
+    logo: "/routers/ramp.png",
     headers: { "X-Gateway-Client": "tejrouter" },
     api: "responses",
     notes: "Speaks the Responses API (POST /v1/responses); it has no /chat/completions. Model ids are per account, discovered from /v1/models when the key is set.",
@@ -42,6 +43,7 @@ export const PROVIDERS: ProviderSpec[] = [
     suggestedModels: ["cyberouter/auto"],
     docsUrl: "https://router.enclave.ai",
     color: "#d95926",
+    logo: "/routers/enclave.png",
   },
   {
     id: "openrouter",
@@ -55,6 +57,7 @@ export const PROVIDERS: ProviderSpec[] = [
     suggestedModels: ["openrouter/auto", "openai/gpt-4o-mini", "anthropic/claude-sonnet-4.5"],
     docsUrl: "https://openrouter.ai/docs",
     color: "#199e70",
+    logo: "/routers/openrouter.png",
     headers: { "HTTP-Referer": "https://github.com/TCYTseven/tejrouter", "X-Title": "TejRouter" },
   },
   {
@@ -69,6 +72,7 @@ export const PROVIDERS: ProviderSpec[] = [
     suggestedModels: ["openai/gpt-4o-mini"],
     docsUrl: "https://docs.requesty.ai",
     color: "#c98500",
+    logo: "/routers/requesty.png",
     notes: "Routing is configured as named policies (policy/<name>); set REQUESTY_MODEL to one.",
   },
   {
@@ -83,6 +87,7 @@ export const PROVIDERS: ProviderSpec[] = [
     suggestedModels: [],
     docsUrl: "https://fastllm.azrty.com/",
     color: "#d55181",
+    logo: "/routers/fastllm.png",
     notes: "Self-hosted: set FASTLLM_BASE_URL to your deployment's /v1 URL and FASTLLM_MODEL to a frontend model.",
   },
   {
@@ -97,6 +102,7 @@ export const PROVIDERS: ProviderSpec[] = [
     suggestedModels: [],
     docsUrl: "https://docs.withmartian.com",
     color: "#008300",
+    logo: "/routers/martian.png",
     notes: "Base URL and routing model id unverified; override with MARTIAN_BASE_URL / MARTIAN_MODEL.",
   },
   {

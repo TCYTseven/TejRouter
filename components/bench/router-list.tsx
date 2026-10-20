@@ -55,7 +55,7 @@ export function RouterList({
             const model = a.model.trim();
             return (
               <li key={a.key} className="flex items-center gap-3 px-4 py-2.5">
-                <ProviderDot color={arm?.color ?? p?.color} simulated={p?.simulated} size={10} />
+                <ProviderDot provider={p} color={arm?.color} size={10} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[15px] text-fg">{p?.name ?? a.providerId}</p>
                   <p className="truncate text-[13px] text-fg-muted">

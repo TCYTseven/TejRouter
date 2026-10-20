@@ -1,12 +1,14 @@
 import type { ProviderSpec } from "@/lib/types";
 import { cn } from "@/lib/client/cn";
 
-type ProviderLike = Pick<ProviderSpec, "id" | "name" | "color"> & { simulated?: boolean };
+type ProviderLike = Pick<ProviderSpec, "id" | "name" | "color" | "logo"> & { simulated?: boolean };
 
 /**
- * The provider's identity mark: a small square in its registry color.
- * Shape (square for real routers, ring for simulators) is a secondary
- * encoding so identity is never color alone.
+ * The provider's identity mark. Given a `provider`, it is the router's own logo
+ * in a 16px box (or, for routers without one, its dot centred in that box), so
+ * every router in a list lines up the same way. Given only a `color` (a benchmark
+ * arm, which charts tell apart by shade), it is the small dot: a square for real
+ * routers, a ring for simulators, so identity is never color alone.
  */
 export function ProviderDot({
   provider,
@@ -23,10 +25,10 @@ export function ProviderDot({
 }) {
   const c = color ?? provider?.color ?? "var(--fg-subtle)";
   const sim = simulated ?? provider?.simulated;
-  return (
+  const dot = (
     <span
       aria-hidden="true"
-      className={cn("inline-block shrink-0", sim ? "rounded-full" : "rounded-[2px]", className)}
+      className={cn("inline-block shrink-0", sim ? "rounded-full" : "rounded-[2px]", provider ? null : className)}
       style={{
         width: size,
         height: size,
@@ -34,6 +36,30 @@ export function ProviderDot({
         boxShadow: sim ? `inset 0 0 0 2px ${c}` : undefined,
       }}
     />
+  );
+  if (!provider) return dot;
+  const box = Math.max(16, size);
+  return (
+    <span
+      aria-hidden="true"
+      className={cn("inline-flex shrink-0 items-center justify-center", className)}
+      style={{ width: box, height: box }}
+    >
+      {provider.logo ? (
+        // A 64px PNG under /public; next/image would add nothing at this size.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={provider.logo}
+          alt=""
+          width={box}
+          height={box}
+          draggable={false}
+          className="rounded-[4px] outline outline-1 -outline-offset-1 outline-fg/10"
+        />
+      ) : (
+        dot
+      )}
+    </span>
   );
 }
 

@@ -41,7 +41,7 @@ export function RouterRow({ provider: serverProvider, expandable = true }: { pro
 
   const identity = (
     <>
-      <ProviderDot provider={p} size={10} className="mt-[7px]" />
+      <ProviderDot provider={p} size={10} className="mt-1" />
       <span className="min-w-0 flex-1">
         <span className="block text-[15px] font-semibold text-fg">{p.name}</span>
         <span className="block text-sm text-fg-muted">{p.tagline}</span>

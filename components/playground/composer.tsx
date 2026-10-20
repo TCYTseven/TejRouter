@@ -215,7 +215,7 @@ function AddRouter({
       )}
     >
       {(close) => (
-        <ul className="max-h-80 overflow-y-auto py-1.5">
+        <ul className="max-h-[min(26rem,60vh)] overflow-y-auto py-1.5">
           {sorted.map((p) => (
             <li key={p.id}>
               <button
