@@ -5,6 +5,7 @@ import {
   agreement,
   aiq as computeAiq,
   benjaminiHochberg,
+  bestUnderBudget,
   betaDifference,
   betaInv,
   bootstrapIndices,
@@ -13,6 +14,7 @@ import {
   bradleyTerryBootstrap,
   cliffsDelta,
   deriveSeed,
+  dominates,
   describe as describeStats,
   designEffect,
   dominanceRelations,
@@ -47,6 +49,7 @@ import {
   wilcoxonSignedRank,
   wilson,
   type BootstrapResult,
+  type BudgetChoice,
   type CQPoint,
   type PairwiseMatch,
 } from "@/lib/stats";
@@ -65,6 +68,7 @@ import type {
   DifficultyCurve,
   EscalationStats,
   Estimate,
+  HindsightAtBudget,
   MIStats,
   ModelShare,
   PairwiseStats,
@@ -878,8 +882,65 @@ export function analyzeRun(run: BenchRun, opts: AnalyzeOptions = {}): RunReport 
         costSavingsVsBestFixed: rCost != null && bCost != null && bCost > 0 ? num(1 - rCost / bCost) : null,
         headroomCaptured: headDen != null && headDen > 1e-9 && rAcc != null && cAcc != null ? num((rAcc - cAcc) / headDen) : null,
         gainOverBaselineHull: gainMap.get(r.meta.id) ?? null,
+        dominatedBy:
+          rAcc != null && rCost != null
+            ? baselines
+                .map((b) => ({ armId: b.meta.id, accuracy: accOn(b, ts), meanCostUsd: costOn(b, ts) }))
+                .filter((b): b is { armId: string; accuracy: number; meanCostUsd: number } => b.accuracy != null && b.meanCostUsd != null)
+                .filter((b) => dominates({ id: b.armId, cost: b.meanCostUsd, quality: b.accuracy }, { id: r.meta.id, cost: rCost, quality: rAcc }))
+                .sort((x, y) => y.accuracy - x.accuracy || x.meanCostUsd - y.meanCostUsd)
+                .map((b) => ({ armId: b.armId, accuracy: num(b.accuracy)!, meanCostUsd: num(b.meanCostUsd)! }))
+            : [],
+        ...hindsightAtBudget(r, ts, rAcc, rCost),
       };
     });
+
+    // Hindsight baselines at the router's own spend (Vals AI Router Index, 2026): the best one could
+    // do with the same money by fixing one model per category, or by picking a model per task.
+    function hindsightAtBudget(r: ArmData, ts: string[], rAcc: number | null, rCost: number | null) {
+      const none = { fixedPerCategoryAtBudget: null, perTaskAtBudget: null };
+      if (rAcc == null || rCost == null || ts.length === 0) return none;
+      const priced = baselines.filter((b) => ts.every((t) => costOf(b, t) != null));
+      if (priced.length === 0) return none;
+      const served = new Set(r.obs.map((o) => o.model).filter((m): m is string => m != null));
+      const servedBy = (b: ArmData) => [b.meta.model, ...b.obs.map((o) => o.model)].some((m) => m != null && served.has(m));
+      const own = priced.filter(servedBy);
+      const pool: "router-models" | "all-baselines" = own.length > 0 ? "router-models" : "all-baselines";
+      const cands = own.length > 0 ? own : priced;
+      const budget = rCost * ts.length;
+      const finish = (choice: BudgetChoice | null, picks: { category: string; armId: string }[]): HindsightAtBudget | null => {
+        if (!choice) return null;
+        const acc = choice.score / ts.length;
+        return {
+          pool,
+          candidateArmIds: cands.map((b) => b.meta.id),
+          accuracy: num(acc),
+          meanCostUsd: num(choice.cost / ts.length),
+          gainOverRouter: num(acc - rAcc),
+          picks,
+        };
+      };
+      const cats = [...new Set(ts.map((t) => r.cells.get(t)!.category))].sort();
+      const catTasks = cats.map((c) => ts.filter((t) => r.cells.get(t)!.category === c));
+      const perCat = bestUnderBudget(
+        catTasks.map((group) =>
+          cands.map((b) => ({
+            id: b.meta.id,
+            score: group.reduce((s, t) => s + b.cells.get(t)!.meanScore, 0),
+            cost: group.reduce((s, t) => s + costOf(b, t)!, 0),
+          })),
+        ),
+        budget,
+      );
+      const perTask = bestUnderBudget(
+        ts.map((t) => cands.map((b) => ({ id: b.meta.id, score: b.cells.get(t)!.meanScore, cost: costOf(b, t)! }))),
+        budget,
+      );
+      return {
+        fixedPerCategoryAtBudget: finish(perCat, perCat ? cats.map((category, i) => ({ category, armId: perCat.picks[i] })) : []),
+        perTaskAtBudget: finish(perTask, []),
+      };
+    }
     return {
       available: true,
       reason: routers.length ? null : "No router arms to compare against the oracle.",

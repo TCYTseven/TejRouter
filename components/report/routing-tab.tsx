@@ -4,7 +4,7 @@ import { Fragment, useMemo, type ReactNode } from "react";
 import { Legend, LineChart, StackedBarRows, TipNote, TipRow, TipTitle, ordinalColor, type LineSeries, type Segment } from "@/components/charts";
 import { ButtonLink } from "@/components/ui/button";
 import type { ModelShare, RoutingStats } from "@/lib/analysis/types";
-import { levelPct, pct, usd } from "./format";
+import { levelPct, pct, pp, usd } from "./format";
 import { ArmLabel, METHOD, Panel, Term, useReportCtx } from "./section";
 import { easyHardMix, fin, oneModelReason, pricierModel } from "./verdicts";
 
@@ -278,12 +278,40 @@ function VsPerfectPicker() {
             const acc = fin(g.lo) && fin(g.hi) ? (g.lo > 0 ? "is clearly less accurate" : g.hi < 0 ? "is clearly more accurate" : "is about as accurate") : "";
             vsBest = ` Always using ${fixedName(bestFixed.armId)} gets ${pct(bestFixed.accuracy)}; ${cost}${acc ? ` and ${acc}` : ""}.`;
           }
+          const beaten = r.dominatedBy[0];
+          const cat = r.fixedPerCategoryAtBudget;
+          const task = r.perTaskAtBudget;
+          const pool = (cat ?? task)?.pool === "router-models" ? "its own models" : "the single models in this run";
           return (
             <li key={r.armId} className="py-4 first:pt-0 last:pb-0">
               <ArmLabel arm={a} className="text-[15px] font-medium text-fg" />
               <p className="mt-1 text-[15px] text-fg-muted">
                 Gets {pct(r.accuracy)} vs {pct(o.accuracy)} for a perfect picker{costVsPicker}.{vsBest}
               </p>
+              {beaten ? (
+                <p className="mt-1 text-[15px] text-fg-muted">
+                  <span className="font-medium text-fg">Beaten by a single model:</span> always using {fixedName(beaten.armId)} gets{" "}
+                  {pct(beaten.accuracy)} for {usd(beaten.meanCostUsd)} per answer, more accurate and no more expensive
+                  {r.dominatedBy.length > 1 ? ` (${r.dominatedBy.length - 1} other single ${r.dominatedBy.length === 2 ? "model does" : "models do"} too)` : ""}.
+                </p>
+              ) : null}
+              {cat || task ? (
+                <p className="mt-1 text-[15px] text-fg-muted">
+                  With the same spend and {pool}, picked in hindsight:
+                  {cat ? (
+                    <>
+                      {" "}one <Term tip="One model for each task type, chosen after seeing the results, with total spend capped at what this router spent.">model per task type</Term> gets {pct(cat.accuracy)} ({pp(cat.gainOverRouter)})
+                    </>
+                  ) : null}
+                  {cat && task ? ";" : null}
+                  {task ? (
+                    <>
+                      {" "}a <Term tip="A model for every task, chosen after seeing the results, with total spend capped at what this router spent. The room left for better routing at this price.">model per task</Term> gets {pct(task.accuracy)} ({pp(task.gainOverRouter)})
+                    </>
+                  ) : null}
+                  .
+                </p>
+              ) : null}
             </li>
           );
         })}

@@ -169,6 +169,25 @@ describe("analyzeRun end-to-end on simulators", async () => {
     expect(o.gainOverBaselineHull).not.toBeNull();
   });
 
+  it("compares each router with hindsight choices at its own spend", () => {
+    const rq = report.routingQuality;
+    for (const r of rq.routers) {
+      for (const h of [r.fixedPerCategoryAtBudget!, r.perTaskAtBudget!]) {
+        expect(h).not.toBeNull();
+        expect(h.pool).toBe("router-models");
+        expect(h.meanCostUsd!).toBeLessThanOrEqual(r.meanCostUsd! + 1e-9);
+        expect(h.gainOverRouter!).toBeCloseTo(h.accuracy! - r.accuracy!, 6);
+      }
+      // Choosing per task can only do at least as well as one model per category.
+      expect(r.perTaskAtBudget!.accuracy!).toBeGreaterThanOrEqual(r.fixedPerCategoryAtBudget!.accuracy! - 1e-9);
+      expect(r.fixedPerCategoryAtBudget!.picks.map((p) => p.category)).toEqual(["arith", "logic", "lookup", "proof"]);
+      for (const d of r.dominatedBy) {
+        expect(d.accuracy).toBeGreaterThanOrEqual(r.accuracy!);
+        expect(d.meanCostUsd).toBeLessThanOrEqual(r.meanCostUsd!);
+      }
+    }
+  });
+
   it("per-arm stats are sane", () => {
     for (const a of report.perArm) {
       expect(a.n).toBe(360);

@@ -62,6 +62,7 @@ export default async function LandingPage() {
       "Graded benchmarks that measure accuracy",
       "Confidence ranges and significance tests on every result",
       "Blind voting leaderboard",
+      "Router Index checks: single models that beat a router, and hindsight baselines at the router's spend",
     ],
   };
 
@@ -127,6 +128,25 @@ export default async function LandingPage() {
               <Link href="/methodology" className="link">
                 Read the methodology
               </Link>
+            </p>
+          </Reveal>
+        </section>
+
+        {/* Router Index checks */}
+        <section aria-labelledby="single-title" className="border-t border-border py-12 sm:py-16">
+          <Reveal className="max-w-2xl">
+            <h2 id="single-title" className="text-2xl font-semibold tracking-tight text-fg">
+              Does your router beat one good model?
+            </h2>
+            <p className="mt-3 text-[15px] leading-relaxed text-fg-muted">
+              The{" "}
+              <a href="https://www.vals.ai/blogs/routers-new-ai-primitive" className="link" target="_blank" rel="noreferrer">
+                Vals AI Router Index
+              </a>{" "}
+              found every router it tested beaten on both score and cost by at least one single model. TejRouter runs the same checks on
+              your prompts: it flags any single model that is more accurate and no more expensive than your router, and shows what the
+              router&apos;s own models would have scored for the same money, with one model per task type or the best pick for every
+              task.
             </p>
           </Reveal>
         </section>
