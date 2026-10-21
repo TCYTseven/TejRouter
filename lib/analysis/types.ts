@@ -312,6 +312,28 @@ export interface RouterVsOracle {
   headroomCaptured: number | null;
   /** Router quality minus baseline convex hull quality at the router's cost. */
   gainOverBaselineHull: number | null;
+  /**
+   * Single models that beat this router on both accuracy and mean cost on its
+   * tasks (no worse on both, strictly better on one). Most accurate first.
+   */
+  dominatedBy: { armId: string; accuracy: number; meanCostUsd: number }[];
+  /** One fixed model per task category, chosen in hindsight within the router's spend. */
+  fixedPerCategoryAtBudget: HindsightAtBudget | null;
+  /** One fixed model per task, chosen in hindsight within the router's spend. */
+  perTaskAtBudget: HindsightAtBudget | null;
+}
+
+/** A hindsight choice of fixed models constrained to spend no more than the router did. */
+export interface HindsightAtBudget {
+  /** Which models were allowed: the baselines the router itself served, or every baseline. */
+  pool: "router-models" | "all-baselines";
+  candidateArmIds: string[];
+  accuracy: number | null;
+  meanCostUsd: number | null;
+  /** Hindsight accuracy minus router accuracy (positive = the router left this much on the table). */
+  gainOverRouter: number | null;
+  /** fixedPerCategoryAtBudget only: the model picked for each category. */
+  picks: { category: string; armId: string }[];
 }
 
 export interface RoutingQuality {

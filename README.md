@@ -33,6 +33,7 @@ LLM routers (Ramp Router, Enclave Cyberouter, OpenRouter, Requesty, FastLLM, Mar
 - **Your keys stay put.** `.env.local` keys are read only on the server; keys saved in Settings stay in your browser.
 - **Deterministic grading.** 249 auto-graded tasks, no LLM judge in the main score.
 - **Real statistics.** Paired tests, bootstrap intervals, routing analysis and cost-quality frontiers, all documented in [METHODOLOGY.md](docs/METHODOLOGY.md).
+- **Router Index checks.** Following the [Vals AI Router Index](https://www.vals.ai/blogs/routers-new-ai-primitive), each report says whether a single model beats a router on both accuracy and cost, and what the router's own models would have scored at the same spend with one model per task type or a hindsight pick per task.
 
 ## Quickstart
 
@@ -91,7 +92,7 @@ Every number comes with an interval, and tasks (not samples) are the unit of ana
 - **Accuracy** with cluster-bootstrap BCa intervals and Wilson intervals; errors count as wrong.
 - **Pairwise tests** on shared tasks: McNemar (exact and mid-p), paired permutation, Wilcoxon signed-rank and Cliff's delta on latency, Bayesian P(A > B), Holm and Benjamini-Hochberg corrections.
 - **Routing analysis**: served-model distribution by category and difficulty, entropy, mutual information between task category and chosen model, easy-vs-hard Jensen-Shannon divergence, and a Firth logistic escalation curve whose slope measures how adaptive the router is.
-- **Routing quality**: oracle accuracy and cost, regret vs the best fixed model, headroom captured.
+- **Routing quality**: oracle accuracy and cost, regret vs the best fixed model, headroom captured, single models that beat the router on both accuracy and cost, and hindsight choices of the router's own models capped at its spend (one per task type, or one per task).
 - **Cost vs quality**: Pareto frontier, convex hull and AIQ (after RouterBench, Hu et al. 2024).
 - **Ratings**: Bradley-Terry Elo from per-task head-to-heads, with bootstrap intervals and win probabilities.
 - **Power and reliability**: minimum detectable effect, tasks needed for a 5-point difference, ICC and self-consistency across repetitions.

@@ -66,6 +66,25 @@ export function Verdict() {
     }
   }
 
+  // Vals AI Router Index check: is any router beaten on both accuracy and cost by one single model?
+  const rq = report.routingQuality;
+  const beatenRouters = rq.available ? rq.routers.filter((r) => r.dominatedBy.length > 0) : [];
+  const singleModelNote: ReactNode =
+    rq.available && rq.routers.length > 0 ? (
+      beatenRouters.length === 0 ? (
+        <>No single model in this run beats {rq.routers.length === 1 ? name(rq.routers[0].armId) : "any router"} on both accuracy and cost.</>
+      ) : (
+        <>
+          {beatenRouters.map((r, i) => (
+            <Fragment key={r.armId}>
+              {i > 0 ? " " : null}
+              Always using {name(r.dominatedBy[0].armId)} beats {name(r.armId)} on both accuracy and cost.
+            </Fragment>
+          ))}
+        </>
+      )
+    ) : null;
+
   return (
     <section aria-labelledby="verdict-title" className="rounded-xl border border-border bg-surface p-6 max-sm:p-5">
       <h2 id="verdict-title" className="sr-only">
@@ -73,6 +92,7 @@ export function Verdict() {
       </h2>
       <p className="max-w-4xl text-lg leading-relaxed text-fg-muted">{sentence}</p>
       {followUp ? <p className="mt-2 max-w-4xl text-[15px] text-fg-muted">{followUp}</p> : null}
+      {singleModelNote ? <p className="mt-2 max-w-4xl text-[15px] text-fg-muted">{singleModelNote}</p> : null}
       {rows.length ? <Comparison rows={rows} /> : null}
       {warnings.length ? (
         <Disclosure className="mt-5" summary={warnings.length === 1 ? "1 thing to know about this data" : `${warnings.length} things to know about this data`}>

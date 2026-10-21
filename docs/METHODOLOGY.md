@@ -447,6 +447,25 @@ For each router arm, on the tasks it shares with `T` (`routers[]`):
 | `headroomCaptured` | `(routerAcc − cheapAcc) / (oracleAcc − cheapAcc)` | Share of the cheapest→oracle accuracy gap the router recovers |
 | `gainOverBaselineHull` | `routerAcc − q̂_baselines(routerCost)` (Section 22) | > 0: beats every random mix of the baselines at the same cost |
 
+**Single models that beat the router** (`dominatedBy`). The baselines that are no worse than the router on both accuracy and mean cost over its tasks, and strictly better on one (the dominance rule of Section 22), most accurate first. This is the headline check of the Vals AI Router Index (2026), which found every router it tested beaten this way by at least one single model. The report's verdict states it for each router.
+
+**Hindsight at the router's spend.** The oracle above ignores cost. Two further baselines cap spending at what the router actually spent, `B = routerCost · |T_r|` over its tasks `T_r`, and choose fixed models in hindsight:
+
+| Field | Groups | Read as |
+|---|---|---|
+| `fixedPerCategoryAtBudget` | one per task category | The best you could do with the same money by fixing one model per kind of work, no per-prompt routing at all. `picks` gives the model per category |
+| `perTaskAtBudget` | one per task | The best per-prompt routing could do at this price: the room left for a better router |
+
+Each solves a multiple-choice knapsack: pick one baseline `b(g)` per group `g` to
+
+```
+maximize  Σ_g Σ_{t∈g} meanScore(b(g), t)    subject to   Σ_g Σ_{t∈g} cost(b(g), t) ≤ B
+```
+
+and reports `accuracy` (total score / |T_r|), `meanCostUsd` and `gainOverRouter = accuracy − routerAcc` (positive: the router left this much accuracy on the table at its own price). The solver (`lib/stats/budget.ts`) reduces each group to its upper convex hull, starts every group at its cheapest option and applies upgrades in order of score per dollar while they fit, then spends any leftover on the single best remaining upgrade per group (Sinha and Zoltners 1979). The result always respects the budget and is within one upgrade of the LP-relaxation optimum, so it can understate the exact optimum slightly but never overstates it.
+
+**Candidate pool** (`pool`, `candidateArmIds`). Following the Router Index, the candidates are the baselines whose model the router itself served (`router-models`), so the comparison asks whether the router used its own models well. When the router served none of the baseline models, every baseline is used (`all-baselines`). Baselines without cost data are left out; a field is null when the router's spend is below the cheapest possible choice.
+
 **Caveats.** The oracle uses observed scores, which include sampling noise, so a router can occasionally exceed it (negative gap, or `headroomCaptured > 1`), especially with few repetitions or if the router uses models that are not among the baselines. Routers often serve models that are not in the baseline set at all; the oracle is then a reference point rather than a strict bound.
 
 ---
@@ -963,8 +982,10 @@ Model-level checks: Bradley-Terry satisfies its likelihood equations and recover
 - Press, W. H., et al. (2007). *Numerical Recipes* (3rd ed.), §6.2, §6.4.
 - Romano, J., Kromrey, J. D., Coraggio, J., & Skowronek, J. (2006). Appropriate statistics for ordinal level data. *Annual meeting of the Florida Association of Institutional Research*.
 - Shrout, P. E., & Fleiss, J. L. (1979). Intraclass correlations: Uses in assessing rater reliability. *Psychological Bulletin*, 86(2).
+- Sinha, P., & Zoltners, A. A. (1979). The multiple-choice knapsack problem. *Operations Research*, 27(3).
 - Silverman, B. W. (1986). *Density Estimation for Statistics and Data Analysis*.
 - Strehl, A., & Ghosh, J. (2002). Cluster ensembles. *JMLR*, 3.
+- Vals AI (2026). Router Index and "Routers Are a New AI Primitive". vals.ai.
 - Wang, X., et al. (2023). Self-consistency improves chain of thought reasoning in language models. *ICLR*.
 - Welch, B. L. (1947). The generalization of "Student's" problem when several different population variances are involved. *Biometrika*, 34.
 - Wilcoxon, F. (1945). Individual comparisons by ranking methods. *Biometrics Bulletin*, 1(6).

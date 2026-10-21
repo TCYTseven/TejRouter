@@ -17,3 +17,4 @@ export * from "./regression";
 export * from "./costquality";
 export * from "./power";
 export * from "./reliability";
+export * from "./budget";
