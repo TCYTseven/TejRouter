@@ -4,7 +4,7 @@ import { compareRuns } from "@/lib/analysis/advanced";
 import { runBench } from "@/lib/bench/runner";
 import type { BenchRun } from "@/lib/bench/types";
 import { renderMarkdown, renderText, textTable } from "./render";
-import { checkGate, summarize, type Summary } from "./summary";
+import { checkGate, plainNotes, summarize, type Summary } from "./summary";
 
 const CONFIG = {
   suiteIds: ["trivial", "math", "reasoning"],
@@ -48,6 +48,22 @@ describe("summarize", () => {
     expect(summary.verdict[0]).toMatch(/% correct/);
     // Pinned models are present, so the single-model check has an answer.
     expect(summary.verdict.some((v) => /on both accuracy and cost/.test(v))).toBe(true);
+  });
+});
+
+describe("plainNotes", () => {
+  it("turns the report's notes into what to do, and drops the one the verdict already says", async () => {
+    const one = await runBench({ suiteIds: ["trivial"], arms: [{ providerId: "sim-oracle" }], repetitions: 1, concurrency: 4, seed: 1 }, () => {});
+    const raw = analyzeRun(one, { bootstrapIterations: 200 }).warnings;
+    expect(raw.some((w) => /^Only one arm/.test(w))).toBe(true);
+    const notes = plainNotes(raw);
+    expect(notes).toContain("Each task ran once. Add --reps 3 to measure how consistent each router is.");
+    expect(notes.some((n) => /No model is pinned/.test(n))).toBe(true);
+    expect(notes.join(" ")).not.toMatch(/ICC|arm/);
+  });
+
+  it("keeps a note it does not know", () => {
+    expect(plainNotes(["Something new happened."])).toEqual(["Something new happened."]);
   });
 });
 
