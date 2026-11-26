@@ -4,13 +4,14 @@ Thanks for helping out. TejRouter is a small codebase with a few firm rules, and
 
 ## Getting set up
 
-You need Node 20.9 or newer (CI runs Node 22).
+You need Node 20.12 or newer (CI runs Node 22).
 
 ```bash
 git clone https://github.com/TCYTseven/TejRouter
 cd TejRouter
 npm install
-npm run dev        # http://localhost:3000
+npm run bench      # the command line tool, on the practice routers
+npm run dev        # the dashboard, http://localhost:3000
 ```
 
 No keys are needed. Two offline practice routers (Practice: Budget and Practice: Smart) work out of the box, so you can exercise Compare, Benchmark, Results and Leaderboard without spending anything. Copy `.env.example` to `.env.local` when you want to test a real router.
@@ -38,8 +39,9 @@ Small fixes can go straight to a pull request. For a new router, a new suite or 
 ## Where things live
 
 ```
+cli/             the tejrouter command: arguments, the summary and checks, text and Markdown output
 lib/providers/   router registry, server-side key lookup, streaming client, practice routers
-lib/bench/       task suites, graders, runner, run storage
+lib/bench/       task suites, your own tasks (custom.ts), graders, runner, run storage
 lib/stats/       dependency-free statistics (special functions, tests, bootstrap, ranking)
 lib/analysis/    analyzeRun() -> RunReport, the weighted score, the leaderboard
 lib/client/      browser-only code: saved keys, in-tab benchmarks, the relay fallback
@@ -51,7 +53,7 @@ docs/            METHODOLOGY.md, rendered at /methodology
 
 ## Adding a router
 
-A router is one entry in [`lib/providers/registry.ts`](lib/providers/registry.ts): id, name, base URL, the environment variables its key may come from, its auto-routing model id if it has one, and a color for charts. Set `api: "responses"` if it only speaks the Responses API. Compare, Benchmark, the report and Settings pick the entry up without further changes. Add the matching variables to [`.env.example`](.env.example) and a row to the router table in the README.
+A router is one entry in [`lib/providers/registry.ts`](lib/providers/registry.ts): id, name, base URL, the environment variables its key may come from, its auto-routing model id if it has one, and a color for charts. Set `api: "responses"` if it only speaks the Responses API. The command line, Compare, Benchmark, the report and Settings pick the entry up without further changes. Add the matching variables to [`.env.example`](.env.example) and a row to the router table in the README.
 
 ## Adding tasks
 
@@ -60,6 +62,10 @@ Suites live in [`lib/bench/suites/`](lib/bench/suites) and are listed in `suites
 - a `difficulty` in [0, 1], so the report can tell whether a router escalates hard prompts;
 - an answer a deterministic grader can check (exact, numeric, multiple choice, regex, JSON fields, instruction constraints, or code run against tests). There is no LLM judge in the main score;
 - an answer you have verified. Computed answers are generated in code, and puzzles are checked by brute force in `suites.test.ts`.
+
+## The command line
+
+`cli/` only parses arguments and prints: the run, the grading and every number come from `lib/`, the same code the dashboard uses. `npm run cli -- <command>` builds and runs it. Output follows the copy rules below, progress goes to stderr so stdout can be piped, and a change to an option or to the `--json` shape updates the README in the same pull request.
 
 ## Statistics and the report
 

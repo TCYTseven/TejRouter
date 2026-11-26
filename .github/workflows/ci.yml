@@ -18,4 +18,6 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm test
+      # The command line tool end to end, on the offline practice routers.
+      - run: npm run bench -- --max-tasks 3 --seed 1 --fail-under 50
       - run: npm run build

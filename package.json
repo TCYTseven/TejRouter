@@ -2,7 +2,7 @@
   "name": "tejrouter",
   "version": "0.1.0",
   "private": true,
-  "description": "Benchmark LLM routers side by side: which model each router picked, latency, cost, accuracy and whether the differences are real.",
+  "description": "Benchmark LLM routers from the terminal or CI: which model each router picked, latency, cost, accuracy and whether the differences are real.",
   "license": "MIT",
   "author": "Tejas Chakrapani",
   "homepage": "https://github.com/TCYTseven/TejRouter#readme",
@@ -20,18 +20,30 @@
     "openrouter",
     "ai-gateway",
     "evaluation",
-    "nextjs"
+    "nextjs",
+    "cli",
+    "ci"
   ],
   "engines": {
-    "node": ">=20.9"
+    "node": ">=20.12"
   },
+  "bin": {
+    "tejrouter": "dist/tejrouter.mjs"
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "typecheck": "next typegen && tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit",
+    "build:cli": "node scripts/build-cli.mjs",
+    "prepare": "node scripts/build-cli.mjs",
+    "cli": "node scripts/build-cli.mjs && node dist/tejrouter.mjs",
+    "bench": "npm run -s cli -- bench"
   },
   "dependencies": {
     "motion": "^12.43.0",
@@ -45,6 +57,7 @@
     "@types/node": "^22.20.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "^0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.3.8",
     "tailwindcss": "^4",

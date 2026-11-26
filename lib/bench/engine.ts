@@ -4,7 +4,7 @@ import type { ChatRequest, ChatResult } from "@/lib/types";
 import { normalizeArms } from "./arms";
 import { getSuite } from "./suites";
 import { hash32, rng, shuffle } from "./suites/util";
-import type { AttemptRecord, BenchArm, BenchEvent, BenchRun, BenchRunConfig, BenchSample, BenchTask, GradeResult } from "./types";
+import type { AttemptRecord, BenchArm, BenchEvent, BenchRun, BenchRunConfig, BenchSample, BenchSuite, BenchTask, GradeResult } from "./types";
 
 export const MAX_JOBS = 5000;
 export const MAX_ARMS = 16;
@@ -31,9 +31,10 @@ const isInt = (x: unknown): x is number => typeof x === "number" && Number.isInt
 
 /**
  * Validate a (possibly untrusted) run config and resolve suites/arms/tasks.
+ * `extraSuites` are task sets that are not built in (your own prompts, loaded by the CLI).
  * Throws BenchConfigError with a user-facing message.
  */
-export function planRun(input: unknown): RunPlan {
+export function planRun(input: unknown, extraSuites: BenchSuite[] = []): RunPlan {
   if (!input || typeof input !== "object") throw new BenchConfigError("Body must be a BenchRunConfig object.");
   const c = input as Partial<BenchRunConfig> & Record<string, unknown>;
 
@@ -42,7 +43,7 @@ export function planRun(input: unknown): RunPlan {
   }
   const suiteIds = Array.from(new Set(c.suiteIds));
   const suites = suiteIds.map((id) => {
-    const s = getSuite(id);
+    const s = extraSuites.find((x) => x.id === id) ?? getSuite(id);
     if (!s) throw new BenchConfigError(`Unknown suite "${id}".`);
     return s;
   });
@@ -231,6 +232,8 @@ export interface EngineOptions {
   retryBaseMs?: number;
   /** Override the generated run id. */
   runId?: string;
+  /** Task sets that are not built in (see planRun). */
+  suites?: BenchSuite[];
 }
 
 interface Job {
@@ -286,7 +289,7 @@ export async function runBenchWith(
   signal: AbortSignal | undefined,
   opts: EngineOptions,
 ): Promise<BenchRun> {
-  const plan = planRun(configInput);
+  const plan = planRun(configInput, opts.suites);
   const call = opts.call;
   const gradeReply = opts.grade;
   const wait = opts.sleep ?? sleep;
