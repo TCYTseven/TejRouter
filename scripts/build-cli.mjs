@@ -21,6 +21,8 @@ await esbuild.build({
   target: "node20",
   // The server modules import "server-only", which is empty under this condition (as in Next's server build).
   conditions: ["react-server"],
+  // examples/prompts.jsonl is the starter file `tejrouter init` writes.
+  loader: { ".jsonl": "text" },
   banner: { js: "#!/usr/bin/env node" },
   logLevel: "warning",
 });

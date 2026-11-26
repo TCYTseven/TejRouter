@@ -1,0 +1,6 @@
+{"id": "capital", "prompt": "What is the capital of France?", "expected": "Paris"}
+{"id": "return-window", "system": "Policy: items can be returned within 30 days of delivery.", "prompt": "How many days does a customer have to return an item?", "expected": 30, "category": "policy", "difficulty": 0.2}
+{"id": "extract-contact", "prompt": "Extract the name and age as JSON with the keys name and age: Ana is 31 and lives in Lisbon.", "expected": {"name": "Ana", "age": 31}, "category": "extraction", "difficulty": 0.4}
+{"id": "pick-plan", "prompt": "Starter covers up to 10 seats, Team up to 50, Enterprise is unlimited. Which plan is the cheapest fit for a team of 40? A) Starter B) Team C) Enterprise", "expected": "B", "choices": ["A", "B", "C"], "category": "reasoning", "difficulty": 0.5}
+{"id": "iso-date", "prompt": "Write March 5 2024 as an ISO 8601 date. Reply with only the date.", "expected": "2024-03-05", "grader": "exact", "category": "formatting", "difficulty": 0.3}
+{"id": "short-summary", "prompt": "In at most 12 words, say what an LLM router does.", "grader": {"kind": "constraints", "checks": [{"type": "maxWords", "value": 12}, {"type": "includes", "value": "model"}]}, "category": "writing", "difficulty": 0.6}
