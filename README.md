@@ -99,6 +99,7 @@ npm run bench -- --routers openrouter,requesty --tasks prompts.jsonl
 | `tejrouter bench` | Run a benchmark and print which router to use |
 | `tejrouter report [run]` | Print the report for a saved run (default: the latest) |
 | `tejrouter compare <before> <now>` | Compare two saved runs of the same routers |
+| `tejrouter failures [run]` | List the tasks each router got wrong, with the reply and why it was marked wrong |
 | `tejrouter routers [--test]` | List routers and whether each has a key; `--test` sends one prompt to each |
 | `tejrouter suites` | List the built-in task sets |
 | `tejrouter runs` | List saved runs |
@@ -116,6 +117,22 @@ npm run bench -- --routers openrouter,requesty --tasks prompts.jsonl
 | `--md file` | Write the full report as Markdown (task types, head-to-head tests, changes since the baseline) |
 | `--out file` | Write the run, with every call and answer, as JSON |
 | `--json` | Print the summary as JSON instead of text |
+
+`failures` lists first the tasks the other routers got right, which is where a router is losing to its competitors rather than to a hard prompt:
+
+```
+Practice: Budget · sim/auto got 3 of 16 tasks wrong
+Task                    Others right  Model      Why                                               Reply
+math/comb-derangements  1 of 1        sim/small  answer line: 1713 vs 1854                         Working through the combinatorics task on sim/small. Answer…
+knowledge/sci-godel     0 of 1        sim/small  none of "Kurt Gödel", "Gödel", "Godel", "Goedel"  Working through the science task on sim/small. Answer: ledö…
+math/ms-multiples-3-5   0 of 1        sim/small  answer line: 83843 vs 84903                       Working through the multi-step task on sim/small. Answer: 8…
+
+Practice: Smart · sim/auto got 3 of 16 tasks wrong
+Task                    Others right  Model      Why                                                           Reply
+knowledge/geo-mongolia  1 of 1        sim/large  none of "Ulaanbaatar", "Ulan Bator", "Ulan-Bator", "Ulaanba…  Working through the geography task on sim/large. Answer: un…
+knowledge/sci-godel     0 of 1        sim/small  none of "Kurt Gödel", "Gödel", "Godel", "Goedel"              Working through the science task on sim/small. Answer: ledö…
+math/ms-multiples-3-5   0 of 1        sim/large  answer line: 89714 vs 84903                                   Working through the multi-step task on sim/large. Answer: 8…
+```
 
 A run is `latest`, an id from `tejrouter runs`, or a path to a run's JSON file. Exit codes: `0` done, `1` a check failed, `2` the command or its input was wrong.
 
