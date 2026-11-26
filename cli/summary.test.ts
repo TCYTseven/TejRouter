@@ -90,6 +90,25 @@ describe("checkGate", () => {
   });
 });
 
+describe("checkGate on cost", () => {
+  it("fails when cost per answer rose past --max-cost-increase", () => {
+    const drift = compareRuns(run, run);
+    drift.rows[0] = { ...drift.rows[0], meanCostThen: 0.001, meanCostNow: 0.0013 };
+    expect(checkGate(summary, drift, {}).passed).toBe(true);
+    expect(checkGate(summary, drift, { maxCostIncrease: 0.5 }).passed).toBe(true);
+    const gate = checkGate(summary, drift, { maxCostIncrease: 0.2 });
+    expect(gate.failures).toHaveLength(1);
+    expect(gate.failures[0]).toMatch(/now costs \$0\.0013 per answer, up 30% from \$0\.001, more than the allowed 20%\.$/);
+  });
+
+  it("ignores a cost that fell or is unknown", () => {
+    const drift = compareRuns(run, run);
+    drift.rows[0] = { ...drift.rows[0], meanCostThen: 0.002, meanCostNow: 0.001 };
+    drift.rows[1] = { ...drift.rows[1], meanCostThen: null, meanCostNow: 0.5 };
+    expect(checkGate(summary, drift, { maxCostIncrease: 0 }).passed).toBe(true);
+  });
+});
+
 describe("rendering", () => {
   it("prints the verdict, a row per arm and the check result", () => {
     const now = broken("sim-oracle:default");

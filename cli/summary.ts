@@ -147,6 +147,8 @@ export interface GateOptions {
   failUnder?: number;
   /** Fail when a router's accuracy fell by more than this (0 to 1) since the baseline. */
   maxDrop?: number;
+  /** Fail when a router's cost per answer rose by more than this (0.2 = 20%) since the baseline. */
+  maxCostIncrease?: number;
   /** A drop counts as real below this p-value (default 0.05). */
   alpha?: number;
 }
@@ -158,7 +160,8 @@ export interface Gate {
 
 /**
  * Decide whether a run passes. With a baseline, a router fails when its accuracy fell and
- * the drop is statistically clear (McNemar on the shared tasks), or exceeds maxDrop.
+ * the drop is statistically clear (McNemar on the shared tasks), or exceeds maxDrop, or when
+ * its cost per answer rose by more than maxCostIncrease.
  */
 export function checkGate(summary: Summary, drift: DriftReport | null, opts: GateOptions): Gate {
   const failures: string[] = [];
@@ -173,6 +176,14 @@ export function checkGate(summary: Summary, drift: DriftReport | null, opts: Gat
     if (drift.reason) failures.push(`Could not compare with the baseline: ${drift.reason}`);
     const alpha = opts.alpha ?? 0.05;
     for (const r of drift.rows) {
+      if (opts.maxCostIncrease != null && r.meanCostThen != null && r.meanCostNow != null && r.meanCostThen > 0) {
+        const rise = r.meanCostNow / r.meanCostThen - 1;
+        if (rise > opts.maxCostIncrease) {
+          failures.push(
+            `${label(r.armId)} now costs ${usd(r.meanCostNow)} per answer, up ${(rise * 100).toFixed(0)}% from ${usd(r.meanCostThen)}, more than the allowed ${(opts.maxCostIncrease * 100).toFixed(0)}%.`,
+          );
+        }
+      }
       if (r.delta == null || r.delta >= 0) continue;
       const change = `${label(r.armId)} fell from ${pct(r.accuracyThen)} to ${pct(r.accuracyNow)} on ${r.nTasks} shared tasks`;
       if (r.pValue != null && r.pValue < alpha) failures.push(`${change} (p = ${r.pValue.toFixed(3)}).`);
