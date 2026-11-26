@@ -1,0 +1,25 @@
+# Checks every Monday that your router still answers your prompts as well as it did.
+# Copy to .github/workflows/ in your own repository, next to:
+#   prompts.jsonl          your prompts and expected answers (see the TejRouter README)
+#   router-baseline.json   made once with: npx github:TCYTseven/TejRouter bench --routers openrouter --tasks prompts.jsonl --out router-baseline.json
+# The job fails when accuracy drops clearly since the baseline, and the report is shown on the run's summary page.
+name: Router check
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npx --yes github:TCYTseven/TejRouter bench --routers openrouter --tasks prompts.jsonl --baseline router-baseline.json --md report.md
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      - run: cat report.md >> "$GITHUB_STEP_SUMMARY"
+        if: always()

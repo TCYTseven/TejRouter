@@ -46,3 +46,6 @@ next-env.d.ts
 # written by AI coding tools; not part of the project
 /AGENTS.md
 /CLAUDE.md
+
+# command line tool bundle (scripts/build-cli.mjs)
+/dist/
