@@ -9,6 +9,12 @@
 Send the same prompts to every LLM router you use and see which model each one picked,<br />
 how fast it answered, what it cost, whether it was right, and whether the differences are real.
 
+```bash
+npx github:TCYTseven/TejRouter bench
+```
+
+One command, from any directory. No account, and no keys needed to try it.
+
 [![CI](https://github.com/TCYTseven/TejRouter/actions/workflows/ci.yml/badge.svg)](https://github.com/TCYTseven/TejRouter/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/TCYTseven/TejRouter?style=flat&logo=github)](https://github.com/TCYTseven/TejRouter/stargazers)
@@ -37,6 +43,22 @@ LLM routers (Ramp Router, Enclave Cyberouter, OpenRouter, Requesty, FastLLM, Mar
 
 ## Quickstart
 
+Try it with nothing installed. With no keys it compares two offline practice routers, so you see the output before spending anything (the first run takes about half a minute to install):
+
+```bash
+npx github:TCYTseven/TejRouter bench
+```
+
+Then test real routers on your own prompts. `init` writes a starter `prompts.jsonl` and a `.env.local` with a line for every router's key:
+
+```bash
+npx github:TCYTseven/TejRouter init
+# add your keys to .env.local and your prompts to prompts.jsonl, then:
+npx github:TCYTseven/TejRouter bench --tasks prompts.jsonl
+```
+
+Or clone it, which is faster to rerun and includes the dashboard:
+
 ```bash
 git clone https://github.com/TCYTseven/TejRouter
 cd TejRouter
@@ -45,7 +67,7 @@ cp .env.example .env.local   # add whichever router keys you have (all optional)
 npm run bench
 ```
 
-With no keys, `npm run bench -- --preset standard --seed 1` compares the two practice routers on every built-in task, so you can see the output first:
+This is `npm run bench -- --preset standard --seed 1`, the two practice routers on every built-in task:
 
 ```
 249 tasks × 2 routers = 498 calls (seed 1)
@@ -71,22 +93,11 @@ Run saved to data/runs/run-20261126-212928-mbbct4.json
 
 "Clearly better" is only said when a paired test on the shared tasks supports it; otherwise the verdict says the run cannot separate the routers.
 
-Without cloning, the same command runs straight from GitHub (the first run takes a while to install):
-
-```bash
-npx github:TCYTseven/TejRouter bench
-```
-
-It reads keys from `.env.local` in the directory you run it in, or from the environment. In a project of your own, `init` writes that file and a starter set of prompts:
-
-```bash
-npx github:TCYTseven/TejRouter init
-npx github:TCYTseven/TejRouter bench --tasks prompts.jsonl
-```
+Keys are read from `.env.local` in the directory you run it in, or from the environment.
 
 ## Commands
 
-`npm run bench -- <options>` in a clone, or `npx tejrouter bench <options>`.
+`npm run bench -- <options>` in a clone, or `npx github:TCYTseven/TejRouter bench <options>` anywhere. The examples below use the first form.
 
 ```bash
 # Compare two routers, and pin two models as baselines to see whether routing beats a single model
@@ -185,7 +196,7 @@ In GitHub Actions ([`examples/router-check.yml`](examples/router-check.yml)):
 Any agent that can run a shell command can use TejRouter; there is nothing to install into the agent. `--json` prints one JSON object on stdout (the verdict sentences, each router's accuracy with its interval, cost, latency and models served, head-to-head tests, the baseline comparison and whether the checks passed), progress goes to stderr, and the exit code says whether a check failed.
 
 ```bash
-npx tejrouter bench --routers openrouter,requesty --tasks prompts.jsonl --json
+npx github:TCYTseven/TejRouter bench --routers openrouter,requesty --tasks prompts.jsonl --json
 ```
 
 ## Web dashboard
