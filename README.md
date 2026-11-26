@@ -62,11 +62,11 @@ Practice: Budget · sim/auto     79.0%        74–83%         $0.00017        4
 Practice: Smart · sim/auto: Picks per task; uses sim/large for 49% of tasks (sim/small 51%, sim/large 49%)
 Practice: Budget · sim/auto: Picks per task; uses sim/large for 7% of tasks (sim/small 93%, sim/large 7%)
 
-Things to know about this data
-- Only one repetition per task: consistency, ICC and design effects are unavailable.
-- No fixed-model baseline arms (arms with a pinned, non-auto model): oracle and regret analysis skipped.
+Notes
+- Each task ran once. Add --reps 3 to measure how consistent each router is.
+- No model is pinned in this run. Add one, such as openrouter=openai/gpt-4o-mini, to see whether routing beats always using one model.
 
-Run saved to data/runs/run-20261126-205845-vddaeg.json
+Run saved to data/runs/run-20261126-212928-mbbct4.json
 ```
 
 "Clearly better" is only said when a paired test on the shared tasks supports it; otherwise the verdict says the run cannot separate the routers.

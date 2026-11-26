@@ -84,6 +84,24 @@ export function verdictSentences(report: RunReport): string[] {
   return out;
 }
 
+/**
+ * The report's notes are written for the statistics view. On the command line each one
+ * becomes what to do about it; a note that only repeats the verdict is dropped.
+ */
+const NOTES: [RegExp, string | null][] = [
+  [/^Only one repetition per task/, "Each task ran once. Add --reps 3 to measure how consistent each router is."],
+  [/^No fixed-model baseline arms/, "No model is pinned in this run. Add one, such as openrouter=openai/gpt-4o-mini, to see whether routing beats always using one model."],
+  [/^No sample has a cost/, "No router reported a cost or token counts, so cost is not compared."],
+  [/^Only one arm/, null],
+];
+
+export function plainNotes(warnings: string[]): string[] {
+  return warnings.flatMap((w) => {
+    const hit = NOTES.find(([re]) => re.test(w));
+    return hit ? (hit[1] ? [hit[1]] : []) : [w];
+  });
+}
+
 export function summarize(run: BenchRun, report: RunReport): Summary {
   const kindOf = new Map(report.meta.arms.map((a) => [a.id, a.kind]));
   const arms: ArmSummary[] = rankedArms(report).map((a) => {
@@ -135,7 +153,7 @@ export function summarize(run: BenchRun, report: RunReport): Summary {
     warnings: [
       ...(run.aborted ? ["This run was stopped before every task finished, so routers may have answered different numbers of tasks."] : []),
       ...(run.error ? [`The run ended with an error: ${run.error}`] : []),
-      ...report.warnings,
+      ...plainNotes(report.warnings),
     ],
   };
 }

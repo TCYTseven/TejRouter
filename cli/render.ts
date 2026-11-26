@@ -121,7 +121,7 @@ export function renderText({ summary: s, drift, gate }: RenderInput, st: Style =
 
   if (s.warnings.length) {
     out.push("");
-    out.push(st.bold("Things to know about this data"));
+    out.push(st.bold("Notes"));
     for (const w of s.warnings) out.push(`- ${w}`);
   }
 
@@ -203,7 +203,7 @@ export function renderMarkdown({ summary: s, drift, gate }: RenderInput): string
   }
 
   if (s.warnings.length) {
-    out.push("## Things to know about this data", "");
+    out.push("## Notes", "");
     for (const w of s.warnings) out.push(`- ${w}`);
     out.push("");
   }
