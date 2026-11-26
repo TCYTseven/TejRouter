@@ -13,6 +13,7 @@ import { getProviderSpec } from "@/lib/providers/registry";
 import { isConfigured, providerStatuses, resolveProvider } from "@/lib/providers/server";
 import { ms, pct } from "@/components/report/format";
 import pkg from "../package.json";
+import { findMisses } from "./failures";
 import { renderMarkdown, renderText, style, textTable } from "./render";
 import { checkGate, summarize, type Gate, type GateOptions } from "./summary";
 
@@ -28,6 +29,7 @@ Usage
   tejrouter bench [options]         Run a benchmark and print which router to use
   tejrouter report [run]            Print the report for a saved run (default: latest)
   tejrouter compare <before> <now>  Compare two saved runs of the same routers
+  tejrouter failures [run]          List the tasks each router got wrong (default: latest)
   tejrouter routers [--test]        List routers and whether each has a key
   tejrouter suites                  List the built-in task sets
   tejrouter runs                    List saved runs
@@ -57,6 +59,7 @@ Output
   --md <file>          Write the full report as Markdown
   --out <file>         Write the run (every call and answer) as JSON
   --json               Print the summary as JSON instead of text
+  --limit <n>          failures: tasks to list per router (default 10, 0 for all)
 
 A run is "latest", a run id from "tejrouter runs", or a path to a run's JSON file.
 Keys are read from .env.local in the current directory (see .env.example).`;
@@ -81,6 +84,7 @@ const OPTIONS = {
   md: { type: "string" },
   out: { type: "string" },
   json: { type: "boolean" },
+  limit: { type: "string" },
   test: { type: "boolean" },
   help: { type: "boolean", short: "h" },
   version: { type: "boolean", short: "v" },
@@ -320,6 +324,33 @@ async function compare(flags: Flags, positionals: string[]): Promise<number> {
   return finish(now, flags, before);
 }
 
+async function failures(flags: Flags, positionals: string[]): Promise<number> {
+  const run = await resolveRun(positionals[0] ?? "latest");
+  const limit = number(flags, "limit", { int: true, min: 0 }) ?? 10;
+  const all = findMisses(run);
+  if (flags.json) {
+    console.log(JSON.stringify(all, null, 2));
+    return 0;
+  }
+  const st = style(colorOn(process.stdout));
+  const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
+  all.forEach((arm, i) => {
+    if (i) console.log("");
+    console.log(st.bold(`${arm.label} got ${arm.misses.length} of ${arm.tasks} tasks wrong`));
+    const shown = limit ? arm.misses.slice(0, limit) : arm.misses;
+    if (!shown.length) return;
+    const many = run.arms.length > 1;
+    console.log(
+      textTable(
+        ["Task", ...(many ? ["Others right"] : []), "Model", "Why", "Reply"],
+        shown.map((m) => [m.taskId, ...(many ? [`${m.othersRight} of ${m.others}`] : []), m.model ?? "", clip(m.why, 60), clip(m.reply, 60)]),
+      ),
+    );
+    if (shown.length < arm.misses.length) console.log(st.dim(`${arm.misses.length - shown.length} more. Use --limit 0 to list every one.`));
+  });
+  return 0;
+}
+
 async function routers(flags: Flags): Promise<number> {
   const statuses = providerStatuses();
   const state = (p: (typeof statuses)[number]) =>
@@ -419,6 +450,8 @@ export async function main(argv: string[]): Promise<number> {
         return await report(flags, rest);
       case "compare":
         return await compare(flags, rest);
+      case "failures":
+        return await failures(flags, rest);
       case "routers":
         return await routers(flags);
       case "suites":
