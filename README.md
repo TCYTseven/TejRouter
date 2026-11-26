@@ -77,7 +77,12 @@ Without cloning, the same command runs straight from GitHub (the first run takes
 npx github:TCYTseven/TejRouter bench
 ```
 
-It reads keys from `.env.local` in the directory you run it in, or from the environment.
+It reads keys from `.env.local` in the directory you run it in, or from the environment. In a project of your own, `init` writes that file and a starter set of prompts:
+
+```bash
+npx github:TCYTseven/TejRouter init
+npx github:TCYTseven/TejRouter bench --tasks prompts.jsonl
+```
 
 ## Commands
 
@@ -96,6 +101,7 @@ npm run bench -- --routers openrouter,requesty --tasks prompts.jsonl
 
 | Command | What it does |
 | --- | --- |
+| `tejrouter init` | Write a starter `prompts.jsonl` and a `.env.local` with a line for every router's key; never overwrites a file |
 | `tejrouter bench` | Run a benchmark and print which router to use |
 | `tejrouter report [run]` | Print the report for a saved run (default: the latest) |
 | `tejrouter compare <before> <now>` | Compare two saved runs of the same routers |
@@ -149,7 +155,7 @@ A generic benchmark says little about your workload. Put your prompts and the an
 {"id": "iso-date", "prompt": "Write March 5 2024 as an ISO date.", "expected": "2024-03-05", "grader": "exact", "category": "formatting", "difficulty": 0.3}
 ```
 
-How a reply is graded is picked from the answer: a number is compared numerically, an object field by field, `choices` makes it multiple choice, and any other text must appear in the reply. Set `grader` to `contains`, `exact`, `numeric`, `regex`, `choice` or `json` to choose, or to a full grader object from [`lib/bench/types.ts`](lib/bench/types.ts) (for example `{"kind": "code", ...}` to run a JavaScript function against tests). `messages` replaces `prompt` for multi-turn tasks, and `category` and `difficulty` (0 to 1) feed the by-task-type and routing analysis. A JSON array works too.
+[`examples/prompts.jsonl`](examples/prompts.jsonl) has one task for each kind of grading, and `tejrouter init` copies it into your project. How a reply is graded is picked from the answer: a number is compared numerically, an object field by field, `choices` makes it multiple choice, and any other text must appear in the reply. Set `grader` to `contains`, `exact`, `numeric`, `regex`, `choice` or `json` to choose, or to a full grader object from [`lib/bench/types.ts`](lib/bench/types.ts) (for example `{"kind": "code", ...}` to run a JavaScript function against tests). `messages` replaces `prompt` for multi-turn tasks, and `category` and `difficulty` (0 to 1) feed the by-task-type and routing analysis. A JSON array works too.
 
 With `--tasks`, every task in the file runs once. Add `--suites` to run built-in sets alongside.
 

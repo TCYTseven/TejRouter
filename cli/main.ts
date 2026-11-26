@@ -14,6 +14,7 @@ import { isConfigured, providerStatuses, resolveProvider } from "@/lib/providers
 import { ms, pct } from "@/components/report/format";
 import pkg from "../package.json";
 import { findMisses } from "./failures";
+import { ENV_FILE, TASKS_FILE, init } from "./init";
 import { renderMarkdown, renderText, style, textTable } from "./render";
 import { checkGate, summarize, type Gate, type GateOptions } from "./summary";
 
@@ -26,6 +27,7 @@ import { checkGate, summarize, type Gate, type GateOptions } from "./summary";
 const HELP = `tejrouter ${pkg.version}: benchmark LLM routers from the terminal
 
 Usage
+  tejrouter init                    Write a starter prompts.jsonl and .env.local here
   tejrouter bench [options]         Run a benchmark and print which router to use
   tejrouter report [run]            Print the report for a saved run (default: latest)
   tejrouter compare <before> <now>  Compare two saved runs of the same routers
@@ -359,6 +361,24 @@ async function failures(flags: Flags, positionals: string[]): Promise<number> {
   return 0;
 }
 
+async function initFiles(): Promise<number> {
+  const { written, kept } = await init();
+  for (const f of written) console.log(`Wrote ${f}`);
+  for (const f of kept) console.log(`Kept your ${f}`);
+  console.log(
+    [
+      "",
+      "Next:",
+      `  1. Put a key for each router you use in ${ENV_FILE} (keep that file out of git).`,
+      `  2. Replace the examples in ${TASKS_FILE} with your own prompts and expected answers.`,
+      `  3. tejrouter bench --tasks ${TASKS_FILE}`,
+      "",
+      "With no keys, step 3 runs on the two offline practice routers.",
+    ].join("\n"),
+  );
+  return 0;
+}
+
 async function routers(flags: Flags): Promise<number> {
   const statuses = providerStatuses();
   const state = (p: (typeof statuses)[number]) =>
@@ -452,6 +472,8 @@ export async function main(argv: string[]): Promise<number> {
   loadEnv();
   try {
     switch (command) {
+      case "init":
+        return await initFiles();
       case "bench":
         return await bench(flags);
       case "report":
