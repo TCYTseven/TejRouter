@@ -113,6 +113,7 @@ npm run bench -- --routers openrouter,requesty --tasks prompts.jsonl
 | `--reps`, `--max-tasks`, `--seed`, `--concurrency`, `--max-tokens`, `--temperature`, `--name` | Run settings |
 | `--baseline run` | Compare with an earlier run and fail on a clear accuracy drop |
 | `--max-drop points` | Also fail when accuracy fell by more than this many points |
+| `--max-cost-increase pct` | Also fail when cost per answer rose by more than this percentage |
 | `--fail-under pct` | Fail when any router's accuracy is below this |
 | `--md file` | Write the full report as Markdown (task types, head-to-head tests, changes since the baseline) |
 | `--out file` | Write the run, with every call and answer, as JSON |
@@ -161,7 +162,7 @@ npm run bench -- --routers openrouter --tasks prompts.jsonl --out router-baselin
 npm run bench -- --routers openrouter --tasks prompts.jsonl --baseline router-baseline.json
 ```
 
-The second command exits with `1` when a router's accuracy fell and McNemar's test on the shared tasks says the drop is real (p < 0.05), and shows what else changed: the model it uses most, and the cost per answer. `--max-drop 5` also fails on any drop over five points, and `--fail-under 80` sets a floor.
+The second command exits with `1` when a router's accuracy fell and McNemar's test on the shared tasks says the drop is real (p < 0.05), and shows what else changed: the model it uses most, and the cost per answer. `--max-drop 5` also fails on any drop over five points, `--max-cost-increase 20` fails when the cost per answer rose by more than a fifth, and `--fail-under 80` sets a floor.
 
 In GitHub Actions ([`examples/router-check.yml`](examples/router-check.yml)):
 
