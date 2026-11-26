@@ -53,6 +53,8 @@ Bench options
 Checks (exit code 1 when one fails; work with bench, report and compare)
   --baseline <run>     Compare with an earlier run and fail on a clear accuracy drop
   --max-drop <points>  Also fail when accuracy fell by more than this many points
+  --max-cost-increase <pct>
+                       Also fail when cost per answer rose by more than this, e.g. 20
   --fail-under <pct>   Fail when any router's accuracy is below this, e.g. 80
 
 Output
@@ -81,6 +83,7 @@ const OPTIONS = {
   baseline: { type: "string" },
   "max-drop": { type: "string" },
   "fail-under": { type: "string" },
+  "max-cost-increase": { type: "string" },
   md: { type: "string" },
   out: { type: "string" },
   json: { type: "boolean" },
@@ -176,15 +179,20 @@ function parseArms(flags: Flags): BenchRunConfig["arms"] {
   });
 }
 
-function gateOptions(flags: Flags): GateOptions {
-  return { failUnder: fraction(flags, "fail-under"), maxDrop: fraction(flags, "max-drop") };
+function gateOptions(flags: Flags, hasBaseline: boolean): GateOptions {
+  // A cost can more than double, so this one is always read as a percentage: 150 is 150%.
+  const rise = number(flags, "max-cost-increase", { min: 0 });
+  for (const name of ["max-drop", "max-cost-increase"] as const) {
+    if (flags[name] !== undefined && !hasBaseline) throw new UsageError(`--${name} compares with an earlier run, so it needs --baseline <run>.`);
+  }
+  return { failUnder: fraction(flags, "fail-under"), maxDrop: fraction(flags, "max-drop"), ...(rise != null ? { maxCostIncrease: rise / 100 } : {}) };
 }
 
 /** Analyse a run, apply the checks, print and write the outputs. Returns the exit code. */
 async function finish(run: BenchRun, flags: Flags, baseline: BenchRun | null, savedTo?: string): Promise<number> {
   const summary = summarize(run, analyzeRun(run));
   const drift = baseline ? compareRuns(run, baseline) : null;
-  const opts = gateOptions(flags);
+  const opts = gateOptions(flags, Boolean(baseline));
   const gate: Gate | null = baseline || opts.failUnder != null ? checkGate(summary, drift, opts) : null;
 
   if (flags.md) await fs.writeFile(flags.md, renderMarkdown({ summary, drift, gate }), "utf8");
@@ -232,7 +240,7 @@ function progressReporter(total: number) {
 }
 
 async function bench(flags: Flags): Promise<number> {
-  gateOptions(flags); // reject a bad check before spending anything
+  gateOptions(flags, Boolean(flags.baseline)); // reject a bad check before spending anything
   let custom: BenchSuite | null = null;
   if (flags.tasks) {
     let text: string;
