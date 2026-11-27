@@ -136,6 +136,7 @@ npm run bench -- --routers openrouter,requesty --tasks prompts.jsonl
 | `--fail-under pct` | Fail when any router's accuracy is below this |
 | `--md file` | Write the full report as Markdown (task types, head-to-head tests, changes since the baseline) |
 | `--out file` | Write the run, with every call and answer, as JSON |
+| `--csv file` | Write one row per call for a spreadsheet or notebook: task, whether it was correct, model served, latency, cost, tokens and the reply |
 | `--json` | Print the summary as JSON instead of text |
 
 `failures` lists first the tasks the other routers got right, which is where a router is losing to its competitors rather than to a hard prompt:
