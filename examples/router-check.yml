@@ -18,8 +18,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npx --yes github:TCYTseven/TejRouter bench --routers openrouter --tasks prompts.jsonl --baseline router-baseline.json --md report.md
+      # --max-spend stops the run if the bill passes a dollar; the report goes on the run's summary page by itself.
+      - run: npx --yes github:TCYTseven/TejRouter bench --routers openrouter --tasks prompts.jsonl --baseline router-baseline.json --max-spend 1
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-      - run: cat report.md >> "$GITHUB_STEP_SUMMARY"
-        if: always()
