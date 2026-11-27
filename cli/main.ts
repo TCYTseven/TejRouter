@@ -70,7 +70,8 @@ Output
   --limit <n>          failures: tasks to list per router (default 10, 0 for all)
 
 A run is "latest", a run id from "tejrouter runs", or a path to a run's JSON file.
-Keys are read from .env.local in the current directory (see .env.example).`;
+Keys are read from .env.local in the current directory (see .env.example).
+In GitHub Actions the report is also added to the run's summary page.`;
 
 class UsageError extends Error {}
 
@@ -205,6 +206,9 @@ async function finish(run: BenchRun, flags: Flags, baseline: BenchRun | null, sa
   const gate: Gate | null = baseline || opts.failUnder != null ? checkGate(summary, drift, opts) : null;
 
   if (flags.md) await fs.writeFile(flags.md, renderMarkdown({ summary, drift, gate }), "utf8");
+  // In GitHub Actions the report also goes on the run's summary page, with nothing to set up.
+  const stepSummary = process.env.GITHUB_STEP_SUMMARY;
+  if (stepSummary) await fs.appendFile(stepSummary, `${renderMarkdown({ summary, drift, gate })}\n`, "utf8").catch(() => {});
   if (flags.out) await fs.writeFile(flags.out, JSON.stringify(run), "utf8");
   if (flags.csv) await fs.writeFile(flags.csv, renderCsv(run), "utf8");
 
