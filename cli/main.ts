@@ -51,6 +51,7 @@ Bench options
   --max-tokens <n>     Reply length limit (default 1024)
   --temperature <t>    Sampling temperature (default 0)
   --name <text>        Name for the run
+  --dry-run            Show the tasks, routers and number of calls, then stop without calling
 
 Checks (exit code 1 when one fails; work with bench, report and compare)
   --baseline <run>     Compare with an earlier run and fail on a clear accuracy drop
@@ -82,6 +83,7 @@ const OPTIONS = {
   "max-tokens": { type: "string" },
   temperature: { type: "string" },
   name: { type: "string" },
+  "dry-run": { type: "boolean" },
   baseline: { type: "string" },
   "max-drop": { type: "string" },
   "fail-under": { type: "string" },
@@ -241,6 +243,23 @@ function progressReporter(total: number) {
   };
 }
 
+/** What --dry-run prints: the run's name, its routers and how many tasks come from each set. */
+function describePlan(plan: ReturnType<typeof planRun>, extra: BenchSuite[]): string {
+  const sets = plan.config.suiteIds.map((id) => {
+    const tasks = plan.tasks.filter((t) => t.suiteId === id);
+    return [extra.find((s) => s.id === id)?.name ?? id, String(tasks.length), String(tasks.filter((t) => t.difficulty >= HARD_MIN_DIFFICULTY).length)];
+  });
+  return [
+    plan.config.name,
+    "",
+    textTable(["Router", "Model"], plan.arms.map((a) => [a.label.split(" · ")[0], a.model || "its own choice"])),
+    "",
+    textTable(["Task set", "Tasks", "Hard"], sets, ["left", "right", "right"]),
+    "",
+    `Nothing was sent. Remove --dry-run to make the ${plan.totalJobs} calls.`,
+  ].join("\n");
+}
+
 async function bench(flags: Flags): Promise<number> {
   gateOptions(flags, Boolean(flags.baseline)); // reject a bad check before spending anything
   let custom: BenchSuite | null = null;
@@ -290,6 +309,10 @@ async function bench(flags: Flags): Promise<number> {
   console.error(
     `${plan.tasks.length} tasks × ${plan.arms.length} router${plan.arms.length === 1 ? "" : "s"}${reps > 1 ? ` × ${reps} repetitions` : ""} = ${plan.totalJobs} calls (seed ${plan.config.seed})`,
   );
+  if (flags["dry-run"]) {
+    console.log(describePlan(plan, extra));
+    return 0;
+  }
 
   const abort = new AbortController();
   const onInterrupt = () => {
