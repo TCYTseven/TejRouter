@@ -187,12 +187,12 @@ The second command exits with `1` when a router's accuracy fell and McNemar's te
 In GitHub Actions ([`examples/router-check.yml`](examples/router-check.yml)):
 
 ```yaml
-- run: npx --yes github:TCYTseven/TejRouter bench --routers openrouter --tasks prompts.jsonl --baseline router-baseline.json --md report.md
+- run: npx --yes github:TCYTseven/TejRouter bench --routers openrouter --tasks prompts.jsonl --baseline router-baseline.json --max-spend 1
   env:
     OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-- run: cat report.md >> "$GITHUB_STEP_SUMMARY"
-  if: always()
 ```
+
+The report is added to the run's summary page without a further step, and `--max-spend 1` stops the job if the bill passes a dollar.
 
 ## From a coding agent
 
