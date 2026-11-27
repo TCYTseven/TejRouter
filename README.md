@@ -128,6 +128,7 @@ npm run bench -- --routers openrouter,requesty --tasks prompts.jsonl
 | `--suites a,b` | Built-in task sets to run |
 | `--preset name` | `quick` (10 tasks per set, the default), `standard` (all), `thorough` (all, three times), `hard` (only the hardest) |
 | `--reps`, `--max-tasks`, `--seed`, `--concurrency`, `--max-tokens`, `--temperature`, `--name` | Run settings |
+| `--max-spend usd` | Stop once the routers have reported this much cost, print the report for what finished and exit `1`. Calls already in flight still finish, so the total can end a little over |
 | `--dry-run` | Show the routers, task sets and number of calls, then stop before sending anything |
 | `--baseline run` | Compare with an earlier run and fail on a clear accuracy drop |
 | `--max-drop points` | Also fail when accuracy fell by more than this many points |
@@ -153,7 +154,7 @@ knowledge/sci-godel     0 of 1        sim/small  none of "Kurt Gödel", "Gödel"
 math/ms-multiples-3-5   0 of 1        sim/large  answer line: 89714 vs 84903                                   Working through the multi-step task on sim/large. Answer: 8…
 ```
 
-A run is `latest`, an id from `tejrouter runs`, or a path to a run's JSON file. Exit codes: `0` done, `1` a check failed, `2` the command or its input was wrong.
+A run is `latest`, an id from `tejrouter runs`, or a path to a run's JSON file. Exit codes: `0` done, `1` a check failed or the run hit `--max-spend`, `2` the command or its input was wrong, `130` interrupted.
 
 ## Your own prompts
 
