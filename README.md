@@ -128,6 +128,7 @@ npm run bench -- --routers openrouter,requesty --tasks prompts.jsonl
 | `--suites a,b` | Built-in task sets to run |
 | `--preset name` | `quick` (10 tasks per set, the default), `standard` (all), `thorough` (all, three times), `hard` (only the hardest) |
 | `--reps`, `--max-tasks`, `--seed`, `--concurrency`, `--max-tokens`, `--temperature`, `--name` | Run settings |
+| `--dry-run` | Show the routers, task sets and number of calls, then stop before sending anything |
 | `--baseline run` | Compare with an earlier run and fail on a clear accuracy drop |
 | `--max-drop points` | Also fail when accuracy fell by more than this many points |
 | `--max-cost-increase pct` | Also fail when cost per answer rose by more than this percentage |
