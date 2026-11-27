@@ -13,6 +13,7 @@ import { getProviderSpec } from "@/lib/providers/registry";
 import { isConfigured, providerStatuses, resolveProvider } from "@/lib/providers/server";
 import { ms, pct, usd } from "@/components/report/format";
 import pkg from "../package.json";
+import { renderCsv } from "./csv";
 import { findMisses } from "./failures";
 import { ENV_FILE, TASKS_FILE, init } from "./init";
 import { renderMarkdown, renderText, style, textTable } from "./render";
@@ -64,6 +65,7 @@ Checks (exit code 1 when one fails; work with bench, report and compare)
 Output
   --md <file>          Write the full report as Markdown
   --out <file>         Write the run (every call and answer) as JSON
+  --csv <file>         Write one row per call (task, correct, model served, latency, cost, reply)
   --json               Print the summary as JSON instead of text
   --limit <n>          failures: tasks to list per router (default 10, 0 for all)
 
@@ -92,6 +94,7 @@ const OPTIONS = {
   "max-cost-increase": { type: "string" },
   md: { type: "string" },
   out: { type: "string" },
+  csv: { type: "string" },
   json: { type: "boolean" },
   limit: { type: "string" },
   test: { type: "boolean" },
@@ -203,12 +206,13 @@ async function finish(run: BenchRun, flags: Flags, baseline: BenchRun | null, sa
 
   if (flags.md) await fs.writeFile(flags.md, renderMarkdown({ summary, drift, gate }), "utf8");
   if (flags.out) await fs.writeFile(flags.out, JSON.stringify(run), "utf8");
+  if (flags.csv) await fs.writeFile(flags.csv, renderCsv(run), "utf8");
 
   if (flags.json) {
     console.log(JSON.stringify({ ...summary, drift, gate, savedTo: savedTo ?? null }, null, 2));
   } else {
     console.log(renderText({ summary, drift, gate }, style(colorOn(process.stdout))));
-    const files = [savedTo && `Run saved to ${savedTo}`, flags.md && `Report written to ${flags.md}`, flags.out && `Run written to ${flags.out}`].filter(Boolean);
+    const files = [savedTo && `Run saved to ${savedTo}`, flags.md && `Report written to ${flags.md}`, flags.out && `Run written to ${flags.out}`, flags.csv && `Calls written to ${flags.csv}`].filter(Boolean);
     if (files.length) console.log(`\n${files.join("\n")}`);
   }
   return gate && !gate.passed ? 1 : 0;
