@@ -138,6 +138,19 @@ describe("tejrouter bench", () => {
     expect(await tejrouter("bench", ...SIMS, "--tasks", file("bad.jsonl"))).toMatchObject({ code: 2, err: expect.stringContaining('line 1: needs an "expected" answer') });
   });
 
+  it("adds the report to the GitHub Actions summary page", async () => {
+    writeFileSync(file("summary.md"), "earlier step\n");
+    process.env.GITHUB_STEP_SUMMARY = file("summary.md");
+    try {
+      expect((await tejrouter("report", file("run.json"), "--fail-under", "100")).code).toBe(1);
+    } finally {
+      delete process.env.GITHUB_STEP_SUMMARY;
+    }
+    const page = readFileSync(file("summary.md"), "utf8");
+    expect(page).toMatch(/^earlier step\n# Practice: Budget vs Practice: Smart, quick/);
+    expect(page).toContain("Check failed");
+  });
+
   it("refuses a file that is not a run", async () => {
     writeFileSync(file("other.json"), '{"hello": 1}');
     expect(await tejrouter("report", file("other.json"))).toMatchObject({ code: 2, err: expect.stringContaining("is not a saved run") });
