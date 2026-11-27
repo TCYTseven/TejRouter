@@ -116,6 +116,18 @@ describe("tejrouter bench", () => {
     expect((await tejrouter("compare", file("run.json"))).code).toBe(2);
   });
 
+  it("stops at --max-spend, reports what finished and exits 1", async () => {
+    const r = await tejrouter("bench", ...SIMS, "--suites", "math,reasoning", "--concurrency", "1", "--max-spend", "0.000001", "--json");
+    expect(r.code).toBe(1);
+    expect(r.err).toMatch(/Stopped at the --max-spend limit of \$0\.000001: \d+ of \d+ calls finished and cost \$/);
+    const summary = JSON.parse(r.out);
+    expect(summary.aborted).toBe(true);
+    expect(summary.calls).toBeLessThan(10);
+    // A limit the run never reaches changes nothing.
+    expect((await tejrouter(...quick, "--max-spend", "100")).code).toBe(0);
+    expect(await tejrouter(...quick, "--max-spend", "lots")).toMatchObject({ code: 2 });
+  });
+
   it("runs your own tasks and names the run after the file", async () => {
     writeFileSync(file("mine.jsonl"), '{"prompt": "What is 2+2?", "expected": 4}\n{"prompt": "Capital of France?", "expected": "Paris"}\n');
     const r = await tejrouter("bench", ...SIMS, "--tasks", file("mine.jsonl"), "--json");
