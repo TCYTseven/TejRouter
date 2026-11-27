@@ -157,6 +157,34 @@ math/ms-multiples-3-5   0 of 1        sim/large  answer line: 89714 vs 84903    
 
 A run is `latest`, an id from `tejrouter runs`, or a path to a run's JSON file. Exit codes: `0` done, `1` a check failed or the run hit `--max-spend`, `2` the command or its input was wrong, `130` interrupted.
 
+## Before you spend
+
+A benchmark against paid routers is real calls on your keys. Two options keep that predictable:
+
+```bash
+# See the routers, the task sets and the number of calls. Nothing is sent
+npm run bench -- --routers openrouter,requesty --tasks prompts.jsonl --dry-run
+
+# Stop once the routers have reported 50 cents of cost
+npm run bench -- --routers openrouter,requesty --tasks prompts.jsonl --max-spend 0.50
+```
+
+```
+6 tasks × 2 routers = 12 calls (seed 788960867)
+Practice: Budget vs Practice: Smart · sim/large on prompts.jsonl
+
+Router            Model
+Practice: Budget  its own choice
+Practice: Smart   sim/large
+
+Task set       Tasks  Hard
+prompts.jsonl      6     1
+
+Nothing was sent. Remove --dry-run to make the 12 calls.
+```
+
+A run stopped by `--max-spend` still prints the report for the calls that finished, saves the run and exits `1`. The default `quick` preset is 10 tasks per set, and `routers --test` checks every key with one short prompt each.
+
 ## Your own prompts
 
 A generic benchmark says little about your workload. Put your prompts and the answers you expect in a JSONL file, one task per line:
