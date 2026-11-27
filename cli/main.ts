@@ -11,7 +11,7 @@ import { HARD_MIN_DIFFICULTY, type BenchRun, type BenchRunConfig, type BenchSuit
 import { callChat } from "@/lib/providers/client";
 import { getProviderSpec } from "@/lib/providers/registry";
 import { isConfigured, providerStatuses, resolveProvider } from "@/lib/providers/server";
-import { ms, pct } from "@/components/report/format";
+import { ms, pct, usd } from "@/components/report/format";
 import pkg from "../package.json";
 import { findMisses } from "./failures";
 import { ENV_FILE, TASKS_FILE, init } from "./init";
@@ -21,7 +21,7 @@ import { checkGate, summarize, type Gate, type GateOptions } from "./summary";
 /**
  * The tejrouter command. It runs the same engine, graders and statistics as the web app,
  * with keys from .env.local, and prints a verdict instead of opening a dashboard.
- * Exit codes: 0 done, 1 a check failed, 2 the command or its input was wrong.
+ * Exit codes: 0 done, 1 a check failed or the run hit --max-spend, 2 the command or its input was wrong.
  */
 
 const HELP = `tejrouter ${pkg.version}: benchmark LLM routers from the terminal
@@ -51,6 +51,7 @@ Bench options
   --max-tokens <n>     Reply length limit (default 1024)
   --temperature <t>    Sampling temperature (default 0)
   --name <text>        Name for the run
+  --max-spend <usd>    Stop the run once the routers have reported this much cost, e.g. 0.50
   --dry-run            Show the tasks, routers and number of calls, then stop without calling
 
 Checks (exit code 1 when one fails; work with bench, report and compare)
@@ -83,6 +84,7 @@ const OPTIONS = {
   "max-tokens": { type: "string" },
   temperature: { type: "string" },
   name: { type: "string" },
+  "max-spend": { type: "string" },
   "dry-run": { type: "boolean" },
   baseline: { type: "string" },
   "max-drop": { type: "string" },
@@ -262,6 +264,7 @@ function describePlan(plan: ReturnType<typeof planRun>, extra: BenchSuite[]): st
 
 async function bench(flags: Flags): Promise<number> {
   gateOptions(flags, Boolean(flags.baseline)); // reject a bad check before spending anything
+  const budget = number(flags, "max-spend", { min: 0 });
   let custom: BenchSuite | null = null;
   if (flags.tasks) {
     let text: string;
@@ -323,11 +326,20 @@ async function bench(flags: Flags): Promise<number> {
   process.on("SIGINT", onInterrupt);
 
   const progress = progressReporter(plan.totalJobs);
+  let spent = 0;
+  let overBudget = false;
   const run = await runBench(
     plan.config,
     (e) => {
-      if (e.type === "sample") progress.sample(e.completed, e.sample.result.ok);
-      else if (e.type === "error") console.error(`\n${e.message}`);
+      if (e.type === "sample") {
+        progress.sample(e.completed, e.sample.result.ok);
+        // Calls already in flight still finish (and cost), so the total can end a little over.
+        spent += e.sample.result.costUsd ?? 0;
+        if (budget != null && spent >= budget && !overBudget && e.completed < e.totalJobs) {
+          overBudget = true;
+          abort.abort();
+        }
+      } else if (e.type === "error") console.error(`\n${e.message}`);
     },
     abort.signal,
     { suites: extra },
@@ -342,6 +354,10 @@ async function bench(flags: Flags): Promise<number> {
     return 130;
   }
   const code = await finish(run, flags, baseline, saved.path);
+  if (overBudget) {
+    console.error(`\nStopped at the --max-spend limit of ${usd(budget)}: ${run.samples.length} of ${plan.totalJobs} calls finished and cost ${usd(spent)}.`);
+    return 1;
+  }
   return run.aborted && abort.signal.aborted ? 130 : code;
 }
 
