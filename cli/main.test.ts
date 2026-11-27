@@ -66,6 +66,16 @@ describe("tejrouter bench", () => {
     expect(await tejrouter("report")).toMatchObject({ code: 2, err: expect.stringContaining("There are no saved runs yet") });
   });
 
+  it("shows the plan and sends nothing with --dry-run", async () => {
+    const r = await tejrouter(...quick, "--dry-run");
+    expect(r.code).toBe(0);
+    expect(r.err).toContain("8 tasks × 2 routers = 16 calls (seed 5)");
+    expect(r.out).toMatch(/^Practice: Budget vs Practice: Smart, quick/);
+    expect(r.out).toMatch(/trivial\s+4\s+0/);
+    expect(r.out).toContain("Nothing was sent. Remove --dry-run to make the 16 calls.");
+    expect((await tejrouter("runs")).out).toMatch(/No saved runs yet/);
+  });
+
   it("runs, prints the verdict, saves the run and writes the files asked for", async () => {
     const r = await tejrouter(...quick, "--md", file("report.md"), "--out", file("run.json"));
     expect(r.code).toBe(0);
